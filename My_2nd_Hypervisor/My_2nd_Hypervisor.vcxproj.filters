@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Driver Files">
+      <UniqueIdentifier>{8E41214B-6785-4CFE-B992-037D68949A14}</UniqueIdentifier>
+      <Extensions>inf;inv;inx;mof;mc;</Extensions>
+    </Filter>
+    <Filter Include="Zydis">
+      <UniqueIdentifier>{e5850b57-1cf2-40b8-8332-8493386d4d8b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Inf Include="My_2nd_Hypervisor.inf">
+      <Filter>Driver Files</Filter>
+    </Inf>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Driver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vmexit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npt_setup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npt_hook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_handlers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\Decoder.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\DecoderData.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\Formatter.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\FormatterATT.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\FormatterBase.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\FormatterBuffer.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\FormatterIntel.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\MetaInfo.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\Mnemonic.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\Register.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\SharedData.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\String.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\Utils.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="zydis\src\Zydis.c">
+      <Filter>Zydis</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Logging.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Command.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Experiment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AMD_Define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="npt_setup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ia32_define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="npt_hook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Structs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Logging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Command.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Experiment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Pool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MapperTraces.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="LaunchVm.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+  </ItemGroup>
+</Project>
