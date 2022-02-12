@@ -1,11 +1,5 @@
 #pragma once
-#include    <ntifs.h>
-#include    <Ntstrsafe.h>
-#include    <intrin.h>
-#include    <ntdef.h>
-#include    <windef.h>
-#include    <wdm.h>
-#include    "ia32_define.h"                          
+#include "includes.h"        
 
 
 #define  CPUID_MAX_STANDARD_FN_NUMBER_AND_VENDOR_STRING          0x00000000

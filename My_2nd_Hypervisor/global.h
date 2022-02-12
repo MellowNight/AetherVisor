@@ -1,7 +1,7 @@
 #pragma once
 #include "AMD_Define.h"
 
-#define    DIFFERENCE(a, b)    max(a,b) - min(a, b)
+#define DIFFERENCE(a, b)    max(a,b) - min(a, b)
 
 
 struct NPTHOOK_ENTRY;
@@ -44,24 +44,24 @@ extern int  CoreCount;
 extern VPROCESSOR_DATA*    g_VpData[32];
 
 
-struct GUEST_REGISTERS
+struct registers
 {
-    UINT64  R15;
-    UINT64  R14;
-    UINT64  R13;
-    UINT64  R12;
-    UINT64  R11;
-    UINT64  R10;
-    UINT64  R9;
-    UINT64  R8;
-    UINT64  Rdi;
-    UINT64  Rsi;
-    UINT64  Rbp;
-    UINT64  Rsp;
-    UINT64  Rbx;
-    UINT64  Rdx;
-    UINT64  Rcx;
-    UINT64  Rax;
+    UINT64  r15;
+    UINT64  r14;
+    UINT64  r13;
+    UINT64  r12;
+    UINT64  r11;
+    UINT64  r10;
+    UINT64  r9;
+    UINT64  r8;
+    UINT64  rdi;
+    UINT64  rsi;
+    UINT64  rbp;
+    UINT64  rsp;
+    UINT64  rbx;
+    UINT64  rdx;
+    UINT64  rcx;
+    UINT64  rax;
 };
 
 

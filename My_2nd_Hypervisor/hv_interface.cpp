@@ -1,8 +1,8 @@
-#include "Command.h"
-#include "Utility.h"
-#include "Logging.h"
+#include "hv_interface.h"
+#include "utils.h"
+#include "logging.h"
 
-void	HandleCommands()
+void HandleCommands()
 {
 	while (1)
 	{

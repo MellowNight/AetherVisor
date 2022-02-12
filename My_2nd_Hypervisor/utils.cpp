@@ -4,35 +4,18 @@
 
 namespace Utils
 {
-    KIRQL disableWP()
+    bool IsInsideRange(uintptr_t address, uintptr_t range_base, uintptr_t range_size)
     {
-        KIRQL	tempirql = KeRaiseIrqlToDpcLevel();
-
-        ULONG64  cr0 = __readcr0();
-
-        cr0 &= 0xfffffffffffeffff;
-
-        __writecr0(cr0);
-
-        _disable();
-
-        return tempirql;
-
+        if ((range_base > address) &&
+            ((range_base + range_size) < address))
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
-
-    void enableWP(KIRQL		tempirql)
-    {
-        ULONG64	cr0 = __readcr0();
-
-        cr0 |= 0x10000;
-
-        _enable();
-
-        __writecr0(cr0);
-
-        KeLowerIrql(tempirql);
-    }
-
 
     PVOID	GetVaFromPfn(ULONG64 pfn)
     {

@@ -2,13 +2,6 @@
 #include "Global.h"
 #include	"Zydis/Zydis.h"
 
-extern ZydisDecoder ZyDec64;
-ZyanU8 GetInstructionLength(ZyanU8* Instruction);
-
-int	LengthOfInstructions(PVOID	address, int BytesLength);
-
-typedef int (*PageTableOperation)(PT_ENTRY_64*);
-
 #define IMAGE_SCN_CNT_INITIALIZED_DATA  0x00000040
 #define IMAGE_SCN_CNT_UNINITIALIZED_DATA    0x00000080
 #define IMAGE_SCN_CNT_CODE  0x00000020
@@ -16,14 +9,38 @@ typedef int (*PageTableOperation)(PT_ENTRY_64*);
 
 namespace Utils
 {
-	PVOID	GetVaFromPfn(ULONG64	pfn);
-	PFN_NUMBER	GetPfnFromVa(ULONG64	Va);
+	bool IsInsideRange(
+		uintptr_t address, 
+		uintptr_t range_base, 
+		uintptr_t range_size
+	);
 
-	PT_ENTRY_64* GetPte(PVOID VirtualAddress, ULONG64 Pml4BasePa, PageTableOperation Operation = NULL);
-	PT_ENTRY_64* GetPte(PVOID VirtualAddress, ULONG64 Pml4BasePa, PDPTE_64** PdpteResult, PDE_64** PdeResult);
+	PVOID	GetVaFromPfn(
+		ULONG64 pfn
+	);
 
-	KIRQL	disableWP();
-	void	enableWP(KIRQL tempirql);
+	PFN_NUMBER	GetPfnFromVa(
+		ULONG64	Va
+	);
+
+	/*	
+		virtual_addr - virtual address to get pte of
+		pml4_base_pa - base physical address of PML4
+		page_table_callback - callback to call on the PTE, PDPTE, PDE, and PML4E associated 
+		with this virtual address
+	*/
+	PT_ENTRY_64* GetPte(
+		void* virtual_addr, 
+		uintptr_t pml4_base_pa, 
+		int (*page_table_callback)(PT_ENTRY_64*) = NULL
+	);
+
+	PT_ENTRY_64* GetPte(
+		void* virtual_addr, 
+		uintptr_t pml4_base_pa, 
+		PDPTE_64** PdpteResult, 
+		PDE_64** PdeResult
+	);
 
 	void	GetJmpCode(ULONG64 jmpAddr, char* output);
 

@@ -2,24 +2,6 @@
 #include	"hook_handler.h"
 #include	"Structs.h"
 
-wchar_t* HvAnalyzedImage2 = L"ModernWarfare.exe";
-
-
-bool IsInsideImage(ULONG64 address)
-{
-	ULONG	size;
-
-	if ((((ULONG64)g_HvData->ImageStart + g_HvData->ImageSize) > address) &&
-		((ULONG64)g_HvData->ImageStart < address))
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
 NPTHOOK_ENTRY* GetHookByPhysicalPage(HYPERVISOR_DATA* HvData, UINT64 PagePhysical)
 {
 	PFN_NUMBER pfn = PagePhysical >> PAGE_SHIFT;

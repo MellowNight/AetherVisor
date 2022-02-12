@@ -1,6 +1,6 @@
 #pragma once
 #include "Global.h"
-#include "Structs.h"
+#include "structs.h"
 
 #define USER_VMMCALL 0xAAAA
 #define KERNEL_VMMCALL 0xBBBB

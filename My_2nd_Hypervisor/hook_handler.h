@@ -106,5 +106,3 @@ NTSTATUS NTAPI NtDeviceIoctl_Handler(
     ULONG OutputBufferLength
 );
 extern NPTHOOK_ENTRY* NtDeviceIoctl_Entry;
-
-bool IsInsideImage(ULONG64 address);

@@ -18,7 +18,6 @@ EXTERN_C VOID NTAPI LaunchVm(PVOID VmLaunchParams);
 /*	Copy bits bits 55:52 and 47:40	*/
 SEGMENT_ATTRIBUTE	GetSegmentAttributes(UINT16 SegmentSelector, ULONG64 GdtBase)
 {	
-
 	SEGMENT_SELECTOR	SegSelector;
 
 	SegSelector.Flags = SegmentSelector;
@@ -40,32 +39,6 @@ SEGMENT_ATTRIBUTE	GetSegmentAttributes(UINT16 SegmentSelector, ULONG64 GdtBase)
 	return attribute;
 }
 
-
-
-ZydisDecoder ZyDec64;
-
-ZyanU8 GetInstructionLength(ZyanU8* Instruction)
-{
-	ZydisDecodedInstruction ZyIns;
-	ZydisDecoderDecodeBuffer(&ZyDec64, Instruction, 20, &ZyIns);
-	return ZyIns.length;
-}
-
-/*	Gets total instructions length closest to BytesLength	*/
-int	LengthOfInstructions(PVOID	address, int BytesLength)
-{
-	int InstructionLen = 0;
-	for (InstructionLen = 0; InstructionLen < BytesLength;)
-	{
-		int CurInstructionLen = GetInstructionLength((ZyanU8*)address + InstructionLen);
-		InstructionLen += CurInstructionLen;
-
-		DbgPrint("CurInstructionLen %i \n", CurInstructionLen);
-	}
-	DbgPrint("InstructionLen %i \n", InstructionLen);
-
-	return InstructionLen;
-}
 
 
 void	ConfigureProcessor(VPROCESSOR_DATA* VpData, PCONTEXT ContextRecord, HYPERVISOR_DATA* Hvdata)
@@ -185,7 +158,7 @@ bool	IsSvmUnlocked()
 	return true;
 }
 
-void	Enable_Svme()
+void	EnableSVME()
 {
 	EFER_MSR	msr;
 	msr.Flags = __readmsr(AMD_EFER);
@@ -210,7 +183,7 @@ bool	IsHypervisorPresent(int CoreNumber)
 
 bool	IsProcessorReadyForVmrun(VMCB* GuestVmcb, SEGMENT_ATTRIBUTE CsAttr)
 {
-	EFER_MSR	efer_msr = { 0 };
+	EFER_MSR efer_msr = { 0 };
 	efer_msr.Flags = __readmsr(AMD_EFER);
 
 	if (efer_msr.SVME == 1)
@@ -315,10 +288,11 @@ bool	IsProcessorReadyForVmrun(VMCB* GuestVmcb, SEGMENT_ATTRIBUTE CsAttr)
 	DbgPrint("consistency checks passed \n");
 	return true;
 
-	/*	to be done: msr and IOIO map address checks, and some more. */
+	/*	to do: msr and IOIO map address checks, and some more. */
 }
 
 HYPERVISOR_DATA* g_HvData = 0;
+
 BOOL	VirtualizeAllProcessors()
 {
 	if (!IsSvmSupported())
