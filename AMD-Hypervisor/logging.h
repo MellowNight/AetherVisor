@@ -3,16 +3,14 @@
 
 namespace Logger 
 {
-	struct LogEntry
-	{
-		size_t length;
-		char buffer[256];
-	};
+	#define LOG_MAX_LEN 256
 
-	extern int log_entry_index;
-	extern int log_max_entries;
-	extern LogEntry* log_entries;
+	TRACELOGGING_DECLARE_PROVIDER(log_provider);
 
-	void Init(int max_entries);
+	NTSTATUS Init();
+
 	void Log(const char* format, ...);
+
+	void LogSessionEnd();
+
 };

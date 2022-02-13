@@ -1,40 +1,37 @@
 #include "logging.h"
-#include "npt_hook.h"
-#include "hook_handler.h"
+
+
 
 namespace Logger
 {
-	int log_entry_index;
-	int log_max_entries;
-	LogEntry* log_entries;
 
-	void Init(int max_entries)
+	// GUID: e4536023-1c9d-4f87-b369-ef2b023bc280
+
+	TRACELOGGING_DEFINE_PROVIDER(
+		log_provider, 
+		"TheHv",
+		(0xe4536023, 0x1c9d, 0x4f87, 0xb3, 0x69, 0xef, 0x2b, 0x02, 0x3b, 0xc2, 0x80)
+	);
+
+	NTSTATUS Start()
 	{
-		log_max_entries = max_entries;
-		log_entry_index = 0;
-
-		auto irql = KeGetCurrentIrql();
-
-		/*	Make sure we aren't in vm root	*/
-		NT_ASSERT(irql < DISPATCH_LEVEL);
-
-		log_entries = (LogEntry*)ExAllocatePool(NonPagedPool, max_entries * sizeof(LogEntry));
+		return TraceLoggingRegister(log_provider);
 	}
 
 	void Log(const char* format, ...)
 	{
-		char buffer[256];
+		char buffer[LOG_MAX_LEN];
+
 		va_list args;
 		va_start(args, format);
-		RtlStringCchPrintfA(buffer, 255, format, args);
+		RtlStringCchPrintfA(buffer, LOG_MAX_LEN, format, args);
 		va_end(args);
 
-		if (log_max_entries == log_entry_index)
-		{
-			/*	Wrap around and overwrite the log buffer when it's used up	*/
-			log_entry_index = 0;
-		}
+		TraceLoggingWrite(log_provider, "DbgMessage", TraceLoggingWideString(buffer));
+	}
 
-		memcpy(log_entries[log_entry_index].buffer, buffer, 256);
+	void End()
+	{
+		TraceLoggingUnregister( log_provider );
 	}
 };
