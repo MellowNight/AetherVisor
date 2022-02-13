@@ -5,9 +5,9 @@
 PHYSICAL_MEMORY_RANGE   g_PhysMemRange[10];
 int  numberOfRuns = 0;
 
-PVOID	AllocateNewTable(PML4E_64* PageEntry)
+void*	AllocateNewTable(PML4E_64* PageEntry)
 {
-	PVOID	Table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+	void*	Table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
 	PageEntry->PageFrameNumber = MmGetPhysicalAddress(Table).QuadPart >> PAGE_SHIFT;
 	PageEntry->Write = 1;
@@ -37,7 +37,7 @@ void    GetPhysicalMemoryRanges()
 }
 
 
-PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, ULONG64 PhysicalAddr, bool execute)
+PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 {
 	ADDRESS_TRANSLATION_HELPER	Helper;
 	Helper.AsUInt64 = PhysicalAddr;
@@ -96,7 +96,7 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, ULONG64 PhysicalAddr, bool execute)
 
 
 
-ULONG64	 BuildNestedPagingTables(ULONG64* NCr3, bool execute)
+uintptr_t	 BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 {
 	GetPhysicalMemoryRanges();
 
@@ -108,8 +108,8 @@ ULONG64	 BuildNestedPagingTables(ULONG64* NCr3, bool execute)
 
 	for (int run = 0; run < numberOfRuns; ++run)
 	{
-		ULONG64		PageCount = g_PhysMemRange[run].NumberOfBytes.QuadPart / PAGE_SIZE;
-		ULONG64		PagesBase = g_PhysMemRange[run].BaseAddress.QuadPart / PAGE_SIZE;
+		uintptr_t		PageCount = g_PhysMemRange[run].NumberOfBytes.QuadPart / PAGE_SIZE;
+		uintptr_t		PagesBase = g_PhysMemRange[run].BaseAddress.QuadPart / PAGE_SIZE;
 
 		for (PFN_NUMBER PFN = PagesBase; PFN < PagesBase + PageCount; ++PFN)
 		{

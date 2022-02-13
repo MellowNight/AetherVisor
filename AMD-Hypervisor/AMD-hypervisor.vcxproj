@@ -35,14 +35,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{F30FCD52-BC65-4A65-9E61-F843CF365954}</ProjectGuid>
+    <ProjectGuid>{EEBE7609-CF06-424A-99AA-088B5747D4DF}</ProjectGuid>
     <TemplateGuid>{1bc93793-694f-48fe-9372-81e2b05556fd}</TemplateGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
     <Configuration>Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">Win32</Platform>
-    <RootNamespace>My_2nd_Hypervisor</RootNamespace>
-    <ProjectName>Big Brother</ProjectName>
+    <RootNamespace>AMD_Hypervisor</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -77,7 +76,6 @@
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>KMDF</DriverType>
     <DriverTargetPlatform>Universal</DriverTargetPlatform>
-    <Driver_SpectreMitigation>Spectre</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <TargetVersion>Windows10</TargetVersion>
@@ -127,12 +125,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
-    <EnableInf2cat>false</EnableInf2cat>
-    <SourcePath>C:\Users\Object9999\source\repos\My_2nd_Hypervisor\My_2nd_Hypervisor;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)dependencies\Zydis\include;%(AdditionalIncludeDirectories);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
-    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
@@ -149,78 +145,39 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)My_2nd_Hypervisor\zydis\src;$(SolutionDir)My_2nd_Hypervisor\zydis\msvc;$(SolutionDir)My_2nd_Hypervisor\zydis\include;$(SolutionDir)My_2nd_Hypervisor;$(SolutionDir)My_2nd_Hypervisor\Zydis\zycore\include;$(SolutionDir)My_2nd_Hypervisor\zydis\dependencies\zycore\include;$(SolutionDir)My_2nd_Hypervisor\Zydis\Internal;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\Zydis\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <Link>
-      <EntryPointSymbol>MapperEntry</EntryPointSymbol>
-      <AdditionalDependencies>$(SolutionDir)My_2nd_Hypervisor\zydis\msvc\bin\DebugX64Kernel\zydis.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\Object9999\source\repos\My_2nd_Hypervisor\My_2nd_Hypervisor\zydis\msvc\bin\DebugX64Kernel;$(SolutionDir)My_2nd_Hypervisor\zydis\msvc\bin\DebugX64Kernel;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
-      <GenerateMapFile>true</GenerateMapFile>
-      <SpecifySectionAttributes>/SECTION:.text,RWE;%(SpecifySectionAttributes)</SpecifySectionAttributes>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <TreatWarningAsError>false</TreatWarningAsError>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-    </ClCompile>
-    <Link>
-      <EntryPointSymbol>MapperEntry</EntryPointSymbol>
-    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Inf Include="My_2nd_Hypervisor.inf" />
+    <Inf Include="AMD-Hypervisor.inf" />
   </ItemGroup>
   <ItemGroup>
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Command.cpp" />
-    <ClCompile Include="Driver.cpp" />
-    <ClCompile Include="Experiment.cpp" />
-    <ClCompile Include="hook_handlers.cpp" />
-    <ClCompile Include="Logging.cpp" />
-    <ClCompile Include="npt_hook.cpp" />
-    <ClCompile Include="npt_setup.cpp" />
-    <ClCompile Include="Pool.cpp" />
-    <ClCompile Include="Utility.cpp" />
-    <ClCompile Include="Vmexit.cpp" />
-    <ClCompile Include="zydis\src\Decoder.c" />
-    <ClCompile Include="zydis\src\DecoderData.c" />
-    <ClCompile Include="zydis\src\Formatter.c" />
-    <ClCompile Include="zydis\src\FormatterATT.c" />
-    <ClCompile Include="zydis\src\FormatterBase.c" />
-    <ClCompile Include="zydis\src\FormatterBuffer.c" />
-    <ClCompile Include="zydis\src\FormatterIntel.c" />
-    <ClCompile Include="zydis\src\MetaInfo.c" />
-    <ClCompile Include="zydis\src\Mnemonic.c" />
-    <ClCompile Include="zydis\src\Register.c" />
-    <ClCompile Include="zydis\src\SharedData.c" />
-    <ClCompile Include="zydis\src\String.c" />
-    <ClCompile Include="zydis\src\Utils.c" />
-    <ClCompile Include="zydis\src\Zydis.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AMD_Define.h" />
-    <ClInclude Include="Command.h" />
-    <ClInclude Include="Experiment.h" />
-    <ClInclude Include="Global.h" />
-    <ClInclude Include="hook_handler.h" />
-    <ClInclude Include="Logging.h" />
-    <ClInclude Include="MapperTraces.h" />
+    <ClInclude Include="amd_definitions.h" />
+    <ClInclude Include="global.h" />
+    <ClInclude Include="hv_interface.h" />
+    <ClInclude Include="ia32.h" />
+    <ClInclude Include="includes.h" />
+    <ClInclude Include="logging.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt_setup.h" />
-    <ClInclude Include="Pool.h" />
-    <ClInclude Include="Structs.h" />
-    <ClInclude Include="Utility.h" />
-    <ClInclude Include="ia32_define.h" />
+    <ClInclude Include="utils.h" />
+    <ClInclude Include="virtualization.h" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="LaunchVm.asm" />
+    <ClCompile Include="driver.cpp" />
+    <ClCompile Include="hv_interface.cpp" />
+    <ClCompile Include="logging.cpp" />
+    <ClCompile Include="npt_hook.cpp" />
+    <ClCompile Include="npt_setup.cpp" />
+    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="virtualization.cpp" />
+    <ClCompile Include="vmexit.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="vm_launch.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

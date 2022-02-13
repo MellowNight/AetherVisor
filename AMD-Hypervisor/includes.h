@@ -6,4 +6,5 @@
 #include    <windef.h>
 #include    <wdm.h>
 
-#include    "ia32.h"     
+#include    "ia32.h"
+#include	<TraceLoggingProvider.h>

@@ -1,4 +1,4 @@
-#include "Utility.h"
+#include "utils.h"
 #include "Structs.h"
 #include "Logging.h"
 
@@ -17,7 +17,7 @@ namespace Utils
         }
     }
 
-    PVOID	GetVaFromPfn(ULONG64 pfn)
+    void*	GetVaFromPfn(uintptr_t pfn)
     {
         PHYSICAL_ADDRESS pa;
         pa.QuadPart = pfn << PAGE_SHIFT;
@@ -25,12 +25,12 @@ namespace Utils
         return MmGetVirtualForPhysical(pa);
     }
 
-    PFN_NUMBER	GetPfnFromVa(ULONG64 Va)
+    PFN_NUMBER	GetPfnFromVa(uintptr_t Va)
     {
-        return MmGetPhysicalAddress((PVOID)Va).QuadPart >> PAGE_SHIFT;
+        return MmGetPhysicalAddress((void*)Va).QuadPart >> PAGE_SHIFT;
     }
 
-    PT_ENTRY_64* GetPte(PVOID VirtualAddress, ULONG64 Pml4BasePa, PageTableOperation Operation)
+    PT_ENTRY_64* GetPte(void* VirtualAddress, uintptr_t Pml4BasePa, PageTableOperation Operation)
     {
         ADDRESS_TRANSLATION_HELPER helper;
         PT_ENTRY_64* finalEntry;
@@ -109,7 +109,7 @@ namespace Utils
 
         return  (PT_ENTRY_64*)pte;
     }
-    PT_ENTRY_64* GetPte(PVOID VirtualAddress, ULONG64 Pml4BasePa, PDPTE_64** PdpteResult, PDE_64** PdeResult)
+    PT_ENTRY_64* GetPte(void* VirtualAddress, uintptr_t Pml4BasePa, PDPTE_64** PdpteResult, PDE_64** PdeResult)
     {
         ADDRESS_TRANSLATION_HELPER helper;
         PT_ENTRY_64* finalEntry;
@@ -172,21 +172,21 @@ namespace Utils
         return  (PT_ENTRY_64*)pte;
     }
 
-    void    GetJmpCode(ULONG64 jmpAddr, char* output)
+    void    GetJmpCode(uintptr_t jmpAddr, char* output)
     {
         char JmpIndirect[15] = "\xFF\x25\x00\x00\x00\x00\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC";
 
-        memcpy(JmpIndirect + 6, &jmpAddr, sizeof(PVOID));
-        memcpy((PVOID)output, JmpIndirect, 14);
+        memcpy(JmpIndirect + 6, &jmpAddr, sizeof(void*));
+        memcpy((void*)output, JmpIndirect, 14);
     }
 
-    PVOID	GetSystemRoutineAddress(wchar_t* RoutineName, PVOID* RoutinePhysical)
+    void*	GetSystemRoutineAddress(wchar_t* RoutineName, void** RoutinePhysical)
     {
         UNICODE_STRING	Routine_Name = RTL_CONSTANT_STRING(RoutineName);
 
-        PVOID	Routine = MmGetSystemRoutineAddress(&Routine_Name);
+        void*	Routine = MmGetSystemRoutineAddress(&Routine_Name);
 
-        PVOID	RoutinePa = (PVOID)MmGetPhysicalAddress(Routine).QuadPart;
+        void*	RoutinePa = (void*)MmGetPhysicalAddress(Routine).QuadPart;
 
         if (RoutinePhysical)
         {
@@ -197,7 +197,7 @@ namespace Utils
     }
 
 
-    PMDL    LockPages(PVOID VirtualAddress, LOCK_OPERATION  operation)
+    PMDL    LockPages(void* VirtualAddress, LOCK_OPERATION  operation)
     {
         PMDL mdl = IoAllocateMdl(VirtualAddress, PAGE_SIZE, FALSE, FALSE, nullptr);
         
@@ -214,7 +214,7 @@ namespace Utils
         return STATUS_SUCCESS;
     }
 
-    PVOID GetDriverBaseAddress(OUT PULONG pSize, UNICODE_STRING DriverName)
+    void* GetDriverBaseAddress(OUT PULONG pSize, UNICODE_STRING DriverName)
     {
         PLIST_ENTRY moduleList = (PLIST_ENTRY)PsLoadedModuleList;
 
@@ -241,7 +241,7 @@ namespace Utils
         return 0;
     }
 
-    uintptr_t GetSectionByName(PVOID base, const char* SectionName)
+    uintptr_t GetSectionByName(void* base, const char* SectionName)
     {
         PIMAGE_NT_HEADERS64 pHdr = (PIMAGE_NT_HEADERS64)RtlImageNtHeader(base);
        
@@ -250,7 +250,7 @@ namespace Utils
 
         PIMAGE_SECTION_HEADER pFirstSection = (PIMAGE_SECTION_HEADER)((uintptr_t)&pHdr->FileHeader + pHdr->FileHeader.SizeOfOptionalHeader + sizeof(IMAGE_FILE_HEADER));
 
-        PVOID ptr = NULL;
+        void* ptr = NULL;
 
         for (PIMAGE_SECTION_HEADER pSection = pFirstSection; pSection < pFirstSection + pHdr->FileHeader.NumberOfSections; ++pSection)
         {
@@ -269,7 +269,7 @@ namespace Utils
 
         NTSTATUS status = STATUS_SUCCESS;
 
-        PVOID buffer;
+        void* buffer;
 
 
         buffer = ExAllocatePoolWithTag(NonPagedPool, 1024 * 1024, 'qpwo');
@@ -318,37 +318,8 @@ namespace Utils
 
         return procId;
     }
-    PVOID ResolveRelativeAddress(_In_ PVOID Instruction, _In_ ULONG OffsetOffset, _In_ ULONG InstructionSize)
-    {
-        ULONG_PTR Instr = (ULONG_PTR)Instruction;
-
-        LONG RipOffset = *(PLONG)(Instr + OffsetOffset);
-        PVOID ResolvedAddr = (PVOID)(Instr + InstructionSize + RipOffset);
-
-        return ResolvedAddr;
-    }
-
-    void PrintModuleFromAddress(PVOID address)
-    {
-        PLIST_ENTRY moduleList = (PLIST_ENTRY)PsLoadedModuleList;
-
-        UNICODE_STRING  DrvName;
-
-        for (PLIST_ENTRY link = moduleList;
-            link != moduleList->Blink;
-            link = link->Flink)
-        {
-            LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(link, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-            if ((address > entry->DllBase) && ((ULONG64)address < (ULONG64)entry->DllBase + entry->SizeOfImage))
-            {
-                logger->Log<PVOID>("[BigBrother] address at %ws", entry->BaseDllName.Buffer, TYPES::pointer);
-                logger->Log<ULONG64>("+%p \n", (ULONG64)address-(ULONG64)entry->DllBase, TYPES::pointer);
-            }
-        }
-    }
-
-    int ipow(int base, int power)
+    
+    ipow(int base, int power)
     {
         int start = 1;
         for (int i = 0; i < power; ++i)
@@ -359,7 +330,7 @@ namespace Utils
         return start;
     }
 
-    NTSTATUS BBSearchPattern(IN PCUCHAR pattern, IN UCHAR wildcard, IN ULONG_PTR len, IN const VOID* base, IN ULONG_PTR size, OUT PVOID* ppFound)
+    NTSTATUS BBSearchPattern(IN PCUCHAR pattern, IN UCHAR wildcard, IN ULONG_PTR len, IN const VOID* base, IN ULONG_PTR size, OUT void** ppFound)
     {
         ASSERT(ppFound != NULL && pattern != NULL && base != NULL);
         if (ppFound == NULL || pattern == NULL || base == NULL)
@@ -388,7 +359,7 @@ namespace Utils
     }
 
 
-    NTSTATUS BBScan(IN PCCHAR section, IN PCUCHAR pattern, IN UCHAR wildcard, IN ULONG_PTR len, OUT PVOID* ppFound, PVOID base)
+    NTSTATUS BBScan(IN PCCHAR section, IN PCUCHAR pattern, IN UCHAR wildcard, IN ULONG_PTR len, OUT void** ppFound, void* base)
     {
         //ASSERT(ppFound != NULL);
         if (ppFound == NULL)
@@ -407,7 +378,7 @@ namespace Utils
         //PIMAGE_SECTION_HEADER pFirstSection = (PIMAGE_SECTION_HEADER)(pHdr + 1);
         PIMAGE_SECTION_HEADER pFirstSection = (PIMAGE_SECTION_HEADER)((uintptr_t)&pHdr->FileHeader + pHdr->FileHeader.SizeOfOptionalHeader + sizeof(IMAGE_FILE_HEADER));
 
-        PVOID ptr = NULL;
+        void* ptr = NULL;
 
         for (PIMAGE_SECTION_HEADER pSection = pFirstSection; pSection < pFirstSection + pHdr->FileHeader.NumberOfSections; pSection++)
         {
@@ -423,7 +394,7 @@ namespace Utils
 
                 if (NT_SUCCESS(status)) {
 
-                    *(PULONG64)ppFound = (ULONG_PTR)(ptr); //- (PUCHAR)base
+                    *(Puintptr_t)ppFound = (ULONG_PTR)(ptr); //- (PUCHAR)base
                     DbgPrint("found\r\n");
                     return status;
                 }

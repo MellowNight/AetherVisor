@@ -1,38 +1,31 @@
 #pragma once
 #include "includes.h"        
 
+enum CPUID_CODES
+{
+    MAX_STANDARD_FN_NUMBER_AND_VENDOR_STRING = 0x0,
+    PROCESSOR_AND_FEATURE_IDENTIFIERS = 0x1
+};
 
-#define  CPUID_MAX_STANDARD_FN_NUMBER_AND_VENDOR_STRING          0x00000000
-#define  CPUID_PROCESSOR_AND_PROCESSOR_FEATURE_IDENTIFIERS       0x00000001
+enum MSR
+{
+    APIC_BAR = 0x1b,
+    VM_CR = 0xC0010114,
+    EFER = 0xC0000080,
+    PAT = 0x00000277,  /*  Page Atrribute Table, see   MSR0000_0277    */
+    VM_HSAVE_PA = 0xc0010117
+};
 
-/*	MSR stuff */
-#define  MSR_APIC_BAR    0x0000001b
-#define	 AMD_VM_CR	     0xC0010114
-#define	 AMD_EFER	     0xC0000080 
-#define  AMD_MSR_PAT     0x00000277  /*  Page Atrribute Table, see   MSR0000_0277    */
-#define  VM_HSAVE_PA     0xc0010117
 
 
 /*  Intercepts  */
+
 #define INTERCEPT_VMRUN       (1UL << 0)
 #define INTERCEPT_CPUID       (1UL << 18)
 #define INTERCEPT_VMMCALL     (1UL << 1)
 #define INTERCEPT_DB          (1UL << 1)
 
-
-
-enum VMMCALL
-{
-    HYPERVISOR_SIG  = 0x1337422,
-    ENABLE_HOOKS    = 0x1337423,
-    END_HV          = 0x128628,
-    TEST            = 0x128629,
-    DISABLE_HOOKS   = 0x128630,
-    DISPLAY_INFO    = 0x128631,
-};
-
-
-typedef struct _VMCB_CONTROL_AREA
+struct VmcbControlArea
 {
     UINT16 InterceptCrRead;             // +0x000
     UINT16 InterceptCrWrite;            // +0x002
@@ -72,14 +65,14 @@ typedef struct _VMCB_CONTROL_AREA
     UINT64 Reserved3;                   // +0x100
     UINT64 VmcbSaveStatePointer;        // +0x108
     UINT8 Reserved4[0x400 - 0x110];     // +0x110
-} VMCB_CONTROL_AREA, * PVMCB_CONTROL_AREA;
-static_assert(sizeof(VMCB_CONTROL_AREA) == 0x400,
-    "VMCB_CONTROL_AREA Size Mismatch");
+};
+static_assert(sizeof(VmcbControlArea) == 0x400,
+    "VmcbControlArea Size Mismatch");
 
 //
 // See "VMCB Layout, State Save Area"
 //
-typedef struct _VMCB_STATE_SAVE_AREA
+typedef struct VmcbSaveStateArea
 {
     UINT16 EsSelector;                  // +0x000
     UINT16 EsAttrib;                    // +0x002
@@ -153,12 +146,12 @@ typedef struct _VMCB_STATE_SAVE_AREA
     UINT64 BrTo;                        // +0x280
     UINT64 LastExcepFrom;               // +0x288
     UINT64 LastExcepTo;                 // +0x290
-} VMCB_STATE_SAVE_AREA, * PVMCB_STATE_SAVE_AREA;
-static_assert(sizeof(VMCB_STATE_SAVE_AREA) == 0x298,
+};
+static_assert(sizeof(VmcbSaveStateArea) == 0x298,
     "VMCB_STATE_SAVE_AREA Size Mismatch");
 
 
-typedef struct _SEGMENT_DESCRIPTOR
+struct SegmentDescriptor
 {
     union
     {
@@ -180,20 +173,20 @@ typedef struct _SEGMENT_DESCRIPTOR
             UINT32 BaseHigh : 8;    // [56:63]
         } Fields;
     };
-} SEGMENT_DESCRIPTOR, * PSEGMENT_DESCRIPTOR;
-static_assert(sizeof(SEGMENT_DESCRIPTOR) == 8,
+};
+static_assert(sizeof(SegmentDescriptor) == 8,
     "SEGMENT_DESCRIPTOR Size Mismatch");
 
 
-/*	(Core::X86::Msr::EFER	*/
-union  EFER_MSR
+/*	Core::X86::Msr::EFER	*/
+union  MsrEfer
 {
     struct {
         int		syscall : 1;
         int		reserved : 7;
-        int		LongModeEnable : 1;
+        int		long_mode_enable : 1;
         int		reserved2 : 1;
-        int		LongModeActive : 1;
+        int		long_mode_active : 1;
         int		NXE : 1;
         int		SVME : 1;
         int		LMSLE : 1;
@@ -229,7 +222,7 @@ struct APIC_BAR
 
 
 /*	 Core::X86::Msr::VM_CR	*/
-union 	VM_CR_MSR
+union 	MsrVmcr
 {
     struct {
         int		Reserved1 : 1;
@@ -254,7 +247,7 @@ static_assert(sizeof(DESCRIPTOR_TABLE_REGISTER) == 0xA,
     "DESCRIPTOR_TABLE_REGISTER Size Mismatch");
 #pragma pack(pop)
 
-typedef struct _SEGMENT_ATTRIBUTE
+struct SegmentAttribute
 {
     union
     {
@@ -272,7 +265,7 @@ typedef struct _SEGMENT_ATTRIBUTE
             UINT16 Reserved1 : 4;   // [12:15]
         } Fields;
     };
-} SEGMENT_ATTRIBUTE, * PSEGMENT_ATTRIBUTE;
+};
 
 
 /*  15.20 Event Injection   */
@@ -314,8 +307,8 @@ struct NPF_EXITINFO1
 /*  must be 4KB aligned     */
 struct VMCB
 {
-    VMCB_CONTROL_AREA       ControlArea;
-    VMCB_STATE_SAVE_AREA    SaveStateArea;
-    char pad[0x1000 - sizeof(VMCB_CONTROL_AREA) - sizeof(VMCB_STATE_SAVE_AREA)];
+    VmcbControlArea       ControlArea;
+    VmcbSaveStateArea    SaveStateArea;
+    char pad[0x1000 - sizeof(VmcbControlArea) - sizeof(VmcbSaveStateArea)];
 };
 

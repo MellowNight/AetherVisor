@@ -1,173 +1,14 @@
-#include "npt_setup.h"
-#include "npt_hook.h"
-#include "hook_handler.h"
-#include "Structs.h"
-#include "Command.h"
-#include "Experiment.h"
-#include "Logging.h"
-#include "Pool.h"
+#include "virtualization.h"
 
-int	CoreCount = 0;
-VPROCESSOR_DATA* g_VpData[32] = { 0 };
-
-EXTERN_C VOID _sgdt(_Out_ PVOID Descriptor);
-
-EXTERN_C VOID NTAPI LaunchVm(PVOID VmLaunchParams);
+int	core_count = 0;
+CoreVmcbData* g_VpData[32] = { 0 };
 
 
-/*	Copy bits bits 55:52 and 47:40	*/
-SEGMENT_ATTRIBUTE	GetSegmentAttributes(UINT16 SegmentSelector, ULONG64 GdtBase)
-{	
-	SEGMENT_SELECTOR	SegSelector;
-
-	SegSelector.Flags = SegmentSelector;
-
-	SEGMENT_DESCRIPTOR	SegDescriptor = ((SEGMENT_DESCRIPTOR*)GdtBase)[SegSelector.Index];
-
-	SEGMENT_ATTRIBUTE	attribute;
-
-	attribute.Fields.Type = SegDescriptor.Fields.Type;
-	attribute.Fields.System = SegDescriptor.Fields.System;
-	attribute.Fields.Dpl = SegDescriptor.Fields.Dpl;
-	attribute.Fields.Present = SegDescriptor.Fields.Present;
-	attribute.Fields.Avl = SegDescriptor.Fields.Avl;
-	attribute.Fields.LongMode = SegDescriptor.Fields.LongMode;
-	attribute.Fields.DefaultBit = SegDescriptor.Fields.DefaultBit;
-	attribute.Fields.Granularity = SegDescriptor.Fields.Granularity;
-	attribute.Fields.Reserved1 = 0;
-
-	return attribute;
-}
+extern "C" void NTAPI LaunchVm(void* VmLaunchParams);
 
 
 
-void	ConfigureProcessor(VPROCESSOR_DATA* VpData, PCONTEXT ContextRecord, HYPERVISOR_DATA* Hvdata)
-{
-	VpData->GuestVmcbPa = MmGetPhysicalAddress(&VpData->GuestVmcb).QuadPart;	
-	VpData->HostVmcbPa = MmGetPhysicalAddress(&VpData->HostVmcb).QuadPart;
-	VpData->Self = VpData;
-
-
-	VpData->GuestVmcb.ControlArea.NCr3 = g_HvData->PrimaryNCr3;
-	VpData->GuestVmcb.ControlArea.NpEnable = (1UL << 0);
-	
-	DESCRIPTOR_TABLE_REGISTER	Gdtr, idtr;
-
-	_sgdt(&Gdtr);
-	__sidt(&idtr);
-
-	VpData->GuestVmcb.ControlArea.InterceptVec4 |= INTERCEPT_VMMCALL;
-	VpData->GuestVmcb.ControlArea.InterceptVec4 |= INTERCEPT_VMRUN;
-
-
-	VpData->GuestVmcb.ControlArea.GuestAsid = 1;
-	VpData->GuestVmcb.SaveStateArea.Cr0 = __readcr0();	
-	VpData->GuestVmcb.SaveStateArea.Cr2 = __readcr2();
-	VpData->GuestVmcb.SaveStateArea.Cr3 = __readcr3();
-	VpData->GuestVmcb.SaveStateArea.Cr4 = __readcr4();
-	
-
-	VpData->GuestVmcb.SaveStateArea.Rip = ContextRecord->Rip;
-	VpData->GuestVmcb.SaveStateArea.Rax = ContextRecord->Rax;
-	VpData->GuestVmcb.SaveStateArea.Rsp = ContextRecord->Rsp;
-	VpData->GuestVmcb.SaveStateArea.Rflags = __readeflags();
-	VpData->GuestVmcb.SaveStateArea.Efer = __readmsr(AMD_EFER);
-	VpData->GuestVmcb.SaveStateArea.GPat = __readmsr(AMD_MSR_PAT);
-
-	VpData->GuestVmcb.SaveStateArea.GdtrLimit = Gdtr.Limit;
-	VpData->GuestVmcb.SaveStateArea.GdtrBase = Gdtr.Base;
-	VpData->GuestVmcb.SaveStateArea.IdtrLimit = idtr.Limit;
-	VpData->GuestVmcb.SaveStateArea.IdtrBase = idtr.Base;
-	
-	VpData->GuestVmcb.SaveStateArea.CsLimit = GetSegmentLimit(ContextRecord->SegCs);
-	VpData->GuestVmcb.SaveStateArea.DsLimit = GetSegmentLimit(ContextRecord->SegDs);
-	VpData->GuestVmcb.SaveStateArea.EsLimit = GetSegmentLimit(ContextRecord->SegEs);
-	VpData->GuestVmcb.SaveStateArea.SsLimit = GetSegmentLimit(ContextRecord->SegSs);
-
-	VpData->GuestVmcb.SaveStateArea.CsSelector = ContextRecord->SegCs;
-	VpData->GuestVmcb.SaveStateArea.DsSelector = ContextRecord->SegDs;
-	VpData->GuestVmcb.SaveStateArea.EsSelector = ContextRecord->SegEs;
-	VpData->GuestVmcb.SaveStateArea.SsSelector = ContextRecord->SegSs;
-
-
-	VpData->GuestVmcb.SaveStateArea.CsAttrib = GetSegmentAttributes(ContextRecord->SegCs, Gdtr.Base).AsUInt16;
-	VpData->GuestVmcb.SaveStateArea.DsAttrib = GetSegmentAttributes(ContextRecord->SegDs, Gdtr.Base).AsUInt16;
-	VpData->GuestVmcb.SaveStateArea.EsAttrib = GetSegmentAttributes(ContextRecord->SegEs, Gdtr.Base).AsUInt16;
-	VpData->GuestVmcb.SaveStateArea.SsAttrib = GetSegmentAttributes(ContextRecord->SegSs, Gdtr.Base).AsUInt16;
-
-	DbgPrint("VpData->GuestVmcb: %p\n", VpData->GuestVmcb);
-	DbgPrint("VpData->GuestVmcbPa: %p\n", VpData->GuestVmcbPa);
-
-	__svm_vmsave(VpData->GuestVmcbPa);
-
-	__writemsr(VM_HSAVE_PA, MmGetPhysicalAddress(&VpData->HostSaveArea).QuadPart);
-
-	__svm_vmsave(VpData->HostVmcbPa);
-}
-
-bool	IsSvmSupported()
-{
-	int	cpuInfo[4] = { 0 };
-
-	/*	  CPUID_Fn80000001_ECX.bit_2	*/
-	__cpuid(cpuInfo, CPUID_PROCESSOR_AND_PROCESSOR_FEATURE_IDENTIFIERS);
-
-	if ((cpuInfo[2] & (1 << 1)) == 0)
-	{
-		return false;
-	}
-
-
-	int		VendorNameResult[4];
-	char	VendorName[13];
-
-	__cpuid(VendorNameResult, CPUID_MAX_STANDARD_FN_NUMBER_AND_VENDOR_STRING);
-	memcpy(VendorName, &VendorNameResult[1], sizeof(int));
-	memcpy(VendorName + 4, &VendorNameResult[3], sizeof(int));
-	memcpy(VendorName + 8, &VendorNameResult[2], sizeof(int));
-
-	VendorName[12] = '\0';
-
-	DbgPrint("[SETUP] Vendor Name %s \n", VendorName);
-
-	if (strcmp(VendorName, "AuthenticAMD") && strcmp(VendorName, "VmwareVmware"))
-	{
-		return false;
-	}
-
-	return true;
-}
-
-bool	IsSvmUnlocked()
-{
-	VM_CR_MSR	msr;
-	msr.Flags = __readmsr(AMD_VM_CR);
-
-
-	if (msr.SVMLock == 0)
-	{
-		msr.SVMEDisable = 0;
-		msr.SVMLock = 1;
-		__writemsr(AMD_VM_CR, msr.Flags);
-	}
-	else if (msr.SVMEDisable == 1)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-void	EnableSVME()
-{
-	EFER_MSR	msr;
-	msr.Flags = __readmsr(AMD_EFER);
-	msr.SVME = 1;
-	__writemsr(AMD_EFER, msr.Flags);
-}
-
-
-bool	IsHypervisorPresent(int CoreNumber)
+bool IsHypervisorPresent(int CoreNumber)
 {
 	/*	shitty check, switched from vmmcall to pointer check to avoid #UD	*/
 
@@ -181,9 +22,9 @@ bool	IsHypervisorPresent(int CoreNumber)
 	}
 }
 
-bool	IsProcessorReadyForVmrun(VMCB* GuestVmcb, SEGMENT_ATTRIBUTE CsAttr)
+bool IsProcessorReadyForVmrun(VMCB* GuestVmcb, SegmentAttribute CsAttr)
 {
-	EFER_MSR efer_msr = { 0 };
+	MsrEfer efer_msr = { 0 };
 	efer_msr.Flags = __readmsr(AMD_EFER);
 
 	if (efer_msr.SVME == 1)
@@ -252,7 +93,7 @@ bool	IsProcessorReadyForVmrun(VMCB* GuestVmcb, SEGMENT_ATTRIBUTE CsAttr)
 		return false;
 	}
 
-	if (efer_msr.LongModeEnable == 1 && cr0.PagingEnable == 1)
+	if (efer_msr.long_mode_enable == 1 && cr0.PagingEnable == 1)
 	{
 		if (cr4.PhysicalAddressExtension == 0)
 		{
@@ -340,17 +181,17 @@ BOOL	VirtualizeAllProcessors()
 		{
 			Enable_Svme();
 
-			g_VpData[i] = (VPROCESSOR_DATA*)ExAllocatePoolZero(NonPagedPool, sizeof(VPROCESSOR_DATA), 'Vmcb');
+			g_VpData[i] = (CoreVmcbData*)ExAllocatePoolZero(NonPagedPool, sizeof(CoreVmcbData), 'Vmcb');
 
 			ConfigureProcessor(g_VpData[i], pContext, g_HvData);
 
-			SEGMENT_ATTRIBUTE	CsAttrib;
+			SegmentAttribute	CsAttrib;
 
 			CsAttrib.AsUInt16 = g_VpData[i]->GuestVmcb.SaveStateArea.CsAttrib;
 
 			if (IsProcessorReadyForVmrun(&g_VpData[i]->GuestVmcb, CsAttrib))
 			{
-				LaunchVm(&g_VpData[i]->GuestVmcbPa);
+				LaunchVm(&g_VpData[i]->guest_vmcb_physicaladdr);
 			}
 			else
 			{

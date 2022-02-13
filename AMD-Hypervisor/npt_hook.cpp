@@ -1,6 +1,4 @@
 #include	"npt_hook.h"
-#include	"hook_handler.h"
-#include	"Structs.h"
 
 NPTHOOK_ENTRY* GetHookByPhysicalPage(HYPERVISOR_DATA* HvData, UINT64 PagePhysical)
 {
@@ -24,35 +22,35 @@ NPTHOOK_ENTRY* GetHookByPhysicalPage(HYPERVISOR_DATA* HvData, UINT64 PagePhysica
 }
 
 
-NPTHOOK_ENTRY* AddHookedPage(HYPERVISOR_DATA* HvData, PVOID PhysicalAddr, char* patch, int PatchLen, bool UseDisasm)
+NPTHOOK_ENTRY* AddHookedPage(HYPERVISOR_DATA* HvData, void* PhysicalAddr, char* patch, int PatchLen, bool UseDisasm)
 {
-	int PageOffset = (ULONG64)PhysicalAddr & (PAGE_SIZE - 1);
+	int page_offset = (uintptr_t)PhysicalAddr & (PAGE_SIZE - 1);
 
 	PT_ENTRY_64* InnocentNptEntry = Utils::GetPte(PhysicalAddr, HvData->PrimaryNCr3);
 
 	PT_ENTRY_64* HookedNptEntry = Utils::GetPte(PhysicalAddr, HvData->SecondaryNCr3);
 
 
-	ULONG64	CopyPage = (ULONG64)ExAllocatePool(NonPagedPool, PAGE_SIZE);
+	uintptr_t	CopyPage = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
 
-	ULONG64	PageAddr = (ULONG64)Utils::GetVaFromPfn(InnocentNptEntry->PageFrameNumber);
+	uintptr_t	PageAddr = (uintptr_t)Utils::GetVaFromPfn(InnocentNptEntry->PageFrameNumber);
 
-	if (!MmIsAddressValid((PVOID)PageAddr))
+	if (!MmIsAddressValid((void*)PageAddr))
 	{
 		DbgPrint("Address invalid! PageAddr %p \n", PageAddr);
 		DbgPrint("PhysicalAddr %p \n", PhysicalAddr);
 		DbgPrint("nested page frame number %p \n", InnocentNptEntry->PageFrameNumber);
 		return 0;
 	}
-	if (!MmIsAddressValid((PVOID)CopyPage))
+	if (!MmIsAddressValid((void*)CopyPage))
 	{
 		DbgPrint("Address invalid! CopyPage %p \n", CopyPage);
 		return 0;
 	}
 
-	memcpy((PVOID)CopyPage, (PVOID)PageAddr, PAGE_SIZE);
+	memcpy((void*)CopyPage, (void*)PageAddr, PAGE_SIZE);
 
-	memcpy((PVOID)(CopyPage + PageOffset), patch, PatchLen);
+	memcpy((void*)(CopyPage + PageOffset), patch, PatchLen);
 
 	InnocentNptEntry->ExecuteDisable = 1;
 
@@ -85,7 +83,7 @@ NPTHOOK_ENTRY* AddHookedPage(HYPERVISOR_DATA* HvData, PVOID PhysicalAddr, char* 
 		NewHook->OriginalInstrLen = PatchLen;
 	}
 	
-	memcpy(&NewHook->Jmpout.OriginalBytes, (PVOID)(PageAddr + PageOffset), NewHook->OriginalInstrLen);
+	memcpy(&NewHook->Jmpout.OriginalBytes, (void*)(PageAddr + PageOffset), NewHook->OriginalInstrLen);
 
 
 	NewHook->NptEntry1 = InnocentNptEntry;
@@ -97,20 +95,20 @@ NPTHOOK_ENTRY* AddHookedPage(HYPERVISOR_DATA* HvData, PVOID PhysicalAddr, char* 
 
 
 char Jmp[15];
-void SetNPTHook(PVOID Function, PVOID handler, NPTHOOK_ENTRY** HookEntry, bool UseDisasm = true, int OriginalByteLen = 15)
+void SetNPTHook(void* Function, void* handler, NPTHOOK_ENTRY** HookEntry, bool UseDisasm = true, int OriginalByteLen = 15)
 {
-	PVOID	HookedFunc = Function;
-	PVOID	HookedFuncPa = (PVOID)MmGetPhysicalAddress(HookedFunc).QuadPart;
+	void* HookedFunc = Function;
+	void* HookedFuncPa = (void*)MmGetPhysicalAddress(HookedFunc).QuadPart;
 
 	Utils::LockPages(HookedFunc, IoReadAccess);
 
-	Utils::GetJmpCode((ULONG64)handler, Jmp);
+	Utils::GetJmpCode((uintptr_t)handler, Jmp);
 
 	*HookEntry = AddHookedPage(g_HvData, HookedFuncPa, Jmp, OriginalByteLen, UseDisasm);
 
 	if (*HookEntry)
 	{
-		Utils::GetJmpCode((ULONG64)HookedFunc + (*HookEntry)->OriginalInstrLen,
+		Utils::GetJmpCode((uintptr_t)HookedFunc + (*HookEntry)->OriginalInstrLen,
 			(char*)&(*HookEntry)->Jmpout.Jmp);
 	}
 	else

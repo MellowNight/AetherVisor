@@ -1,5 +1,5 @@
 #pragma once
-#include "Utility.h"
+#include "utils.h"
 
 /*	the stuff we will analyze	*/
 #define		HV_ANALYZED_IMAGE	RTL_CONSTANT_STRING(L"EasyAntiCheat.sys")
@@ -19,7 +19,7 @@ struct NPTHOOK_ENTRY
 		{
 			char	OriginalBytes[20];
 			char	Jmp[6];
-			PVOID	OriginalFunc;
+			void*	OriginalFunc;
 		} Jmpout;
 		char	Shellcode[64];
 	};
@@ -28,8 +28,8 @@ struct NPTHOOK_ENTRY
 };
 
 NPTHOOK_ENTRY*	GetHookByPhysicalPage(HYPERVISOR_DATA* HvData, UINT64 PagePhysical);
-NPTHOOK_ENTRY*	GetHookByOldFuncAddress(HYPERVISOR_DATA* HvData, PVOID	FuncAddr);
-NPTHOOK_ENTRY*	AddHookedPage(HYPERVISOR_DATA* HvData, PVOID PhysicalAddr, ULONG64	NCr3, char* patch, int PatchLen);
+NPTHOOK_ENTRY*	GetHookByOldFuncAddress(HYPERVISOR_DATA* HvData, void*	FuncAddr);
+NPTHOOK_ENTRY*	AddHookedPage(HYPERVISOR_DATA* HvData, void* PhysicalAddr, uintptr_t	NCr3, char* patch, int PatchLen);
 
 
 void	SetHooks();
