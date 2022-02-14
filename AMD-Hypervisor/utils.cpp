@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "Logging.h"
+#include "logging.h"
 
 namespace Utils
 {
@@ -16,7 +16,7 @@ namespace Utils
         }
     }
 
-    void*	GetVaFromPfn(uintptr_t pfn)
+    void* VirtualAddrFromPfn(uintptr_t pfn)
     {
         PHYSICAL_ADDRESS pa;
         pa.QuadPart = pfn << PAGE_SHIFT;
@@ -24,12 +24,12 @@ namespace Utils
         return MmGetVirtualForPhysical(pa);
     }
 
-    PFN_NUMBER	GetPfnFromVa(uintptr_t Va)
+    PFN_NUMBER	PfnFromVirtualAddr(uintptr_t va)
     {
-        return MmGetPhysicalAddress((void*)Va).QuadPart >> PAGE_SHIFT;
+        return MmGetPhysicalAddress((void*)va).QuadPart >> PAGE_SHIFT;
     }
 
-    PT_ENTRY_64* GetPte(void* VirtualAddress, uintptr_t Pml4BasePa, PageTableOperation Operation)
+    PT_ENTRY_64* GetPte(void* VirtualAddress, uintptr_t Pml4BasePa, int (*page_table_callback)(PT_ENTRY_64*))
     {
         ADDRESS_TRANSLATION_HELPER helper;
         PT_ENTRY_64* finalEntry;
@@ -48,9 +48,9 @@ namespace Utils
 
         pml4e = &pml4[helper.AsIndex.Pml4];
 
-        if (Operation)
+        if (page_table_callback)
         {
-            Operation((PT_ENTRY_64*)pml4e);
+            page_table_callback((PT_ENTRY_64*)pml4e);
         }
 
         if (pml4e->Present == FALSE)
@@ -61,13 +61,13 @@ namespace Utils
         PDPTE_64* pdpt;
         PDPTE_64* pdpte;
 
-        pdpt = (PDPTE_64*)GetVaFromPfn(pml4e->PageFrameNumber);
+        pdpt = (PDPTE_64*)VirtualAddrFromPfn(pml4e->PageFrameNumber);
 
         pdpte = &pdpt[helper.AsIndex.Pdpt];
 
-        if (Operation)
+        if (page_table_callback)
         {
-            Operation((PT_ENTRY_64*)pdpte);
+            page_table_callback((PT_ENTRY_64*)pdpte);
         }
 
         if ((pdpte->Present == FALSE) || (pdpte->LargePage != FALSE))
@@ -78,13 +78,13 @@ namespace Utils
         PDE_64* pd;
         PDE_64* pde;
 
-        pd = (PDE_64*)GetVaFromPfn(pdpte->PageFrameNumber);
+        pd = (PDE_64*)VirtualAddrFromPfn(pdpte->PageFrameNumber);
 
         pde = &pd[helper.AsIndex.Pd];
 
-        if (Operation)
+        if (page_table_callback)
         {
-            Operation((PT_ENTRY_64*)pde);
+            page_table_callback((PT_ENTRY_64*)pde);
         }
 
         if ((pde->Present == FALSE) || (pde->LargePage != FALSE))
@@ -97,13 +97,13 @@ namespace Utils
         PTE_64* pte;
 
         
-        pt = (PTE_64*)GetVaFromPfn(pde->PageFrameNumber);
+        pt = (PTE_64*)VirtualAddrFromPfn(pde->PageFrameNumber);
 
         pte = &pt[helper.AsIndex.Pt];
 
-        if (Operation)
+        if (page_table_callback)
         {
-            Operation((PT_ENTRY_64*)pte);
+            page_table_callback((PT_ENTRY_64*)pte);
         }
 
         return  (PT_ENTRY_64*)pte;
@@ -137,7 +137,7 @@ namespace Utils
         PDPTE_64* pdpt;
         PDPTE_64* pdpte;
 
-        pdpt = (PDPTE_64*)GetVaFromPfn(pml4e->PageFrameNumber);
+        pdpt = (PDPTE_64*)VirtualAddrFromPfn(pml4e->PageFrameNumber);
 
         *PdpteResult = pdpte = &pdpt[helper.AsIndex.Pdpt];
 
@@ -150,7 +150,7 @@ namespace Utils
         PDE_64* pd;
         PDE_64* pde;
 
-        pd = (PDE_64*)GetVaFromPfn(pdpte->PageFrameNumber);
+        pd = (PDE_64*)VirtualAddrFromPfn(pdpte->PageFrameNumber);
 
         *PdeResult = pde = &pd[helper.AsIndex.Pd];
 
@@ -164,7 +164,7 @@ namespace Utils
         PTE_64* pte;
 
 
-        pt = (PTE_64*)GetVaFromPfn(pde->PageFrameNumber);
+        pt = (PTE_64*)VirtualAddrFromPfn(pde->PageFrameNumber);
 
         pte = &pt[helper.AsIndex.Pt];
 

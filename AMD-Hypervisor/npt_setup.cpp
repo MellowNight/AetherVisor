@@ -52,7 +52,7 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 	}
 	else
 	{
-		Pdpt = (PDPTE_64*)Utils::GetVaFromPfn(Pml4e->PageFrameNumber);
+		Pdpt = (PDPTE_64*)Utils::VirtualAddrFromPfn(Pml4e->PageFrameNumber);
 	}
 
 
@@ -65,7 +65,7 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 	}
 	else
 	{
-		Pd = (PDE_64*)Utils::GetVaFromPfn(Pdpte->PageFrameNumber);
+		Pd = (PDE_64*)Utils::VirtualAddrFromPfn(Pdpte->PageFrameNumber);
 	}
 
 
@@ -80,7 +80,7 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 	}
 	else
 	{
-		Pt = (PTE_64*)Utils::GetVaFromPfn(Pde->PageFrameNumber);
+		Pt = (PTE_64*)Utils::VirtualAddrFromPfn(Pde->PageFrameNumber);
 	}
 
 	PTE_64* Pte = &Pt[Helper.AsIndex.Pt];

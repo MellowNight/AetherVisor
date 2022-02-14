@@ -16,6 +16,7 @@ enum MSR
     VM_HSAVE_PA = 0xC0010117
 };
 
+/*  the vmcb structures are typed out by Satoshi Tanda @tandasat*/
 
 struct VmcbControlArea
 {
@@ -317,6 +318,35 @@ struct NestedPageFaultInfo1
     };
 };
 
+
+union ADDRESS_TRANSLATION_HELPER
+{
+    //
+    // Indexes to locate paging-structure entries corresponds to this virtual
+    // address.
+    //
+    struct
+    {
+        UINT64 Unused : 12;         //< [11:0]
+        UINT64 Pt : 9;              //< [20:12]
+        UINT64 Pd : 9;              //< [29:21]
+        UINT64 Pdpt : 9;            //< [38:30]
+        UINT64 Pml4 : 9;            //< [47:39]
+    } AsIndex;
+
+    //
+    // The page offset for each type of pages. For example, for 4KB pages, bits
+    // [11:0] are treated as the page offset and Mapping4Kb can be used for it.
+    //
+    union
+    {
+        UINT64 Mapping4Kb : 12;     //< [11:0]
+        UINT64 Mapping2Mb : 21;     //< [20:0]
+        UINT64 Mapping1Gb : 30;     //< [29:0]
+    } AsPageOffset;
+
+    UINT64 AsUInt64;
+};
 
 /*  must be 4KB aligned     */
 struct Vmcb

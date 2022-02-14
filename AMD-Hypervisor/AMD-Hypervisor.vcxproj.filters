@@ -36,9 +36,6 @@
     <ClInclude Include="ia32.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="includes.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="logging.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -52,6 +49,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="virtualization.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows_structs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

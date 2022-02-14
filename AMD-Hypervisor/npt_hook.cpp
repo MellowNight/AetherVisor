@@ -32,7 +32,7 @@ NptHookEntry* AddHookedPage(GlobalHvData* HvData, void* PhysicalAddr, char* patc
 
 	uintptr_t	CopyPage = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
 
-	uintptr_t	PageAddr = (uintptr_t)Utils::GetVaFromPfn(InnocentNptEntry->PageFrameNumber);
+	uintptr_t	PageAddr = (uintptr_t)Utils::VirtualAddrFromPfn(InnocentNptEntry->PageFrameNumber);
 
 	if (!MmIsAddressValid((void*)PageAddr))
 	{
@@ -54,7 +54,7 @@ NptHookEntry* AddHookedPage(GlobalHvData* HvData, void* PhysicalAddr, char* patc
 	InnocentNptEntry->ExecuteDisable = 1;
 
 	HookedNptEntry->ExecuteDisable = 0;
-	HookedNptEntry->PageFrameNumber = Utils::GetPfnFromVa(CopyPage);
+	HookedNptEntry->PageFrameNumber = Utils::PfnFromVirtualAddr(CopyPage);
 
 
 	LIST_ENTRY* entry = HvData->hook_list_head;
@@ -124,7 +124,7 @@ void SetNptHook(
 		return;
 	}
 
-	DbgPrint("2nd page %p \n", Utils::GetVaFromPfn((*HookEntry)->NptEntry2->PageFrameNumber));
+	DbgPrint("2nd page %p \n", Utils::VirtualAddrFromPfn((*HookEntry)->NptEntry2->PageFrameNumber));
 	DbgPrint("original bytes shellcode %p \n", (*HookEntry)->Shellcode);
 }
 

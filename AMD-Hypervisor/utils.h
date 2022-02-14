@@ -1,10 +1,7 @@
 #pragma once
 #include "global.h"
 
-#define IMAGE_SCN_CNT_INITIALIZED_DATA  0x00000040
-#define IMAGE_SCN_CNT_UNINITIALIZED_DATA    0x00000080
-#define IMAGE_SCN_CNT_CODE  0x00000020
-#define IMAGE_SCN_MEM_EXECUTE   0x20000000
+
 
 namespace Utils
 {
@@ -14,12 +11,12 @@ namespace Utils
 		uintptr_t range_size
 	);
 
-	void*	GetVaFromPfn(
+	void*	VirtualAddrFromPfn(
 		uintptr_t pfn
 	);
 
-	PFN_NUMBER	GetPfnFromVa(
-		uintptr_t	Va
+	PFN_NUMBER	PfnFromVirtualAddr(
+		uintptr_t	va
 	);
 
 	/*	
@@ -41,9 +38,13 @@ namespace Utils
 		PDE_64** PdeResult
 	);
 
-	void	GetJmpCode(uintptr_t jmpAddr, char* output);
+	void	GetJmpCode(
+		uintptr_t jmpAddr,
+		char* output
+	);
 
-	void*	GetSystemRoutineAddress(wchar_t* RoutineName, void** RoutinePhysical = NULL);
+	void*	GetSystemRoutineAddress(
+		wchar_t* RoutineName, void** RoutinePhysical = NULL);
 
 	PMDL	LockPages(void* VirtualAddress, LOCK_OPERATION  operation);
 	NTSTATUS    UnlockPages(PMDL mdl);
