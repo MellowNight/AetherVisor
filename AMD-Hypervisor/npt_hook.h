@@ -8,7 +8,7 @@
 extern	wchar_t* HvAnalyzedImage2;
 
 
-struct NPTHOOK_ENTRY
+struct NptHookEntry
 {
 	PT_ENTRY_64* NptEntry1;
 	PT_ENTRY_64* NptEntry2;
@@ -18,7 +18,7 @@ struct NPTHOOK_ENTRY
 		struct Trampoline
 		{
 			char	OriginalBytes[20];
-			char	Jmp[6];
+			char	jmp[6];
 			void*	OriginalFunc;
 		} Jmpout;
 		char	Shellcode[64];
@@ -27,9 +27,8 @@ struct NPTHOOK_ENTRY
 	LIST_ENTRY	HookList;
 };
 
-NPTHOOK_ENTRY*	GetHookByPhysicalPage(HYPERVISOR_DATA* HvData, UINT64 PagePhysical);
-NPTHOOK_ENTRY*	GetHookByOldFuncAddress(HYPERVISOR_DATA* HvData, void*	FuncAddr);
-NPTHOOK_ENTRY*	AddHookedPage(HYPERVISOR_DATA* HvData, void* PhysicalAddr, uintptr_t	NCr3, char* patch, int PatchLen);
-
+NptHookEntry*	GetHookByPhysicalPage(GlobalHvData* HvData, UINT64 PagePhysical);
+NptHookEntry*	GetHookByOldFuncAddress(GlobalHvData* HvData, void*	FuncAddr);
+NptHookEntry*	AddHookedPage(GlobalHvData* HvData, void* PhysicalAddr, uintptr_t	NCr3, char* patch, int PatchLen);
 
 void	SetHooks();

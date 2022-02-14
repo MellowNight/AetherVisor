@@ -4,66 +4,70 @@
 #include "logging.h"
 
 
-enum VMEXIT_CODES {
-    VMEXIT_CPUID = 0x72,
-    VMEXIT_MSR = 0x7C,
-    VMEXIT_VMRUN = 0x80,
-    VMEXIT_VMMCALL = 0x81,
-    VMEXIT_NPF = 0x400,
-    VMEXIT_PF = 0x4E,
-    VMEXIT_INVALID = -1,
-    VMEXIT_GP = 0x4D,
-    VMEXIT_DB = 0x41,
+enum VMEXIT
+{
+    CPUID = 0x72,
+    MSR = 0x7C,
+    VMRUN = 0x80,
+    VMMCALL = 0x81,
+    NPF = 0x400,
+    PF = 0x4E,
+    INVALID = -1,
+    GP = 0x4D,
+    DB = 0x41,
 };
 
-void InjectException(CoreVmcbData* core_data, int vector, int ErrorCode = 0)
+void InjectException(CoreVmcbData* core_data, int vector, int error_code = 0)
 {
-    EVENTINJ EventInj;
+    EventInjection event_injection;
 
-    EventInj.Vector = vector;
-    EventInj.Type = 3;
-    EventInj.Valid = 1;
+    event_injection.vector = vector;
+    event_injection.type = 3;
+    event_injection.valid = 1;
 
-    if (ErrorCode != 0) {
-        EventInj.PushErrorCode = 1;
-        EventInj.ErrorCode = ErrorCode;
+    if (error_code != 0)
+    {
+        event_injection.push_error_code = 1;
+        event_injection.error_code = error_code;
     }
 
-    Vpdata->GuestVmcb.ControlArea.EventInj = EventInj.Flags;
+    core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
 
 uintptr_t GuestRip = 0;
 void HandleNestedPageFault(CoreVmcbData* VpData, GeneralPurposeRegs* GuestContext)
 {
-    NPF_EXITINFO1 ExitInfo1;
+    NestedPageFaultInfo1 exit_info1;
 
-    ExitInfo1.AsUInt64 = VpData->GuestVmcb.ControlArea.ExitInfo1;
+    exit_info1.as_uint64 = VpData->guest_vmcb.control_area.ExitInfo1;
 
-    uintptr_t FailAddress = VpData->GuestVmcb.ControlArea.ExitInfo2;
+    uintptr_t fail_address = VpData->guest_vmcb.control_area.ExitInfo2;
 
     PHYSICAL_ADDRESS NCr3;
 
-    NCr3.QuadPart = VpData->GuestVmcb.ControlArea.NCr3;
+    NCr3.QuadPart = VpData->guest_vmcb.control_area.NCr3;
 
-    GuestRip = VpData->GuestVmcb.SaveStateArea.Rip;
+    GuestRip = VpData->guest_vmcb.save_state_area.Rip;
 
 
-    if (ExitInfo1.Fields.Valid == 0) {
+    if (exit_info1.fields.valid == 0) 
+    {
 
-        int NumberOfBytes = VpData->GuestVmcb.ControlArea.NumOfBytesFetched;
+        int num_bytes = VpData->guest_vmcb.control_area.NumOfBytesFetched;
 
-        UINT8* InstructionBytes = VpData->GuestVmcb.ControlArea.GuestInstructionBytes;
+        auto insn_bytes = VpData->guest_vmcb.control_area.GuestInstructionBytes;
 
-        PML4E_64* Pml4Base = (PML4E_64*)MmGetVirtualForPhysical(NCr3);
+        auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(NCr3);
 
-        PTE_64* Pte64 = AssignNPTEntry((PML4E_64*)Pml4Base, FailAddress, true);
+        auto pte = AssignNPTEntry((PML4E_64*)pml4_base, fail_address, true);
 
         return;
     }
 
 
-    if (ExitInfo1.Fields.Execute == 1) {
-        NPTHOOK_ENTRY* nptHook = GetHookByPhysicalPage(g_HvData, FailAddress);
+    if (exit_info1.fields.execute == 1) 
+    {
+        NptHookEntry* nptHook = GetHookByPhysicalPage(global_hypervisor_data, fail_address);
 
         bool Switch = true;
 
@@ -85,17 +89,19 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GeneralPurposeRegs* GuestContex
             Switch = false;
         }   
 
-        VpData->GuestVmcb.ControlArea.VmcbClean &= 0xFFFFFFEF;
-        VpData->GuestVmcb.ControlArea.TlbControl = 3;
+        VpData->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+        VpData->guest_vmcb.control_area.TlbControl = 3;
 
-        /*  switch to hook CR3 or switch to innocent CR3   */
+        /*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
         if (Switch)
         {
-            if (nptHook) {
-                VpData->GuestVmcb.ControlArea.NCr3 = g_HvData->SecondaryNCr3;
+            if (nptHook) 
+            {
+                VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->secondary_ncr3;
             }
-            else {
-                VpData->GuestVmcb.ControlArea.NCr3 = g_HvData->PrimaryNCr3;
+            else 
+            {
+                VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->primary_ncr3;
             }
         }
     }
@@ -103,12 +109,12 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GeneralPurposeRegs* GuestContex
 
 void HandleCpuidExit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters)
 {
-    VpData->GuestVmcb.SaveStateArea.Rip = VpData->GuestVmcb.ControlArea.NRip;
+    VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
 void HandleMsrExit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters)
 {
-    VpData->GuestVmcb.SaveStateArea.Rip = VpData->GuestVmcb.ControlArea.NRip;
+    VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
 
@@ -124,13 +130,13 @@ void HandleVmmcall(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters,
     { 
         switch (Leaf) {
 
-        case VMMCALL::HYPERVISOR_SIG: 
+        case VMMCALL : 
         {
             Registers[0] = 'epyH'; /*	"HyperCheatzz"	*/
             Registers[1] = 'ehCr';
             Registers[2] = 'zzta';
 
-            VpData->GuestVmcb.SaveStateArea.Rax = Registers[0];
+            VpData->guest_vmcb.save_state_area.Rax = Registers[0];
             GuestRegisters->Rbx = Registers[1];
             GuestRegisters->Rcx = Registers[2];
             GuestRegisters->Rdx = Registers[3];
@@ -139,7 +145,7 @@ void HandleVmmcall(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters,
         }
         case VMMCALL::DISABLE_HOOKS: 
         {
-            VpData->GuestVmcb.ControlArea.NCr3 = g_HvData->TertiaryCr3;
+            VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->tertiary_cr3;
             break;
         }
         case VMMCALL::END_HV: 
@@ -155,9 +161,9 @@ void HandleVmmcall(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters,
     }
     else if (Origin == USER_VMMCALL)
     {
-        g_HvData->HvCommand = Leaf;
+        global_hypervisor_data->HvCommand = Leaf;
     }
-    VpData->GuestVmcb.SaveStateArea.Rip = VpData->GuestVmcb.ControlArea.NRip;
+    VpData->guest_vmcb.SaveStateArea.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
 
@@ -168,77 +174,66 @@ extern "C" bool HandleVmexit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegi
 
     bool EndVm = false;
 
-    switch ((int)VpData->GuestVmcb.ControlArea.ExitCode) {
+    switch ((int)VpData->guest_vmcb.control_area.ExitCode) {
 
-    case VMEXIT_CPUID: {
+    case VMEXIT::CPUID: {
         HandleCpuidExit(VpData, GuestRegisters);
         break;
     }
-    case VMEXIT_MSR: 
+    case VMEXIT::MSR: 
     {
         HandleMsrExit(VpData, GuestRegisters);
         break;
     }
-    case VMEXIT_VMRUN: 
+    case VMEXIT::VMRUN: 
     {
         InjectException(VpData, 13);
         break;
     }
-    case VMEXIT_VMMCALL: 
+    case VMEXIT::VMMCALL: 
     {
         HandleVmmcall(VpData, GuestRegisters, &EndVm);
         break;
     }
-    case VMEXIT_NPF: 
+    case VMEXIT::NPF: 
     {
         HandleNestedPageFault(VpData, GuestRegisters);
         break;
     }
-    case VMEXIT_GP: {
-        char InstructionBytes[16] = { 0 };
-        memcpy(InstructionBytes, (void*)VpData->GuestVmcb.SaveStateArea.Rip, 16);
-
-        CR3 cr3;
-        cr3.Flags = __readcr3();
-
-        GuestQueryInfoFilePte = (PDE_2MB_64*)Utils::GetPte(
-            NtQueryInformationFile, cr3.AddressOfPageDirectory);
-
-        KeBugCheckEx(MANUALLY_INITIATED_CRASH,
-            (uintptr_t)InstructionBytes,
-            (uintptr_t)GuestRegisters,
-            VpData->GuestVmcb.SaveStateArea.Rip,
-            (uintptr_t)GuestQueryInfoFilePte);
-
+    case VMEXIT::GP: 
+    {
         InjectException(VpData, 13, 0xC0000005);
         break;
     }
-    case VMEXIT_INVALID: {
+    case VMEXIT::INVALID: 
+    {
         SegmentAttribute CsAttrib;
-        CsAttrib.AsUInt16 = VpData->GuestVmcb.SaveStateArea.CsAttrib;
+        CsAttrib.as_uint16 = VpData->guest_vmcb.SaveStateArea.CsAttrib;
 
-        IsProcessorReadyForVmrun(&VpData->GuestVmcb, CsAttrib);
+        IsProcessorReadyForVmrun(&VpData->guest_vmcb, CsAttrib);
 
         break;
     }
     default:
         DbgPrint("[VMEXIT] huh?? wtf why did I exit ?? exit code %p \n",
-            VpData->GuestVmcb.ControlArea.ExitCode);
+            VpData->guest_vmcb.control_area.ExitCode);
         break;
     }
 
-    if (EndVm) {
+    if (EndVm) 
+    {
         /*
-                When we end the VM operation, we merge guest context with host context, and then jump to guest context.
+            When we end the VM operation, we just disable virtualization
+            and jump to the guest context
 
-                1. load guest state
-                2. disable IF
-                3. enable GIF
-                4. disable SVME
-                5. restore EFLAGS and re enable IF
-                6. set RBX to RIP
-                7. set RCX to RSP
-                8. return and jump back
+            1. load guest state
+            2. disable IF
+            3. enable GIF
+            4. disable SVME
+            5. restore EFLAGS and re enable IF
+            6. set RBX to RIP
+            7. set RCX to RSP
+            8. return and jump back
         */
 
         __svm_vmload(VpData->guest_vmcb_physicaladdr);
@@ -246,16 +241,16 @@ extern "C" bool HandleVmexit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegi
         __svm_stgi();
         _disable();
 
-        EFER_MSR Msr;
+        MsrEfer msr;
 
-        Msr.Flags = __readmsr(AMD_EFER);
-        Msr.SVME = 0;
+        msr.flags = __readmsr(MSR::EFER);
+        msr.svme = 0;
 
-        __writemsr(AMD_EFER, Msr.Flags);
-        __writeeflags(VpData->GuestVmcb.SaveStateArea.Rflags);
+        __writemsr(MSR::EFER, msr.flags);
+        __writeeflags(VpData->guest_vmcb.save_state_area.Rflags);
 
-        GuestRegisters->Rcx = VpData->GuestVmcb.SaveStateArea.Rsp;
-        GuestRegisters->Rbx = VpData->GuestVmcb.ControlArea.NRip;
+        GuestRegisters->rcx = VpData->guest_vmcb.save_state_area.Rsp;
+        GuestRegisters->rbx = VpData->guest_vmcb.control_area.NRip;
     }
 
     return EndVm;

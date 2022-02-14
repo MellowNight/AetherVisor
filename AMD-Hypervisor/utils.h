@@ -1,6 +1,5 @@
 #pragma once
 #include "global.h"
-#include "Zydis/Zydis.h"
 
 #define IMAGE_SCN_CNT_INITIALIZED_DATA  0x00000040
 #define IMAGE_SCN_CNT_UNINITIALIZED_DATA    0x00000080

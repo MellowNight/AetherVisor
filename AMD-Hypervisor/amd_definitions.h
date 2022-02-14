@@ -1,7 +1,7 @@
 #pragma once
 #include "includes.h"        
 
-enum CPUID_CODES
+enum CPUID
 {
     MAX_STANDARD_FN_NUMBER_AND_VENDOR_STRING = 0x0,
     PROCESSOR_AND_FEATURE_IDENTIFIERS = 0x1
@@ -12,18 +12,10 @@ enum MSR
     APIC_BAR = 0x1b,
     VM_CR = 0xC0010114,
     EFER = 0xC0000080,
-    PAT = 0x00000277,  /*  Page Atrribute Table, see   MSR0000_0277    */
-    VM_HSAVE_PA = 0xc0010117
+    PAT = 0x277,  /*  Page Atrribute Table, see   MSR0000_0277    */
+    VM_HSAVE_PA = 0xC0010117
 };
 
-
-
-/*  Intercepts  */
-
-#define INTERCEPT_VMRUN       (1UL << 0)
-#define INTERCEPT_CPUID       (1UL << 18)
-#define INTERCEPT_VMMCALL     (1UL << 1)
-#define INTERCEPT_DB          (1UL << 1)
 
 struct VmcbControlArea
 {
@@ -67,7 +59,7 @@ struct VmcbControlArea
     UINT8 Reserved4[0x400 - 0x110];     // +0x110
 };
 static_assert(sizeof(VmcbControlArea) == 0x400,
-    "VmcbControlArea Size Mismatch");
+    "Vmcbcontrol_area Size Mismatch");
 
 //
 // See "VMCB Layout, State Save Area"
@@ -187,22 +179,22 @@ union  MsrEfer
         int		long_mode_enable : 1;
         int		reserved2 : 1;
         int		long_mode_active : 1;
-        int		NXE : 1;
-        int		SVME : 1;
-        int		LMSLE : 1;
-        int		FFXSE : 1;
-        int		TCE : 1;
+        int		nxe : 1;
+        int		svme : 1;
+        int		lmsle : 1;
+        int		ffxse : 1;
+        int		tce : 1;
         int     reserved3 : 1;
-        int     MCommit : 1;
-        int     INTWB : 1;
+        int     m_commit : 1;
+        int     intwb : 1;
         __int64	 reserved4 : 45;
 
     };
-    __int64	Flags;
+    __int64	flags;
 };
 
 /*	 Core::X86::Msr::APIC_BAR	*/
-struct APIC_BAR
+struct MsrApicBar
 {
     union
     {
@@ -222,93 +214,115 @@ struct APIC_BAR
 
 
 /*	 Core::X86::Msr::VM_CR	*/
-union 	MsrVmcr
+union MsrVmcr
 {
-    struct {
-        int		Reserved1 : 1;
-        int		InterceptInit : 1;
-        int		Reserved2 : 1;
-        int		SVMLock : 1;
-        int		SVMEDisable : 1;
-        int		Reserved3 : 27;
-        int		Reserved4 : 32;
+    struct 
+    {
+        int		reserved1 : 1;
+        int		intercept_init : 1;
+        int		reserved2 : 1;
+        int		svm_lock : 1;
+        int		svme_disable : 1;
+        int		reserved3 : 27;
+        int		reserved4 : 32;
     };
-    __int64	Flags;
+    int64_t	flags;
 };
+
+
+/*  vector 2 for exceptions */
+
+struct InterceptVector2
+{
+    int32_t intercept_vec_1 : 1;
+    int32_t intercept_db : 1;
+};
+
+union InterceptVector4
+{ 
+    struct
+    {
+        int32_t  intercept_vmrun : 1; // intercept VMRUN
+        int32_t  intercept_vmmcall : 1;  // Intercept VMMCALL
+        int32_t  pad : 30;
+    };
+    int32_t	as_int32;
+};
+static_assert(sizeof(InterceptVector4) == 0x4, "InterceptVector4 Size Mismatch");
+
 
 /*	#include <pshpack1.h> to remove struct alignment, so we wont have GDTR value issues	*/
 #pragma pack(push, 1)
-typedef struct _DESCRIPTOR_TABLE_REGISTER
+struct DescriptorTableRegister
 {
-    UINT16	Limit;
-    ULONG_PTR Base;
-} DESCRIPTOR_TABLE_REGISTER, * PDESCRIPTOR_TABLE_REGISTER;
-static_assert(sizeof(DESCRIPTOR_TABLE_REGISTER) == 0xA,
-    "DESCRIPTOR_TABLE_REGISTER Size Mismatch");
+    uint16_t limit;
+    uintptr_t base;
+};
+
+static_assert(sizeof(DescriptorTableRegister) == 0xA, "DESCRIPTOR_TABLE_REGISTER Size Mismatch");
 #pragma pack(pop)
 
 struct SegmentAttribute
 {
     union
     {
-        UINT16 AsUInt16;
+        uint16_t as_uint16;
         struct
         {
-            UINT16 Type : 4;        // [0:3]
-            UINT16 System : 1;      // [4]
-            UINT16 Dpl : 2;         // [5:6]
-            UINT16 Present : 1;     // [7]
-            UINT16 Avl : 1;         // [8]
-            UINT16 LongMode : 1;    // [9]
-            UINT16 DefaultBit : 1;  // [10]
-            UINT16 Granularity : 1; // [11]
-            UINT16 Reserved1 : 4;   // [12:15]
-        } Fields;
+            uint16_t type : 4;        // [0:3]
+            uint16_t system : 1;      // [4]
+            uint16_t dpl : 2;         // [5:6]
+            uint16_t present : 1;     // [7]
+            uint16_t avl : 1;         // [8]
+            uint16_t long_mode : 1;   // [9]
+            uint16_t default_bit : 1; // [10]
+            uint16_t granularity : 1; // [11]
+            uint16_t reserved1 : 4;   // [12:15]
+        } fields;
     };
 };
 
 
 /*  15.20 Event Injection   */
-union EVENTINJ
+union EventInjection
 {
     struct
     {
-        int     Vector : 8;
-        int     Type : 3;
-        int     PushErrorCode : 1;
-        int     Reserved : 19;
-        int     Valid : 1;
-        int     ErrorCode : 32;
+        int     vector : 8;
+        int     type : 3;
+        int     push_error_code : 1;
+        int     reserved : 19;
+        int     valid : 1;
+        int     error_code : 32;
     };
-    __int64 Flags;
+    int64_t fields;
 };
 
-
-struct NPF_EXITINFO1
+struct NestedPageFaultInfo1
 {
     union
     {
-        UINT64 AsUInt64;
+        uint64_t as_uint64;
         struct
         {
-            UINT64 Valid : 1;                   // [0]
-            UINT64 Write : 1;                   // [1]
-            UINT64 User : 1;                    // [2]
-            UINT64 Reserved : 1;                // [3]
-            UINT64 Execute : 1;                 // [4]
-            UINT64 Reserved2 : 27;              // [5:31]
-            UINT64 GuestPhysicalAddress : 1;    // [32]
-            UINT64 GuestPageTables : 1;         // [33]
-        } Fields;
+            uint64_t valid : 1;                   // [0]
+            uint64_t write : 1;                   // [1]
+            uint64_t user : 1;                    // [2]
+            uint64_t reserved : 1;                // [3]
+            uint64_t execute : 1;                 // [4]
+            uint64_t reserved2 : 27;              // [5:31]
+            uint64_t guestphysicaladdress : 1;    // [32]
+            uint64_t guestpagetables : 1;         // [33]
+        } fields;
     };
 };
 
 
 /*  must be 4KB aligned     */
-struct VMCB
+struct Vmcb
 {
-    VmcbControlArea       ControlArea;
-    VmcbSaveStateArea    SaveStateArea;
-    char pad[0x1000 - sizeof(VmcbControlArea) - sizeof(VmcbSaveStateArea)];
+    VmcbControlArea control_area;
+    VmcbSaveStateArea save_state_area;
+    char pad[PAGE_SIZE - sizeof(VmcbControlArea) - sizeof(VmcbSaveStateArea)];
 };
 

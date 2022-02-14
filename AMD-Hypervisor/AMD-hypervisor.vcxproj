@@ -165,6 +165,7 @@
     <ClInclude Include="npt_setup.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="virtualization.h" />
+    <ClInclude Include="windows_structs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="driver.cpp" />

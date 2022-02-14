@@ -1,14 +1,14 @@
 #include	"npt_hook.h"
 
-NPTHOOK_ENTRY* GetHookByPhysicalPage(HYPERVISOR_DATA* HvData, UINT64 PagePhysical)
+NptHookEntry* GetHookByPhysicalPage(GlobalHvData* HvData, UINT64 PagePhysical)
 {
 	PFN_NUMBER pfn = PagePhysical >> PAGE_SHIFT;
 
-	NPTHOOK_ENTRY* nptHook;
+	NptHookEntry* nptHook;
 
-	for (LIST_ENTRY* entry = HvData->HookListHead; entry != 0; entry = entry->Flink) 
+	for (LIST_ENTRY* entry = HvData->hook_list_head; entry != 0; entry = entry->Flink) 
 	{
-		nptHook = CONTAINING_RECORD(entry, NPTHOOK_ENTRY, HookList);
+		nptHook = CONTAINING_RECORD(entry, NptHookEntry, HookList);
 
 		if (nptHook->NptEntry1) {
 
@@ -21,14 +21,13 @@ NPTHOOK_ENTRY* GetHookByPhysicalPage(HYPERVISOR_DATA* HvData, UINT64 PagePhysica
 	return 0;
 }
 
-
-NPTHOOK_ENTRY* AddHookedPage(HYPERVISOR_DATA* HvData, void* PhysicalAddr, char* patch, int PatchLen, bool UseDisasm)
+NptHookEntry* AddHookedPage(GlobalHvData* HvData, void* PhysicalAddr, char* patch, int PatchLen, bool UseDisasm)
 {
 	int page_offset = (uintptr_t)PhysicalAddr & (PAGE_SIZE - 1);
 
-	PT_ENTRY_64* InnocentNptEntry = Utils::GetPte(PhysicalAddr, HvData->PrimaryNCr3);
+	PT_ENTRY_64* InnocentNptEntry = Utils::GetPte(PhysicalAddr, HvData->primary_ncr3);
 
-	PT_ENTRY_64* HookedNptEntry = Utils::GetPte(PhysicalAddr, HvData->SecondaryNCr3);
+	PT_ENTRY_64* HookedNptEntry = Utils::GetPte(PhysicalAddr, HvData->secondary_ncr3);
 
 
 	uintptr_t	CopyPage = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
@@ -58,14 +57,14 @@ NPTHOOK_ENTRY* AddHookedPage(HYPERVISOR_DATA* HvData, void* PhysicalAddr, char* 
 	HookedNptEntry->PageFrameNumber = Utils::GetPfnFromVa(CopyPage);
 
 
-	LIST_ENTRY* entry = HvData->HookListHead;
+	LIST_ENTRY* entry = HvData->hook_list_head;
 
 	while (MmIsAddressValid(entry->Flink))
 	{
 		entry = entry->Flink;
 	}
 
-	NPTHOOK_ENTRY* NewHook = (NPTHOOK_ENTRY*)ExAllocatePoolZero(NonPagedPool, sizeof(NPTHOOK_ENTRY), 'hook');
+	NptHookEntry* NewHook = (NptHookEntry*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHookEntry), 'hook');
 
 	entry->Flink = &NewHook->HookList;
 
@@ -94,22 +93,29 @@ NPTHOOK_ENTRY* AddHookedPage(HYPERVISOR_DATA* HvData, void* PhysicalAddr, char* 
 
 
 
-char Jmp[15];
-void SetNPTHook(void* Function, void* handler, NPTHOOK_ENTRY** HookEntry, bool UseDisasm = true, int OriginalByteLen = 15)
+char jmp[15];
+void SetNptHook(
+	void* address,
+	void* hook_handler,
+	bool execute_only,	// ONLY possible in usermode, with memory protection key
+	uint8_t* hook_bytes
+)
 {
+	NptHookEntry* hook_entry;
+
 	void* HookedFunc = Function;
 	void* HookedFuncPa = (void*)MmGetPhysicalAddress(HookedFunc).QuadPart;
 
 	Utils::LockPages(HookedFunc, IoReadAccess);
 
-	Utils::GetJmpCode((uintptr_t)handler, Jmp);
+	Utils::GetJmpCode((uintptr_t)hook_handler, jmp);
 
-	*HookEntry = AddHookedPage(g_HvData, HookedFuncPa, Jmp, OriginalByteLen, UseDisasm);
+	hook_entry = AddHookedPage(global_hypervisor_data, HookedFuncPa, jmp, OriginalByteLen, UseDisasm);
 
-	if (*HookEntry)
+	if (hook_entry)
 	{
 		Utils::GetJmpCode((uintptr_t)HookedFunc + (*HookEntry)->OriginalInstrLen,
-			(char*)&(*HookEntry)->Jmpout.Jmp);
+			(uint8_t*)&(*HookEntry)->Jmpout.jmp);
 	}
 	else
 	{
@@ -124,13 +130,5 @@ void SetNPTHook(void* Function, void* handler, NPTHOOK_ENTRY** HookEntry, bool U
 
 void SetHooks()
 {
-	SetNPTHook(NtQueryInformationFile, NtQueryInfoFile_handler, &NtQueryInfoFilehk_Entry);
-	//SetNPTHook(KeStackAttachProcess, KeStackAttach_handler, &KeStackAttachhk_Entry);
-	SetNPTHook(NtQuerySystemInformation, NtQuerySystemInfo_handler, &NtQuerySystemInfohk_entry);
-	//SetNPTHook(MmCopyMemory, MmCopyMemory_handler, &MmCopyMemoryhk_entry);
-	//SetNPTHook(ExAllocatePoolWithTag, AllocPoolWithTag_handler, &AllocPoolWithTaghk_entry, false);
-	SetNPTHook(NtCreateFile, NtCreateFile_handler, &NtCreateFilehk_entry, false, 14);
-	SetNPTHook(NtOpenFile, NtOpenFile_handler, &NtOpenFilehk_entry, false, 17);
-	//SetNPTHook(EacReadFile, EacReadFile_Handler, &EacReadFile_Entry, false, 14);
-	SetNPTHook(NtDeviceIoControlFile, NtDeviceIoctl_Handler, &NtDeviceIoctl_Entry, false, 16);
+	SetNptHook(NtQueryInformationFile, NtQueryInfoFile_handler, &NtQueryInfoFilehk_Entry);
 }

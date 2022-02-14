@@ -37,6 +37,7 @@ void    GetPhysicalMemoryRanges()
 }
 
 
+/*	assign a new NPT entry to an unmapped guest physical address	*/
 PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 {
 	ADDRESS_TRANSLATION_HELPER	Helper;
@@ -126,8 +127,8 @@ uintptr_t	 BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 	return *NCr3;
 }
 
-void	InitializeHookList(HYPERVISOR_DATA*	HvData)
+void	InitializeHookList(GlobalHvData*	HvData)
 {
-	HvData->FirstHook = (NPTHOOK_ENTRY*)ExAllocatePoolZero(NonPagedPool, sizeof(NPTHOOK_ENTRY), 'hook');
-	HvData->HookListHead = &HvData->FirstHook->HookList;
+	HvData->first_hook = (NptHookEntry*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHookEntry), 'hook');
+	HvData->hook_list_head = &HvData->first_hook->HookList;
 }

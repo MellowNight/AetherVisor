@@ -25,7 +25,7 @@ namespace Logger
 		RtlStringCchPrintfA(buffer, LOG_MAX_LEN, format, args);
 		va_end(args);
 
-		TraceLoggingWrite(log_provider, "DbgMessage", TraceLoggingWideString(buffer));
+		TraceLoggingWrite(log_provider, (char*)"hello12", TraceLoggingWideString(buffer));
 	}
 
 	void End()

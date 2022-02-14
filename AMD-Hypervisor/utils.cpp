@@ -1,5 +1,4 @@
 #include "utils.h"
-#include "Structs.h"
 #include "Logging.h"
 
 namespace Utils

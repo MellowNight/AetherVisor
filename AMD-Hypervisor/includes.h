@@ -5,6 +5,8 @@
 #include    <ntdef.h>
 #include    <windef.h>
 #include    <wdm.h>
-
-#include    "ia32.h"
 #include	<TraceLoggingProvider.h>
+#include	<cstdint>
+
+#include	"Zydis/Zydis.h"
+#include    "ia32.h"

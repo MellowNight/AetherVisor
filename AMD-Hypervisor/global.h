@@ -1,41 +1,39 @@
 #pragma once
 #include "amd_definitions.h"
 
-#define DIFFERENCE(a, b)    max(a,b) - min(a, b)
-
-struct HYPERVISOR_DATA
+struct GlobalHvData
 {
-    uintptr_t     PrimaryNCr3;
-    uintptr_t     SecondaryNCr3;
-    uintptr_t     TertiaryCr3;
-    struct NptHookEntry*  FirstHook;
-    LIST_ENTRY*     HookListHead;
+    uintptr_t     primary_ncr3;
+    uintptr_t     secondary_ncr3;
+    uintptr_t     tertiary_cr3;
+    struct NptHookEntry*  first_hook;
+    LIST_ENTRY*     hook_list_head;
 };
 
-extern HYPERVISOR_DATA* g_HvData;
+extern GlobalHvData* global_hypervisor_data;
 
 /*	
-*   CoreVmcbData: 
+    CoreVmcbData: 
 	A structure which contains some core-specific data, must be 16 byte aligned on the stack
 
-	StackSpace - Stack Space required because we are manually setting stack pointer to GuestVmcbPa
-	We need to also subtract some size to make VMCB 4KB aligned	& GuestVmcbPa 16 byte aligned
+	StackSpace - Stack Space required because we are manually setting stack pointer to guest_vmcbPa
+	We need to also subtract some size to make VMCB 4KB aligned	& guest_vmcbPa 16 byte aligned
 		
 	Self - Pointer to vprocessor on stack
 */
 struct CoreVmcbData
 {
-	char        StackSpace[KERNEL_STACK_SIZE - sizeof(void*) * 4];	
+	uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(uint64_t) * 4];	
 	uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
 	uintptr_t   host_vmcb_physicaladdr;
-	void*       Self;			
-    char        pad[8];
-    VMCB        GuestVmcb;
-	VMCB        HostVmcb;
-    char        HostSaveArea[0x1000];
+	void*       self;			
+    uint8_t     pad[8];
+    Vmcb        guest_vmcb;
+    Vmcb        host_vmcb;
+    uint8_t     host_save_state_area[0x1000];
 };
-extern int  CoreCount;
-extern CoreVmcbData*    g_VpData[32];
+extern int  core_count;
+extern CoreVmcbData*    hv_core_data[32];
 
 
 struct GeneralPurposeRegs

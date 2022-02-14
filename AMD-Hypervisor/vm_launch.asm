@@ -47,7 +47,7 @@ POPAQ macro
 
 LaunchVm proc frame
 
-	mov	rsp, rcx	; point stack pointer to &VpData->GuestVmcbPa
+	mov	rsp, rcx	; point stack pointer to &VpData->guest_vmcbPa
 
 EnterVm:
 	mov	rax, [rsp]	; put physical address of guest VMCB in rax
@@ -87,7 +87,7 @@ EnterVm:
 
 	test al, al	; if return 1, then end VM
 
-	POPAQ		; restore general purpose registers, RSP pops back to GuestVmcbPa
+	POPAQ		; restore general purpose registers, RSP pops back to guest_vmcbPa
 
 	jz	EnterVm
 	jmp	EndVm
