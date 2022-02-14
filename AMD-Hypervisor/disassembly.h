@@ -7,25 +7,25 @@ int	LengthOfInstructions(PVOID	address, int BytesLength);
 
 ZydisDecoder ZyDec64;
 
-ZyanU8 GetInstructionLength(ZyanU8* Instruction)
+ZyanU8 GetInstructionLength(ZyanU8* instruction)
 {
 	ZydisDecodedInstruction ZyIns;
-	ZydisDecoderDecodeBuffer(&ZyDec64, Instruction, 20, &ZyIns);
+	ZydisDecoderDecodeBuffer(&ZyDec64, instruction, 20, &ZyIns);
 	return ZyIns.length;
 }
 
-/*	Gets total instructions length closest to BytesLength	*/
-int	LengthOfInstructions(PVOID	address, int BytesLength)
+/*	Gets total instructions length closest to byte_length	*/
+int	LengthOfInstructions(void* address, int byte_length)
 {
-	int InstructionLen = 0;
-	for (InstructionLen = 0; InstructionLen < BytesLength;)
+	int insns_len = 0;
+	for (insns_len = 0; insn_len < byte_length;)
 	{
-		int CurInstructionLen = GetInstructionLength((ZyanU8*)address + InstructionLen);
-		InstructionLen += CurInstructionLen;
+		int cur_insn_len = GetInstructionLength((ZyanU8*)address + insn_len);
+		insns_len += cur_insn_len;
 
-		DbgPrint("CurInstructionLen %i \n", CurInstructionLen);
+		DbgPrint("CurInstructionLen %i \n", cur_insn_len);
 	}
-	DbgPrint("InstructionLen %i \n", InstructionLen);
+	DbgPrint("InstructionLen %i \n", insns_len);
 
-	return InstructionLen;
+	return insns_len;
 }

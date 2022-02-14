@@ -91,41 +91,43 @@ NptHookEntry* AddHookedPage(GlobalHvData* HvData, void* PhysicalAddr, char* patc
 	return	NewHook;
 }
 
-
-
-char jmp[15];
-void SetNptHook(
-	void* address,
-	void* hook_handler,
-	bool execute_only,	// ONLY possible in usermode, with memory protection key
-	uint8_t* hook_bytes
-)
+// execute_only is ONLY possible in usermode, using memory protection key
+void SetNptHook(void* address, void* hook_handler, bool execute_only, uint8_t* hook_bytes)
 {
 	NptHookEntry* hook_entry;
 
-	void* HookedFunc = Function;
-	void* HookedFuncPa = (void*)MmGetPhysicalAddress(HookedFunc).QuadPart;
 
-	Utils::LockPages(HookedFunc, IoReadAccess);
-
-	Utils::GetJmpCode((uintptr_t)hook_handler, jmp);
-
-	hook_entry = AddHookedPage(global_hypervisor_data, HookedFuncPa, jmp, OriginalByteLen, UseDisasm);
-
-	if (hook_entry)
+	if (execute_only)
 	{
-		Utils::GetJmpCode((uintptr_t)HookedFunc + (*HookEntry)->OriginalInstrLen,
-			(uint8_t*)&(*HookEntry)->Jmpout.jmp);
 	}
 	else
 	{
-		/*	there was a problem	*/
+		void* hook_physicaladdr = (void*)MmGetPhysicalAddress(address).QuadPart;
 
-		return;
-	}
+		Utils::LockPages(address, IoReadAccess);
 
-	DbgPrint("2nd page %p \n", Utils::VirtualAddrFromPfn((*HookEntry)->NptEntry2->PageFrameNumber));
-	DbgPrint("original bytes shellcode %p \n", (*HookEntry)->Shellcode);
+		int page_offset = (uintptr_t)PhysicalAddr & (PAGE_SIZE - 1);
+
+		PT_ENTRY_64* innocent_npte = Utils::GetPte(PhysicalAddr, HvData->primary_ncr3);
+
+		PT_ENTRY_64* hooked_npte = Utils::GetPte(PhysicalAddr, HvData->secondary_ncr3);
+
+		if (hook_entry)
+		{
+			Utils::GetJmpCode(
+				(uintptr_t)address + (*hook_entry)->OriginalInstrLen,
+				(uint8_t*)&hook_entry->Jmpout.jmp
+			);
+		}
+		else
+		{
+			/*	there was a problem	*/
+			return;
+		}
+
+		DbgPrint("2nd page %p \n", Utils::VirtualAddrFromPfn(hook_entry->NptEntry2->PageFrameNumber));
+		DbgPrint("original bytes shellcode %p \n", hook_entry->Shellcode);
+	}	
 }
 
 void SetHooks()

@@ -16,7 +16,7 @@ namespace Utils
 	);
 
 	PFN_NUMBER	PfnFromVirtualAddr(
-		uintptr_t	va
+		uintptr_t va
 	);
 
 	/*	
@@ -32,31 +32,35 @@ namespace Utils
 	);
 
 	PT_ENTRY_64* GetPte(
-		void* virtual_addr, 
+		void* virtual_address, 
 		uintptr_t pml4_base_pa, 
-		PDPTE_64** PdpteResult, 
-		PDE_64** PdeResult
+		PDPTE_64** pdpte_result, 
+		PDE_64** pde_result
 	);
 
-	void	GetJmpCode(
-		uintptr_t jmpAddr,
+	void GetJmpCode(
+		uintptr_t jmp_target,
 		char* output
 	);
 
-	void*	GetSystemRoutineAddress(
-		wchar_t* RoutineName, void** RoutinePhysical = NULL);
+	PMDL LockPages(
+		void* virtual_address, 
+		LOCK_OPERATION  operation
+	);
 
-	PMDL	LockPages(void* VirtualAddress, LOCK_OPERATION  operation);
-	NTSTATUS    UnlockPages(PMDL mdl);
+	NTSTATUS UnlockPages(PMDL mdl);
 
-	void* GetDriverBaseAddress(OUT PULONG pSize, UNICODE_STRING DriverName);
+	void* GetDriverBaseAddress(
+		OUT size_t* driver_size, 
+		UNICODE_STRING driver_name
+	);
 
-	uintptr_t GetSectionByName(void* base, const char* SectionNam);
+	int Exponent(
+		int base, 
+		int power
+	);
 
-	int ipow(int base, int power);
-
-	HANDLE GetProcessID(const wchar_t* procName);
-
-	NTSTATUS BBScan(IN PCCHAR section, IN PCUCHAR pattern, IN UCHAR wildcard, IN ULONG_PTR len, OUT void** ppFound, void* base = 0);
-	NTSTATUS BBSearchPattern(IN PCUCHAR pattern, IN UCHAR wildcard, IN ULONG_PTR len, IN const VOID* base, IN ULONG_PTR size, OUT void** ppFound);
+	HANDLE GetProcessId(
+		const wchar_t* process_name
+	);
 }

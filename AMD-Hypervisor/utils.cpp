@@ -29,17 +29,17 @@ namespace Utils
         return MmGetPhysicalAddress((void*)va).QuadPart >> PAGE_SHIFT;
     }
 
-    PT_ENTRY_64* GetPte(void* VirtualAddress, uintptr_t Pml4BasePa, int (*page_table_callback)(PT_ENTRY_64*))
+    PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, int (*page_table_callback)(PT_ENTRY_64*))
     {
         ADDRESS_TRANSLATION_HELPER helper;
-        PT_ENTRY_64* finalEntry;
 
+        PT_ENTRY_64* final_entry;
 
-        helper.AsUInt64 = (UINT64)VirtualAddress;
+        helper.AsUInt64 = (uintptr_t)virtual_address;
 
-        PHYSICAL_ADDRESS    addr;
+        PHYSICAL_ADDRESS    pml4_base_physical;
 
-        addr.QuadPart = Pml4BasePa;
+        pml4_base_physical.QuadPart = pml4_base_pa;
 
         PML4E_64* pml4;
         PML4E_64* pml4e;
@@ -108,23 +108,24 @@ namespace Utils
 
         return  (PT_ENTRY_64*)pte;
     }
-    PT_ENTRY_64* GetPte(void* VirtualAddress, uintptr_t Pml4BasePa, PDPTE_64** PdpteResult, PDE_64** PdeResult)
+    
+    PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, PDPTE_64** pdpte_result, PDE_64** pde_result)
     {
         ADDRESS_TRANSLATION_HELPER helper;
-        PT_ENTRY_64* finalEntry;
 
+        PT_ENTRY_64* final_entry;
 
-        helper.AsUInt64 = (UINT64)VirtualAddress;
+        helper.AsUInt64 = (uintptr_t)virtual_address;
 
-        PHYSICAL_ADDRESS    addr;
+        PHYSICAL_ADDRESS    pml4_base_physical;
 
-        addr.QuadPart = Pml4BasePa;
+        pml4_base_physical.QuadPart = pml4_base_pa;
 
 
         PML4E_64* pml4;
         PML4E_64* pml4e;
 
-        pml4 = (PML4E_64*)MmGetVirtualForPhysical(addr);
+        pml4 = (PML4E_64*)MmGetVirtualForPhysical(pml4_base_physical);
 
         pml4e = &pml4[helper.AsIndex.Pml4];
 
@@ -171,41 +172,24 @@ namespace Utils
         return  (PT_ENTRY_64*)pte;
     }
 
-    void    GetJmpCode(uintptr_t jmpAddr, char* output)
+    void GetJmpCode(uintptr_t jmp_target, uint8_t* output)
     {
-        char JmpIndirect[15] = "\xFF\x25\x00\x00\x00\x00\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC";
+        char jmp_rip[15] = "\xFF\x25\x00\x00\x00\x00\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC";
 
-        memcpy(JmpIndirect + 6, &jmpAddr, sizeof(void*));
-        memcpy((void*)output, JmpIndirect, 14);
+        memcpy(jmp_rip + 6, &jmp_target, sizeof(uintptr_t)));
+        memcpy((void*)output, jmp_rip, 14);
     }
 
-    void*	GetSystemRoutineAddress(wchar_t* RoutineName, void** RoutinePhysical)
+    PMDL LockPages(void* virtual_address, LOCK_OPERATION  operation)
     {
-        UNICODE_STRING	Routine_Name = RTL_CONSTANT_STRING(RoutineName);
-
-        void*	Routine = MmGetSystemRoutineAddress(&Routine_Name);
-
-        void*	RoutinePa = (void*)MmGetPhysicalAddress(Routine).QuadPart;
-
-        if (RoutinePhysical)
-        {
-            *RoutinePhysical = RoutinePa;
-        }
-
-        return Routine;
-    }
-
-
-    PMDL    LockPages(void* VirtualAddress, LOCK_OPERATION  operation)
-    {
-        PMDL mdl = IoAllocateMdl(VirtualAddress, PAGE_SIZE, FALSE, FALSE, nullptr);
+        PMDL mdl = IoAllocateMdl(virtual_address, PAGE_SIZE, FALSE, FALSE, nullptr);
         
         MmProbeAndLockPages(mdl, KernelMode, operation);
 
         return mdl;
     }
 
-    NTSTATUS    UnlockPages(PMDL mdl)
+    NTSTATUS UnlockPages(PMDL mdl)
     {
         MmUnlockPages(mdl);
         IoFreeMdl(mdl);
@@ -240,85 +224,28 @@ namespace Utils
         return 0;
     }
 
-    uintptr_t GetSectionByName(void* base, const char* SectionName)
+	HANDLE GetProcessId(const wchar_t* process_name);
     {
-        PIMAGE_NT_HEADERS64 pHdr = (PIMAGE_NT_HEADERS64)RtlImageNtHeader(base);
-       
-        if (!pHdr)
-            return 0; // STATUS_INVALID_IMAGE_FORMAT;
+        auto list_entry = (LIST_ENTRY*)(((uintptr_t)PsInitialSystemProcess) + OFFSET::processLinksOffset);
 
-        PIMAGE_SECTION_HEADER pFirstSection = (PIMAGE_SECTION_HEADER)((uintptr_t)&pHdr->FileHeader + pHdr->FileHeader.SizeOfOptionalHeader + sizeof(IMAGE_FILE_HEADER));
+        auto current_entry = list_entry->Flink;
 
-        void* ptr = NULL;
-
-        for (PIMAGE_SECTION_HEADER pSection = pFirstSection; pSection < pFirstSection + pHdr->FileHeader.NumberOfSections; ++pSection)
+        while (current_entry != list_entry && current_entry != NULL)
         {
-            if (strcmp((char*)pSection->Name, SectionName) == 0)
+            auto process = (PEPROCESS)((uintptr_t)current_entry - OFFSET::processLinksOffset);
+
+            if (!wcscmp(PsGetProcessImageFileName(process), process_name))
             {
-                return pSection->VirtualAddress + (uintptr_t)base;
+                DbgPrint("found process!! PEPROCESS value %p \n", process);
+
+                return process;
             }
+
+            current_entry = current_entry->Flink;
         }
-
-        return 0;
-    }
-
-    HANDLE GetProcessID(const wchar_t* procName)
-    {
-        HANDLE  procId = 0;
-
-        NTSTATUS status = STATUS_SUCCESS;
-
-        void* buffer;
-
-
-        buffer = ExAllocatePoolWithTag(NonPagedPool, 1024 * 1024, 'qpwo');
-
-        if (!buffer) {
-            DbgPrint("couldn't allocate \n");
-            return 0;
-        }
-
-        PSYSTEM_PROCESS_INFORMATION pInfo = (PSYSTEM_PROCESS_INFORMATION)buffer;
-
-
-        status = ZwQuerySystemInformation(SystemProcessInformation, pInfo, 1024 * 1024, NULL);
-        if (!NT_SUCCESS(status)) {
-            DbgPrint("ZwQuerySystemInformation Failed, status %p\n", status);
-            ExFreePoolWithTag(buffer, 'qpwo');
-            return 0;
-        }
-
-        UNICODE_STRING  processName;
-        RtlInitUnicodeString(&processName, procName);
-
-        if (NT_SUCCESS(status))
-        {
-            while (1)
-            {
-                if (RtlEqualUnicodeString(&pInfo->ImageName, &processName, TRUE))
-                {
-                    DbgPrint("found process, process Id: %i \n", pInfo->ProcessId);
-                    procId = pInfo->ProcessId;
-
-                    break;
-                }
-                else if (pInfo->NextEntryOffset)
-                {
-                    pInfo = (PSYSTEM_PROCESS_INFORMATION)((PUCHAR)pInfo + pInfo->NextEntryOffset);
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-
-        ExFreePoolWithTag(buffer, 'qpwo');
-
-        return procId;
     }
     
-    ipow(int base, int power)
+    Exponent(int base, int power)
     {
         int start = 1;
         for (int i = 0; i < power; ++i)
@@ -328,82 +255,4 @@ namespace Utils
 
         return start;
     }
-
-    NTSTATUS BBSearchPattern(IN PCUCHAR pattern, IN UCHAR wildcard, IN ULONG_PTR len, IN const VOID* base, IN ULONG_PTR size, OUT void** ppFound)
-    {
-        ASSERT(ppFound != NULL && pattern != NULL && base != NULL);
-        if (ppFound == NULL || pattern == NULL || base == NULL)
-            return STATUS_INVALID_PARAMETER;
-
-        for (ULONG_PTR i = 0; i < size - len; i++)
-        {
-            BOOLEAN found = TRUE;
-            for (ULONG_PTR j = 0; j < len; j++)
-            {
-                if (pattern[j] != wildcard && pattern[j] != ((PCUCHAR)base)[i + j])
-                {
-                    found = FALSE;
-                    break;
-                }
-            }
-
-            if (found != FALSE)
-            {
-                *ppFound = (PUCHAR)base + i;
-                return STATUS_SUCCESS;
-            }
-        }
-
-        return STATUS_NOT_FOUND;
-    }
-
-
-    NTSTATUS BBScan(IN PCCHAR section, IN PCUCHAR pattern, IN UCHAR wildcard, IN ULONG_PTR len, OUT void** ppFound, void* base)
-    {
-        //ASSERT(ppFound != NULL);
-        if (ppFound == NULL)
-            return STATUS_ACCESS_DENIED; //STATUS_INVALID_PARAMETER
-
-        if (nullptr == base)
-            base = Utils::GetDriverBaseAddress(NULL, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
-
-        if (nullptr == base)
-            return STATUS_ACCESS_DENIED; //STATUS_NOT_FOUND;
-
-        PIMAGE_NT_HEADERS64 pHdr = (PIMAGE_NT_HEADERS64)RtlImageNtHeader(base);
-        if (!pHdr)
-            return STATUS_ACCESS_DENIED; // STATUS_INVALID_IMAGE_FORMAT;
-
-        //PIMAGE_SECTION_HEADER pFirstSection = (PIMAGE_SECTION_HEADER)(pHdr + 1);
-        PIMAGE_SECTION_HEADER pFirstSection = (PIMAGE_SECTION_HEADER)((uintptr_t)&pHdr->FileHeader + pHdr->FileHeader.SizeOfOptionalHeader + sizeof(IMAGE_FILE_HEADER));
-
-        void* ptr = NULL;
-
-        for (PIMAGE_SECTION_HEADER pSection = pFirstSection; pSection < pFirstSection + pHdr->FileHeader.NumberOfSections; pSection++)
-        {
-            ANSI_STRING s1, s2;
-
-            RtlInitAnsiString(&s1, section);
-            RtlInitAnsiString(&s2, (PCCHAR)pSection->Name);
-
-            if (((RtlCompareString(&s1, &s2, TRUE) == 0) || (pSection->Characteristics & IMAGE_SCN_CNT_CODE) ||
-                (pSection->Characteristics & IMAGE_SCN_MEM_EXECUTE)))
-            {
-                NTSTATUS status = BBSearchPattern(pattern, wildcard, len, (PUCHAR)base + pSection->VirtualAddress, pSection->Misc.VirtualSize, &ptr);
-
-                if (NT_SUCCESS(status)) {
-
-                    *(Puintptr_t)ppFound = (ULONG_PTR)(ptr); //- (PUCHAR)base
-                    DbgPrint("found\r\n");
-                    return status;
-                }
-
-            }
-            
-        }
-
-        return STATUS_ACCESS_DENIED; //STATUS_NOT_FOUND;
-    }
-
-
 }

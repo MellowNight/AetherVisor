@@ -18,7 +18,7 @@ void*	AllocateNewTable(PML4E_64* PageEntry)
 	return Table;
 }
 
-void    GetPhysicalMemoryRanges()
+void GetPhysicalMemoryRanges()
 {
 	numberOfRuns = 0;
 
@@ -35,7 +35,6 @@ void    GetPhysicalMemoryRanges()
 
 	return;
 }
-
 
 /*	assign a new NPT entry to an unmapped guest physical address	*/
 PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
