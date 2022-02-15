@@ -57,9 +57,21 @@
     <ClInclude Include="windows_structs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="kernel_structures.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel_exports.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="amd_sev.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="disassembly.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="driver.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hv_interface.cpp">
@@ -81,6 +93,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="virtualization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="amd_sev.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

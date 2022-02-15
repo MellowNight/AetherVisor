@@ -2,7 +2,7 @@
 #include "npt_setup.h"
 #include "hv_interface.h"
 #include "logging.h"
-
+#include "virtualization.h"
 
 enum VMEXIT
 {
@@ -67,7 +67,7 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GeneralPurposeRegs* GuestContex
 
     if (exit_info1.fields.execute == 1) 
     {
-        NptHookEntry* nptHook = GetHookByPhysicalPage(global_hypervisor_data, fail_address);
+        NptHookEntry* nptHook = GetHookByPhysicalPage(hypervisor, fail_address);
 
         bool Switch = true;
 
@@ -97,11 +97,11 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GeneralPurposeRegs* GuestContex
         {
             if (nptHook) 
             {
-                VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->noexecute_ncr3;
+                VpData->guest_vmcb.control_area.NCr3 = hypervisor->noexecute_ncr3;
             }
             else 
             {
-                VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->normal_ncr3;
+                VpData->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
             }
         }
     }
@@ -118,52 +118,9 @@ void HandleMsrExit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters)
 }
 
 
-void HandleVmmcall(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters,
-    bool* EndVM)
+void HandleVmmcall(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters, bool* EndVM)
 {
-    int Registers[4];
-
-    UINT64 Origin = GuestRegisters->rdx;
-    UINT64 Leaf = GuestRegisters->rcx;
-
-    if(Origin == KERNEL_VMMCALL)
-    { 
-        switch (Leaf) {
-
-        case VMMCALL : 
-        {
-            Registers[0] = 'epyH'; /*	"HyperCheatzz"	*/
-            Registers[1] = 'ehCr';
-            Registers[2] = 'zzta';
-
-            VpData->guest_vmcb.save_state_area.Rax = Registers[0];
-            GuestRegisters->Rbx = Registers[1];
-            GuestRegisters->Rcx = Registers[2];
-            GuestRegisters->Rdx = Registers[3];
-
-            break;
-        }
-        case VMMCALL::DISABLE_HOOKS: 
-        {
-            VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->tertiary_cr3;
-            break;
-        }
-        case VMMCALL::END_HV: 
-        {
-            *EndVM = true;
-            break;
-        }
-
-        default:
-            InjectException(VpData, 6);
-            break;
-        }
-    }
-    else if (Origin == USER_VMMCALL)
-    {
-        global_hypervisor_data->HvCommand = Leaf;
-    }
-    VpData->guest_vmcb.SaveStateArea.Rip = VpData->guest_vmcb.control_area.NRip;
+    VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
 
@@ -208,14 +165,14 @@ extern "C" bool HandleVmexit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegi
     case VMEXIT::INVALID: 
     {
         SegmentAttribute CsAttrib;
-        CsAttrib.as_uint16 = VpData->guest_vmcb.SaveStateArea.CsAttrib;
+        CsAttrib.as_uint16 = VpData->guest_vmcb.save_state_area.CsAttrib;
 
         IsProcessorReadyForVmrun(&VpData->guest_vmcb, CsAttrib);
 
         break;
     }
     default:
-        DbgPrint("[VMEXIT] huh?? wtf why did I exit ?? exit code %p \n",
+        Logger::Log(L"[VMEXIT] huh?? wtf why did I exit ?? exit code %p \n",
             VpData->guest_vmcb.control_area.ExitCode);
         break;
     }

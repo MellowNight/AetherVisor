@@ -7,10 +7,10 @@ namespace Logger
 
 	TRACELOGGING_DECLARE_PROVIDER(log_provider);
 
-	NTSTATUS Init();
+	NTSTATUS Start();
 
-	void Log(const char* format, ...);
+	void Log(const wchar_t* format, ...);
 
-	void LogSessionEnd();
+	void End();
 
 };

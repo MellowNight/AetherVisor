@@ -16,16 +16,16 @@ namespace Logger
 		return TraceLoggingRegister(log_provider);
 	}
 
-	void Log(const char* format, ...)
+	void Log(const wchar_t* format, ...)
 	{
-		char buffer[LOG_MAX_LEN];
+		wchar_t buffer[LOG_MAX_LEN];
 
 		va_list args;
 		va_start(args, format);
-		RtlStringCchPrintfA(buffer, LOG_MAX_LEN, format, args);
+		RtlStringCchPrintfW(buffer, LOG_MAX_LEN, format, args);
 		va_end(args);
 
-		TraceLoggingWrite(log_provider, (char*)"hello12", TraceLoggingWideString(buffer));
+		TraceLoggingWrite(log_provider, "HV message", TraceLoggingWideString(buffer));
 	}
 
 	void End()

@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "logging.h"
+#include "kernel_exports.h"
 
 namespace Utils
 {
@@ -44,7 +45,7 @@ namespace Utils
         PML4E_64* pml4;
         PML4E_64* pml4e;
 
-        pml4 = (PML4E_64*)MmGetVirtualForPhysical(addr);
+        pml4 = (PML4E_64*)MmGetVirtualForPhysical(pml4_base_physical);
 
         pml4e = &pml4[helper.AsIndex.Pml4];
 
@@ -140,7 +141,7 @@ namespace Utils
 
         pdpt = (PDPTE_64*)VirtualAddrFromPfn(pml4e->PageFrameNumber);
 
-        *PdpteResult = pdpte = &pdpt[helper.AsIndex.Pdpt];
+        *pdpte_result = pdpte = &pdpt[helper.AsIndex.Pdpt];
 
         if ((pdpte->Present == FALSE) || (pdpte->LargePage != FALSE))
         {
@@ -153,31 +154,22 @@ namespace Utils
 
         pd = (PDE_64*)VirtualAddrFromPfn(pdpte->PageFrameNumber);
 
-        *PdeResult = pde = &pd[helper.AsIndex.Pd];
+        *pde_result = pde = &pd[helper.AsIndex.Pd];
 
         if ((pde->Present == FALSE) || (pde->LargePage != FALSE))
         {
             return (PT_ENTRY_64*)pde;
         }
 
-
         PTE_64* pt;
-        PTE_64* pte;
 
+        PTE_64* pte;
 
         pt = (PTE_64*)VirtualAddrFromPfn(pde->PageFrameNumber);
 
         pte = &pt[helper.AsIndex.Pt];
 
         return  (PT_ENTRY_64*)pte;
-    }
-
-    void GetJmpCode(uintptr_t jmp_target, uint8_t* output)
-    {
-        char jmp_rip[15] = "\xFF\x25\x00\x00\x00\x00\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC";
-
-        memcpy(jmp_rip + 6, &jmp_target, sizeof(uintptr_t)));
-        memcpy((void*)output, jmp_rip, 14);
     }
 
     PMDL LockPages(void* virtual_address, LOCK_OPERATION  operation)
@@ -199,19 +191,17 @@ namespace Utils
 
     void* GetDriverBaseAddress(OUT PULONG pSize, UNICODE_STRING DriverName)
     {
-        PLIST_ENTRY moduleList = (PLIST_ENTRY)PsLoadedModuleList;
+        auto moduleList = (PLIST_ENTRY)PsLoadedModuleList;
 
         UNICODE_STRING  DrvName;
 
-        for (PLIST_ENTRY link = moduleList; 
-            link != moduleList->Blink;
-            link = link->Flink)
+        for (PLIST_ENTRY link = moduleList; link != moduleList->Blink; link = link->Flink)
         {
             LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(link, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
             if (RtlCompareUnicodeString(&DriverName, &entry->BaseDllName, false) == 0)
             {
-                DbgPrint("found module! \n");
+                Logger::Log(L"found module! \n");
                 if (pSize && MmIsAddressValid(pSize))
                 {
                     *pSize = entry->SizeOfImage;
@@ -224,19 +214,19 @@ namespace Utils
         return 0;
     }
 
-	HANDLE GetProcessId(const wchar_t* process_name);
+	HANDLE GetProcessId(const char* process_name)
     {
-        auto list_entry = (LIST_ENTRY*)(((uintptr_t)PsInitialSystemProcess) + OFFSET::processLinksOffset);
+        auto list_entry = (LIST_ENTRY*)(((uintptr_t)PsInitialSystemProcess) + OFFSET::ProcessLinksOffset);
 
         auto current_entry = list_entry->Flink;
 
         while (current_entry != list_entry && current_entry != NULL)
         {
-            auto process = (PEPROCESS)((uintptr_t)current_entry - OFFSET::processLinksOffset);
+            auto process = (PEPROCESS)((uintptr_t)current_entry - OFFSET::ProcessLinksOffset);
 
-            if (!wcscmp(PsGetProcessImageFileName(process), process_name))
+            if (!strcmp(PsGetProcessImageFileName(process), process_name))
             {
-                DbgPrint("found process!! PEPROCESS value %p \n", process);
+                Logger::Log(L"found process!! PEPROCESS value %p \n", process);
 
                 return process;
             }
@@ -245,7 +235,7 @@ namespace Utils
         }
     }
     
-    Exponent(int base, int power)
+    int Exponent(int base, int power)
     {
         int start = 1;
         for (int i = 0; i < power; ++i)

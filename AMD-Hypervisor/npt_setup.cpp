@@ -1,13 +1,10 @@
 #include "npt_setup.h"
 #include "npt_hook.h"
-#include "hook_handler.h"
-
-PHYSICAL_MEMORY_RANGE   g_PhysMemRange[10];
-int  numberOfRuns = 0;
+#include "logging.h"
 
 void*	AllocateNewTable(PML4E_64* PageEntry)
 {
-	void*	Table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+	void* Table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
 	PageEntry->PageFrameNumber = MmGetPhysicalAddress(Table).QuadPart >> PAGE_SHIFT;
 	PageEntry->Write = 1;
@@ -18,9 +15,9 @@ void*	AllocateNewTable(PML4E_64* PageEntry)
 	return Table;
 }
 
-void GetPhysicalMemoryRanges()
+int GetPhysicalMemoryRanges()
 {
-	numberOfRuns = 0;
+	int numberOfRuns = 0;
 
 	PPHYSICAL_MEMORY_RANGE MmPhysicalMemoryRange = MmGetPhysicalMemoryRanges();
 
@@ -28,12 +25,12 @@ void GetPhysicalMemoryRanges()
 		(MmPhysicalMemoryRange[number_of_runs].BaseAddress.QuadPart) || (MmPhysicalMemoryRange[number_of_runs].NumberOfBytes.QuadPart);
 		number_of_runs++)
 	{
-		g_PhysMemRange[number_of_runs] = MmPhysicalMemoryRange[number_of_runs];
+		hypervisor->phys_mem_range[number_of_runs] = MmPhysicalMemoryRange[number_of_runs];
 
 		numberOfRuns += 1;
 	}
 
-	return;
+	return numberOfRuns;
 }
 
 /*	assign a new NPT entry to an unmapped guest physical address	*/
@@ -98,17 +95,17 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 
 uintptr_t	 BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 {
-	GetPhysicalMemoryRanges();
+	auto numberOfRuns = GetPhysicalMemoryRanges();
 
 	PML4E_64* n_Pml4Virtual = (PML4E_64*)ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
 	*NCr3 = MmGetPhysicalAddress(n_Pml4Virtual).QuadPart;
 
-	DbgPrint("[SETUP] pml4 at %p \n", n_Pml4Virtual);
+	Logger::Log(L"[SETUP] pml4 at %p \n", n_Pml4Virtual);
 
 	for (int run = 0; run < numberOfRuns; ++run)
 	{
-		uintptr_t		PageCount = g_PhysMemRange[run].NumberOfBytes.QuadPart / PAGE_SIZE;
+		uintptr_t	PageCount = hypervisor->phys_mem_range[run].NumberOfBytes.QuadPart / PAGE_SIZE;
 		uintptr_t		PagesBase = g_PhysMemRange[run].BaseAddress.QuadPart / PAGE_SIZE;
 
 		for (PFN_NUMBER PFN = PagesBase; PFN < PagesBase + PageCount; ++PFN)
@@ -117,17 +114,17 @@ uintptr_t	 BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 		}
 	}
 
-	APIC_BAR	apic_bar;
+	MsrApicBar apic_bar;
 
-	apic_bar.Flags = __readmsr(MSR_APIC_BAR);
+	apic_bar.Flags = __readmsr(MSR::APIC_BAR);
 
 	AssignNPTEntry(n_Pml4Virtual, apic_bar.ApicBase << PAGE_SHIFT, true);
 
 	return *NCr3;
 }
 
-void	InitializeHookList(GlobalHvData*	HvData)
+void	InitializeHookList(Hypervisor*	HvData)
 {
 	HvData->first_hook = (NptHookEntry*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHookEntry), 'hook');
-	HvData->hook_list_head = &HvData->first_hook->HookList;
+	HvData->hook_list_head = &HvData->first_hook->npt_hook_list;
 }

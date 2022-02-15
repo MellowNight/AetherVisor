@@ -146,7 +146,11 @@
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
       <AdditionalIncludeDirectories>$(SolutionDir)dependencies\Zydis\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
+    <Link>
+      <EntryPointSymbol>EntryPoint</EntryPointSymbol>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Inf Include="AMD-Hypervisor.inf" />
@@ -156,10 +160,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="amd_definitions.h" />
+    <ClInclude Include="amd_sev.h" />
+    <ClInclude Include="disassembly.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="hv_interface.h" />
     <ClInclude Include="ia32.h" />
     <ClInclude Include="includes.h" />
+    <ClInclude Include="kernel_exports.h" />
+    <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt_setup.h" />
@@ -168,7 +176,8 @@
     <ClInclude Include="windows_structs.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="driver.cpp" />
+    <ClCompile Include="amd_sev.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="hv_interface.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="npt_hook.cpp" />

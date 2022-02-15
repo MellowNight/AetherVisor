@@ -10,16 +10,16 @@ struct NptHookEntry
 };
 
 NptHookEntry* GetHookByPhysicalPage(
-	GlobalHvData* HvData, 
+	Hypervisor* HvData, 
 	UINT64 PagePhysical
 );
 
 NptHookEntry* GetHookByOldFuncAddress(
-	GlobalHvData* HvData,
+	Hypervisor* HvData,
 	void*	FuncAddr
 );
 NptHookEntry* AddHookedPage(
-	GlobalHvData* HvData, 
+	Hypervisor* HvData, 
 	void* PhysicalAddr, 
 	uintptr_t	NCr3, 
 	char* patch, 

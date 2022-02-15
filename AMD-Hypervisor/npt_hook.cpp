@@ -1,6 +1,8 @@
-#include	"npt_hook.h"
+#include "npt_hook.h"
+#include "global.h"
+#include "logging.h"
 
-NptHookEntry* GetHookByPhysicalPage(GlobalHvData* HvData, UINT64 PagePhysical)
+NptHookEntry* GetHookByPhysicalPage(Hypervisor* HvData, UINT64 PagePhysical)
 {
 	PFN_NUMBER pfn = PagePhysical >> PAGE_SHIFT;
 
@@ -8,11 +10,12 @@ NptHookEntry* GetHookByPhysicalPage(GlobalHvData* HvData, UINT64 PagePhysical)
 
 	for (LIST_ENTRY* entry = HvData->hook_list_head; entry != 0; entry = entry->Flink) 
 	{
-		nptHook = CONTAINING_RECORD(entry, NptHookEntry, HookList);
+		nptHook = CONTAINING_RECORD(entry, NptHookEntry, npt_hook_list);
 
-		if (nptHook->NptEntry1) {
-
-            if (nptHook->NptEntry1->PageFrameNumber == pfn) {
+		if (nptHook->innocent_npte) 
+		{
+            if (nptHook->innocent_npte->PageFrameNumber == pfn) 
+			{
 				return nptHook;
             }
         }
@@ -23,7 +26,7 @@ NptHookEntry* GetHookByPhysicalPage(GlobalHvData* HvData, UINT64 PagePhysical)
 
 NptHookEntry* NewHookEntry()
 {
-	auto entry = HvData->hook_list_head;
+	auto entry = hypervisor->hook_list_head;
 
 	while (MmIsAddressValid(entry->Flink))
 	{
@@ -32,7 +35,7 @@ NptHookEntry* NewHookEntry()
 
 	auto new_hook = (NptHookEntry*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHookEntry), 'hook');
 
-	entry->Flink = &new_hook->HookList;
+	entry->Flink = &new_hook->npt_hook_list;
 
 	return new_hook;
 }
@@ -50,8 +53,8 @@ void SetNptHook(void* address, bool execute_only, uint8_t* patch_bytes, size_t p
 
 	if (execute_only)
 	{
-		hook_entry->innocent_npte = Utils::GetPte(hook_physicaladdr, HvData->normal_ncr3);
-		hook_entry->hooked_npte = Utils::GetPte(hook_physicaladdr, HvData->noexecute_ncr3);
+		hook_entry->innocent_npte = Utils::GetPte(hook_physicaladdr, hypervisor->normal_ncr3);
+		hook_entry->hooked_npte = Utils::GetPte(hook_physicaladdr, hypervisor->noexecute_ncr3);
 
 		auto page_with_hook = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
 
@@ -69,23 +72,18 @@ void SetNptHook(void* address, bool execute_only, uint8_t* patch_bytes, size_t p
 	{
 		auto page_with_hook = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
 
-		hook_entry->innocent_npte = Utils::GetPte(hook_physicaladdr, HvData->normal_ncr3);
+		hook_entry->innocent_npte = Utils::GetPte(hook_physicaladdr, hypervisor->normal_ncr3);
 
 		/*	copy the innocent npt entry and then point to a different page	*/
-		hook_entry->hooked_npte = innocent_npte;
-		hook_entry->hooked_npte = Utils::PfnFromVirtualAddr(page_with_hook);
+		hook_entry->hooked_npte = hook_entry->innocent_npte;
+		hook_entry->hooked_npte->PageFrameNumber = Utils::PfnFromVirtualAddr(page_with_hook);
 
 		memcpy((uint8_t*)page_with_hook + page_offset, patch_bytes, patch_size);
 
 		
 	}
 
-	DbgPrint("innocent_npte pageframe %p \n", hook_entry->innocent_npte->PageFrameNumber);
+	Logger::Log(L"innocent_npte pageframe %p \n", hook_entry->innocent_npte->PageFrameNumber);
 
 	hook_entry->execute_only = execute_only;
-}
-
-void SetHooks()
-{
-	SetNptHook(NtQueryInformationFile, NtQueryInfoFile_handler, &NtQueryInfoFilehk_Entry);
 }

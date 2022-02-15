@@ -1,16 +1,17 @@
 #pragma once
 #include "amd_definitions.h"
 
-struct GlobalHvData
+struct Hypervisor
 {
     uintptr_t     normal_ncr3;
     uintptr_t     noexecute_ncr3;
     uintptr_t     tertiary_cr3;
     struct NptHookEntry*  first_hook;
     LIST_ENTRY*     hook_list_head;
+    phys_mem_range
 };
 
-extern GlobalHvData* global_hypervisor_data;
+extern Hypervisor* hypervisor;
 
 /*	
     CoreVmcbData: 
@@ -30,10 +31,10 @@ struct CoreVmcbData
     uint8_t     pad[8];
     Vmcb        guest_vmcb;
     Vmcb        host_vmcb;
-    uint8_t     host_save_state_area[0x1000];
+    uint8_t     host_save_area[0x1000];
 };
-extern int  core_count;
-extern CoreVmcbData*    hv_core_data[32];
+extern int core_count;
+extern CoreVmcbData* vcpu_data[32];
 
 
 struct GeneralPurposeRegs

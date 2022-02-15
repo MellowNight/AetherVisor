@@ -38,11 +38,6 @@ namespace Utils
 		PDE_64** pde_result
 	);
 
-	void GetJmpCode(
-		uintptr_t jmp_target,
-		char* output
-	);
-
 	PMDL LockPages(
 		void* virtual_address, 
 		LOCK_OPERATION  operation
@@ -61,6 +56,6 @@ namespace Utils
 	);
 
 	HANDLE GetProcessId(
-		const wchar_t* process_name
+		const char* process_name
 	);
 }

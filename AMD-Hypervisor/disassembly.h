@@ -1,31 +1,41 @@
+#include "includes.h"
 
-
-extern ZydisDecoder ZyDec64;
-ZyanU8 GetInstructionLength(ZyanU8* Instruction);
-
-int	LengthOfInstructions(PVOID	address, int BytesLength);
-
-ZydisDecoder ZyDec64;
-
-ZyanU8 GetInstructionLength(ZyanU8* instruction)
+namespace Disasm
 {
-	ZydisDecodedInstruction ZyIns;
-	ZydisDecoderDecodeBuffer(&ZyDec64, instruction, 20, &ZyIns);
-	return ZyIns.length;
-}
+	static ZydisDecoder zydis_decoder;
 
-/*	Gets total instructions length closest to byte_length	*/
-int	LengthOfInstructions(void* address, int byte_length)
-{
-	int insns_len = 0;
-	for (insns_len = 0; insn_len < byte_length;)
+	ZydisDecodedInstruction Disassemble(uint8_t* instruction)
 	{
-		int cur_insn_len = GetInstructionLength((ZyanU8*)address + insn_len);
-		insns_len += cur_insn_len;
+		ZydisDecodedInstruction zydis_insn;
+		ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
+		
+		ZydisDecoderDecodeFull(
+			&zydis_decoder, 
+			instruction, 16, 
+			&zydis_insn,
+			operands, 
+			ZYDIS_MAX_OPERAND_COUNT_VISIBLE, 
+			ZYDIS_DFLAG_VISIBLE_OPERANDS_ONLY
+		);
 
-		DbgPrint("CurInstructionLen %i \n", cur_insn_len);
+		return zydis_insn;
 	}
-	DbgPrint("InstructionLen %i \n", insns_len);
 
-	return insns_len;
-}
+	/*	Gets total instructions length closest to byte_length	*/
+	int	LengthOfInstructions(void* address, int byte_length)
+	{
+		int insns_len = 0;
+		for (insns_len = 0; insns_len < byte_length;)
+		{
+			int cur_insn_len = Disassemble((uint8_t*)address + insns_len).length;
+			insns_len += cur_insn_len;
+		}
+
+		return insns_len;
+	}
+
+	int Init()
+	{
+		ZydisDecoderInit(&zydis_decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
+	}
+};
