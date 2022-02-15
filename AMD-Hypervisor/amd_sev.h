@@ -1,0 +1,9 @@
+void SetupAmdSev()
+{
+
+}
+
+void SetupAmdSevSnp()
+{
+    
+}

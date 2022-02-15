@@ -97,11 +97,11 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GeneralPurposeRegs* GuestContex
         {
             if (nptHook) 
             {
-                VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->secondary_ncr3;
+                VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->noexecute_ncr3;
             }
             else 
             {
-                VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->primary_ncr3;
+                VpData->guest_vmcb.control_area.NCr3 = global_hypervisor_data->normal_ncr3;
             }
         }
     }

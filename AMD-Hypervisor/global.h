@@ -3,8 +3,8 @@
 
 struct GlobalHvData
 {
-    uintptr_t     primary_ncr3;
-    uintptr_t     secondary_ncr3;
+    uintptr_t     normal_ncr3;
+    uintptr_t     noexecute_ncr3;
     uintptr_t     tertiary_cr3;
     struct NptHookEntry*  first_hook;
     LIST_ENTRY*     hook_list_head;

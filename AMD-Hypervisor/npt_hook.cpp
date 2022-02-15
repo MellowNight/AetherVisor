@@ -21,113 +21,68 @@ NptHookEntry* GetHookByPhysicalPage(GlobalHvData* HvData, UINT64 PagePhysical)
 	return 0;
 }
 
-NptHookEntry* AddHookedPage(GlobalHvData* HvData, void* PhysicalAddr, char* patch, int PatchLen, bool UseDisasm)
+NptHookEntry* NewHookEntry()
 {
-	int page_offset = (uintptr_t)PhysicalAddr & (PAGE_SIZE - 1);
-
-	PT_ENTRY_64* InnocentNptEntry = Utils::GetPte(PhysicalAddr, HvData->primary_ncr3);
-
-	PT_ENTRY_64* HookedNptEntry = Utils::GetPte(PhysicalAddr, HvData->secondary_ncr3);
-
-
-	uintptr_t	CopyPage = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
-
-	uintptr_t	PageAddr = (uintptr_t)Utils::VirtualAddrFromPfn(InnocentNptEntry->PageFrameNumber);
-
-	if (!MmIsAddressValid((void*)PageAddr))
-	{
-		DbgPrint("Address invalid! PageAddr %p \n", PageAddr);
-		DbgPrint("PhysicalAddr %p \n", PhysicalAddr);
-		DbgPrint("nested page frame number %p \n", InnocentNptEntry->PageFrameNumber);
-		return 0;
-	}
-	if (!MmIsAddressValid((void*)CopyPage))
-	{
-		DbgPrint("Address invalid! CopyPage %p \n", CopyPage);
-		return 0;
-	}
-
-	memcpy((void*)CopyPage, (void*)PageAddr, PAGE_SIZE);
-
-	memcpy((void*)(CopyPage + PageOffset), patch, PatchLen);
-
-	InnocentNptEntry->ExecuteDisable = 1;
-
-	HookedNptEntry->ExecuteDisable = 0;
-	HookedNptEntry->PageFrameNumber = Utils::PfnFromVirtualAddr(CopyPage);
-
-
-	LIST_ENTRY* entry = HvData->hook_list_head;
+	auto entry = HvData->hook_list_head;
 
 	while (MmIsAddressValid(entry->Flink))
 	{
 		entry = entry->Flink;
 	}
 
-	NptHookEntry* NewHook = (NptHookEntry*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHookEntry), 'hook');
+	auto new_hook = (NptHookEntry*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHookEntry), 'hook');
 
-	entry->Flink = &NewHook->HookList;
+	entry->Flink = &new_hook->HookList;
 
-	DbgPrint("InnocentNptEntry pageframe %p \n", InnocentNptEntry->PageFrameNumber);
-
-	memset(&NewHook->Shellcode, '\x90', 64);
-
-	/*	get original bytes length	*/
-
-	if(UseDisasm)
-	{
-		NewHook->OriginalInstrLen = LengthOfInstructions((BYTE*)PageAddr + PageOffset, PatchLen);
-	}
-	else {
-		NewHook->OriginalInstrLen = PatchLen;
-	}
-	
-	memcpy(&NewHook->Jmpout.OriginalBytes, (void*)(PageAddr + PageOffset), NewHook->OriginalInstrLen);
-
-
-	NewHook->NptEntry1 = InnocentNptEntry;
-	NewHook->NptEntry2 = HookedNptEntry;
-
-	return	NewHook;
+	return new_hook;
 }
 
-// execute_only is ONLY possible in usermode, using memory protection key
-void SetNptHook(void* address, void* hook_handler, bool execute_only, uint8_t* hook_bytes)
+/*	execute_only is ONLY possible in usermode, using memory protection key	*/
+void SetNptHook(void* address, bool execute_only, uint8_t* patch_bytes, size_t patch_size)
 {
-	NptHookEntry* hook_entry;
+	NptHookEntry* hook_entry = NewHookEntry();
 
+	Utils::LockPages(address, IoReadAccess);
+
+	auto hook_physicaladdr = (void*)MmGetPhysicalAddress(address).QuadPart;
+
+	int page_offset = (uintptr_t)hook_physicaladdr & (PAGE_SIZE - 1);
 
 	if (execute_only)
 	{
+		hook_entry->innocent_npte = Utils::GetPte(hook_physicaladdr, HvData->normal_ncr3);
+		hook_entry->hooked_npte = Utils::GetPte(hook_physicaladdr, HvData->noexecute_ncr3);
+
+		auto page_with_hook = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
+
+		memcpy((uint8_t*)page_with_hook + page_offset, patch_bytes, patch_size);
+
+		/*	(1) Trigger a page fault when the original page is executed	*/
+		hook_entry->innocent_npte->ExecuteDisable = 1;
+
+		/*	(2) map the hook page as executable in the secondary ncr3
+			 and switch to second page when (1) happens */
+		hook_entry->hooked_npte->ExecuteDisable = 0;
+		hook_entry->hooked_npte->PageFrameNumber = Utils::PfnFromVirtualAddr(page_with_hook);
 	}
 	else
 	{
-		void* hook_physicaladdr = (void*)MmGetPhysicalAddress(address).QuadPart;
+		auto page_with_hook = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
 
-		Utils::LockPages(address, IoReadAccess);
+		hook_entry->innocent_npte = Utils::GetPte(hook_physicaladdr, HvData->normal_ncr3);
 
-		int page_offset = (uintptr_t)PhysicalAddr & (PAGE_SIZE - 1);
+		/*	copy the innocent npt entry and then point to a different page	*/
+		hook_entry->hooked_npte = innocent_npte;
+		hook_entry->hooked_npte = Utils::PfnFromVirtualAddr(page_with_hook);
 
-		PT_ENTRY_64* innocent_npte = Utils::GetPte(PhysicalAddr, HvData->primary_ncr3);
+		memcpy((uint8_t*)page_with_hook + page_offset, patch_bytes, patch_size);
 
-		PT_ENTRY_64* hooked_npte = Utils::GetPte(PhysicalAddr, HvData->secondary_ncr3);
+		
+	}
 
-		if (hook_entry)
-		{
-			Utils::GetJmpCode(
-				(uintptr_t)address + (*hook_entry)->OriginalInstrLen,
-				(uint8_t*)&hook_entry->Jmpout.jmp
-			);
-		}
-		else
-		{
-			/*	there was a problem	*/
-			return;
-		}
+	DbgPrint("innocent_npte pageframe %p \n", hook_entry->innocent_npte->PageFrameNumber);
 
-		DbgPrint("2nd page %p \n", Utils::VirtualAddrFromPfn(hook_entry->NptEntry2->PageFrameNumber));
-		DbgPrint("original bytes shellcode %p \n", hook_entry->Shellcode);
-	}	
+	hook_entry->execute_only = execute_only;
 }
 
 void SetHooks()

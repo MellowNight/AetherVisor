@@ -39,8 +39,8 @@ bool VirtualizeAllProcessors()
 
 	global_hypervisor_data = (GlobalHvData*)ExAllocatePoolZero(NonPagedPool, sizeof(GlobalHvData), 'HvDa');
 
-	BuildNestedPagingTables(&global_hypervisor_data->primary_ncr3, true);
-	BuildNestedPagingTables(&global_hypervisor_data->secondary_ncr3, false);
+	BuildNestedPagingTables(&global_hypervisor_data->normal_ncr3, true);
+	BuildNestedPagingTables(&global_hypervisor_data->noexecute_ncr3, false);
 	BuildNestedPagingTables(&global_hypervisor_data->tertiary_cr3, true);
 
 	core_count = KeQueryActiveProcessorCount(0);
