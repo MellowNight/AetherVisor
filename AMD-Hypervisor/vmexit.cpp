@@ -87,7 +87,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
     }
     case VMEXIT::PF:
     {
-        TlbHooker::HandleTlbHook(VpData, GuestRegisters);
+        TlbHooker::HandlePageFaultTlb(VpData, GuestRegisters);
         break;
     }
     case VMEXIT::GP: 

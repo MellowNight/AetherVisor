@@ -2,7 +2,7 @@
 
 Hypervisor* hypervisor = NULL;
 
-bool IsHypervisorPresent(int32_t core_number)
+bool Hypervisor::IsHypervisorPresent(int32_t core_number)
 {
 	/*	shitty check, switched from vmmcall to pointer check to avoid #UD	*/
 
