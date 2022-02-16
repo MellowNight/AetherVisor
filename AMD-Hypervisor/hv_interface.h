@@ -1,2 +1,2 @@
 #pragma once
-#include "global.h"
+#include "amd_definitions.h"

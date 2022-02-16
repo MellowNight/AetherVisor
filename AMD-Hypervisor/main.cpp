@@ -1,27 +1,14 @@
-#include "virtualization.h"
+#include "itlb_hook.h"
+#include "npt_hook.h"
 #include "logging.h"
 #include "disassembly.h"
+#include "prepare_vm.h"
 
-int	core_count = 0;
-CoreVmcbData* vcpu_data[32] = { 0 };
+extern "C" void __stdcall LaunchVm(
+	void* vm_launch_params
+);
 
-Hypervisor* hypervisor = 0;
 
-extern "C" void NTAPI LaunchVm(void* vm_launch_params);
-
-bool IsHypervisorPresent(int32_t core_number)
-{
-	/*	shitty check, switched from vmmcall to pointer check to avoid #UD	*/
-
-	if (vcpu_data[core_number] != NULL)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
 
 bool VirtualizeAllProcessors()
 {
@@ -43,25 +30,27 @@ bool VirtualizeAllProcessors()
 	BuildNestedPagingTables(&hypervisor->noexecute_ncr3, false);
 	BuildNestedPagingTables(&hypervisor->tertiary_cr3, true);
 
-	core_count = KeQueryActiveProcessorCount(0);
+	hypervisor->core_count = KeQueryActiveProcessorCount(0);
 
-	for (int idx = 0; idx < core_count; ++idx)
+	for (int idx = 0; idx < hypervisor->core_count; ++idx)
 	{
 		KAFFINITY affinity = Utils::Exponent(2, idx);
 
 		KeSetSystemAffinityThread(affinity);
 
 		Logger::Log(L"============================================================================= \n");
-		Logger::Log(L"[SETUP] amount of active processors %i \n", core_count);
+		Logger::Log(L"[SETUP] amount of active processors %i \n", hypervisor->core_count);
 		Logger::Log(L"[SETUP] Currently running on core %i \n", idx);
 
 		auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
 
 		RtlCaptureContext(reg_context);
 
-		if (IsHypervisorPresent(idx) == false)
+		if (hypervisor->IsHypervisorPresent(idx) == false)
 		{
 			EnableSvme();
+
+			auto vcpu_data = hypervisor->vcpu_data;
 
 			vcpu_data[idx] = (CoreVmcbData*)ExAllocatePoolZero(NonPagedPool, sizeof(CoreVmcbData), 'Vmcb');
 
@@ -103,6 +92,8 @@ NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
 	Logger::Start();
 	Disasm::Init();
+	TlbHooker::Init();
+	NptHooker::Init();
 
 	Logger::Log(L"EntryPoint \n");
 

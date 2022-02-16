@@ -17,7 +17,7 @@ enum MSR
     VM_HSAVE_PA = 0xC0010117
 };
 
-/*  the vmcb structures are typed out by Satoshi Tanda @tandasat*/
+/*  the vmcb structures are typed out by Satoshi Tanda @tandasat    */
 
 struct VmcbControlArea
 {
@@ -319,6 +319,28 @@ struct NestedPageFaultInfo1
     };
 };
 
+struct PageFaultErrorCode
+{
+    union
+    {
+        uint32_t as_uint32;
+        struct
+        {
+            uint32_t valid : 1;
+            uint32_t write : 1;
+            uint32_t user : 1;
+            uint32_t reserved : 1;
+            uint32_t execute : 1;
+            uint32_t protection_key : 1;
+            uint32_t shadow_stack : 1;
+            uint32_t reserved2 : 24;
+            uint32_t rmp : 1;
+        } fields;
+    };
+};
+static_assert(sizeof(PageFaultErrorCode) == sizeof(uint32_t), "PageFaultErrorCode must be 32 bits!");
+
+
 
 union ADDRESS_TRANSLATION_HELPER
 {
@@ -357,3 +379,22 @@ struct Vmcb
     char pad[PAGE_SIZE - sizeof(VmcbControlArea) - sizeof(VmcbSaveStateArea)];
 };
 
+struct GPRegs
+{
+    UINT64  r15;
+    UINT64  r14;
+    UINT64  r13;
+    UINT64  r12;
+    UINT64  r11;
+    UINT64  r10;
+    UINT64  r9;
+    UINT64  r8;
+    UINT64  rdi;
+    UINT64  rsi;
+    UINT64  rbp;
+    UINT64  rsp;
+    UINT64  rbx;
+    UINT64  rdx;
+    UINT64  rcx;
+    UINT64  rax;
+};

@@ -1,29 +1,21 @@
 #pragma once
-#include "utils.h"
+#include "hypervisor.h"
+#include "npt.h"
 
-struct NptHookEntry
+namespace NptHooker
 {
-	LIST_ENTRY	npt_hook_list;
-	PT_ENTRY_64* innocent_npte;
-	PT_ENTRY_64* hooked_npte;
-	bool execute_only;
+	struct NptHook
+	{
+		struct NptHook* next_hook;
+		PT_ENTRY_64* hookless_npte;
+		PT_ENTRY_64* hooked_npte;
+	};
+
+	extern NptHook* first_npt_hook;
+
+	NptHook* FindByHooklessPhysicalPage(
+		uint64_t page_physical
+	);
+
+	void Init();
 };
-
-NptHookEntry* GetHookByPhysicalPage(
-	Hypervisor* HvData, 
-	UINT64 PagePhysical
-);
-
-NptHookEntry* GetHookByOldFuncAddress(
-	Hypervisor* HvData,
-	void*	FuncAddr
-);
-NptHookEntry* AddHookedPage(
-	Hypervisor* HvData, 
-	void* PhysicalAddr, 
-	uintptr_t	NCr3, 
-	char* patch, 
-	int PatchLen
-);
-
-void	SetHooks();

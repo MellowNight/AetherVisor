@@ -1,8 +1,8 @@
+#include "itlb_hook.h"
 #include "npt_hook.h"
-#include "npt_setup.h"
 #include "hv_interface.h"
 #include "logging.h"
-#include "virtualization.h"
+#include "prepare_vm.h"
 
 enum VMEXIT
 {
@@ -34,97 +34,24 @@ void InjectException(CoreVmcbData* core_data, int vector, int error_code = 0)
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
 
-uintptr_t GuestRip = 0;
-void HandleNestedPageFault(CoreVmcbData* VpData, GeneralPurposeRegs* GuestContext)
-{
-    NestedPageFaultInfo1 exit_info1;
-
-    exit_info1.as_uint64 = VpData->guest_vmcb.control_area.ExitInfo1;
-
-    uintptr_t fail_address = VpData->guest_vmcb.control_area.ExitInfo2;
-
-    PHYSICAL_ADDRESS NCr3;
-
-    NCr3.QuadPart = VpData->guest_vmcb.control_area.NCr3;
-
-    GuestRip = VpData->guest_vmcb.save_state_area.Rip;
-
-
-    if (exit_info1.fields.valid == 0) 
-    {
-
-        int num_bytes = VpData->guest_vmcb.control_area.NumOfBytesFetched;
-
-        auto insn_bytes = VpData->guest_vmcb.control_area.GuestInstructionBytes;
-
-        auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(NCr3);
-
-        auto pte = AssignNPTEntry((PML4E_64*)pml4_base, fail_address, true);
-
-        return;
-    }
-
-
-    if (exit_info1.fields.execute == 1) 
-    {
-        NptHookEntry* nptHook = GetHookByPhysicalPage(hypervisor, fail_address);
-
-        bool Switch = true;
-
-        int length = 10;
-
-        if (PAGE_ALIGN(GuestRip + length) != PAGE_ALIGN(GuestRip)) {
-
-            PT_ENTRY_64* N_Pte = Utils::GetPte((void*)
-                MmGetPhysicalAddress(PAGE_ALIGN(GuestRip)).QuadPart, NCr3.QuadPart);
-
-
-            PT_ENTRY_64* N_Pte2 = Utils::GetPte((void*)
-                MmGetPhysicalAddress(PAGE_ALIGN(GuestRip + length)).QuadPart, NCr3.QuadPart);
-
-
-            N_Pte->ExecuteDisable = 0;
-            N_Pte2->ExecuteDisable = 0;
-
-            Switch = false;
-        }   
-
-        VpData->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
-        VpData->guest_vmcb.control_area.TlbControl = 3;
-
-        /*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
-        if (Switch)
-        {
-            if (nptHook) 
-            {
-                VpData->guest_vmcb.control_area.NCr3 = hypervisor->noexecute_ncr3;
-            }
-            else 
-            {
-                VpData->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
-            }
-        }
-    }
-}
-
-void HandleCpuidExit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters)
+void HandleCpuidExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 {
     VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
-void HandleMsrExit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters)
+void HandleMsrExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 {
     VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
 
-void HandleVmmcall(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters, bool* EndVM)
+void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
 {
     VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
 
-extern "C" bool HandleVmexit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegisters)
+extern "C" bool HandleVmexit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 {
     /*	load host extra state	*/
     __svm_vmload(VpData->host_vmcb_physicaladdr);
@@ -133,7 +60,8 @@ extern "C" bool HandleVmexit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegi
 
     switch ((int)VpData->guest_vmcb.control_area.ExitCode) {
 
-    case VMEXIT::CPUID: {
+    case VMEXIT::CPUID:
+    {
         HandleCpuidExit(VpData, GuestRegisters);
         break;
     }
@@ -152,9 +80,14 @@ extern "C" bool HandleVmexit(CoreVmcbData* VpData, GeneralPurposeRegs* GuestRegi
         HandleVmmcall(VpData, GuestRegisters, &EndVm);
         break;
     }
-    case VMEXIT::NPF: 
+    case VMEXIT::NPF:
     {
         HandleNestedPageFault(VpData, GuestRegisters);
+        break;
+    }
+    case VMEXIT::PF:
+    {
+        TlbHooker::HandleTlbHook(VpData, GuestRegisters);
         break;
     }
     case VMEXIT::GP: 

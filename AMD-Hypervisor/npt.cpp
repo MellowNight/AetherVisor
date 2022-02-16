@@ -1,6 +1,81 @@
-#include "npt_setup.h"
 #include "npt_hook.h"
+#include "itlb_hook.h"
 #include "logging.h"
+#include "hypervisor.h"
+
+uintptr_t GuestRip = 0;
+
+void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
+{
+	NestedPageFaultInfo1 exit_info1 = { VpData->guest_vmcb.control_area.ExitInfo1 };
+
+	uintptr_t fail_address = VpData->guest_vmcb.control_area.ExitInfo2;
+
+	PHYSICAL_ADDRESS NCr3;
+
+	NCr3.QuadPart = VpData->guest_vmcb.control_area.NCr3;
+
+	GuestRip = VpData->guest_vmcb.save_state_area.Rip;
+
+
+	if (exit_info1.fields.valid == 0)
+	{
+		int num_bytes = VpData->guest_vmcb.control_area.NumOfBytesFetched;
+
+		auto insn_bytes = VpData->guest_vmcb.control_area.GuestInstructionBytes;
+
+		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(NCr3);
+
+		auto pte = AssignNPTEntry((PML4E_64*)pml4_base, fail_address, true);
+
+		return;
+	}
+
+
+	if (exit_info1.fields.execute == 1)
+	{
+		auto nptHook = NptHooker::FindByHooklessPhysicalPage(fail_address);
+
+		bool Switch = true;
+
+		int length = 10;
+
+		/*	handle the case where the hook is split across 2 pages	*/
+
+		if (PAGE_ALIGN(GuestRip + length) != PAGE_ALIGN(GuestRip)) {
+
+			PT_ENTRY_64* N_Pte = Utils::GetPte((void*)
+				MmGetPhysicalAddress(PAGE_ALIGN(GuestRip)).QuadPart, NCr3.QuadPart);
+
+
+			PT_ENTRY_64* N_Pte2 = Utils::GetPte((void*)
+				MmGetPhysicalAddress(PAGE_ALIGN(GuestRip + length)).QuadPart, NCr3.QuadPart);
+
+
+			N_Pte->ExecuteDisable = 0;
+			N_Pte2->ExecuteDisable = 0;
+
+			Switch = false;
+		}
+
+		VpData->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+		VpData->guest_vmcb.control_area.TlbControl = 3;
+
+		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
+		if (Switch)
+		{
+			if (nptHook)
+			{
+				VpData->guest_vmcb.control_area.NCr3 = hypervisor->noexecute_ncr3;
+			}
+			else
+			{
+				VpData->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
+			}
+		}
+	}
+}
+
 
 void*	AllocateNewTable(PML4E_64* PageEntry)
 {
@@ -105,8 +180,8 @@ uintptr_t	 BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 
 	for (int run = 0; run < numberOfRuns; ++run)
 	{
-		uintptr_t	PageCount = hypervisor->phys_mem_range[run].NumberOfBytes.QuadPart / PAGE_SIZE;
-		uintptr_t		PagesBase = g_PhysMemRange[run].BaseAddress.QuadPart / PAGE_SIZE;
+		uintptr_t PageCount = hypervisor->phys_mem_range[run].NumberOfBytes.QuadPart / PAGE_SIZE;
+		uintptr_t PagesBase = hypervisor->phys_mem_range[run].BaseAddress.QuadPart / PAGE_SIZE;
 
 		for (PFN_NUMBER PFN = PagesBase; PFN < PagesBase + PageCount; ++PFN)
 		{
@@ -121,10 +196,4 @@ uintptr_t	 BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 	AssignNPTEntry(n_Pml4Virtual, apic_bar.ApicBase << PAGE_SHIFT, true);
 
 	return *NCr3;
-}
-
-void	InitializeHookList(Hypervisor*	HvData)
-{
-	HvData->first_hook = (NptHookEntry*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHookEntry), 'hook');
-	HvData->hook_list_head = &HvData->first_hook->npt_hook_list;
 }

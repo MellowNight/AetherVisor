@@ -1,7 +1,5 @@
 #pragma once
-#include "global.h"
-
-
+#include "amd_definitions.h"
 
 namespace Utils
 {
@@ -46,7 +44,7 @@ namespace Utils
 	NTSTATUS UnlockPages(PMDL mdl);
 
 	void* GetDriverBaseAddress(
-		OUT size_t* driver_size, 
+		size_t* out_driver_size,
 		UNICODE_STRING driver_name
 	);
 

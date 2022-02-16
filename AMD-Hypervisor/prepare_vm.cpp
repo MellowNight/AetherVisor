@@ -1,7 +1,11 @@
-#include "virtualization.h"
+#include "prepare_vm.h"
 #include "logging.h"
 
-extern "C" void _sgdt(_Out_ void* Descriptor);
+
+
+extern "C" void _sgdt(
+	OUT void* Descriptor
+);
 
 bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 {

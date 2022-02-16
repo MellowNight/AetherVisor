@@ -160,30 +160,31 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="amd_definitions.h" />
-    <ClInclude Include="amd_sev.h" />
     <ClInclude Include="disassembly.h" />
-    <ClInclude Include="global.h" />
     <ClInclude Include="hv_interface.h" />
+    <ClInclude Include="hypervisor.h" />
     <ClInclude Include="ia32.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="kernel_exports.h" />
     <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
+    <ClInclude Include="itlb_hook.h" />
     <ClInclude Include="npt_hook.h" />
-    <ClInclude Include="npt_setup.h" />
+    <ClInclude Include="npt.h" />
     <ClInclude Include="utils.h" />
-    <ClInclude Include="virtualization.h" />
+    <ClInclude Include="prepare_vm.h" />
     <ClInclude Include="windows_structs.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="amd_sev.cpp" />
+    <ClCompile Include="hypervisor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="hv_interface.cpp" />
     <ClCompile Include="logging.cpp" />
+    <ClCompile Include="itlb_hook.cpp" />
     <ClCompile Include="npt_hook.cpp" />
-    <ClCompile Include="npt_setup.cpp" />
+    <ClCompile Include="npt.cpp" />
     <ClCompile Include="utils.cpp" />
-    <ClCompile Include="virtualization.cpp" />
+    <ClCompile Include="prepare_vm.cpp" />
     <ClCompile Include="vmexit.cpp" />
   </ItemGroup>
   <ItemGroup>

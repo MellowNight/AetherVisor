@@ -189,7 +189,7 @@ namespace Utils
         return STATUS_SUCCESS;
     }
 
-    void* GetDriverBaseAddress(OUT PULONG pSize, UNICODE_STRING DriverName)
+    void* GetDriverBaseAddress(size_t* out_driver_size, UNICODE_STRING driver_name)
     {
         auto moduleList = (PLIST_ENTRY)PsLoadedModuleList;
 
@@ -199,12 +199,12 @@ namespace Utils
         {
             LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(link, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
-            if (RtlCompareUnicodeString(&DriverName, &entry->BaseDllName, false) == 0)
+            if (RtlCompareUnicodeString(&driver_name, &entry->BaseDllName, false) == 0)
             {
                 Logger::Log(L"found module! \n");
-                if (pSize && MmIsAddressValid(pSize))
+                if (out_driver_size && MmIsAddressValid(out_driver_size))
                 {
-                    *pSize = entry->SizeOfImage;
+                    *out_driver_size = entry->SizeOfImage;
                 }
 
                 return entry->DllBase;
