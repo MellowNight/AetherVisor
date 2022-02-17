@@ -9,11 +9,11 @@ namespace Utils
 		uintptr_t range_size
 	);
 
-	void*	VirtualAddrFromPfn(
+	void* VirtualAddrFromPfn(
 		uintptr_t pfn
 	);
 
-	PFN_NUMBER	PfnFromVirtualAddr(
+	PFN_NUMBER PfnFromVirtualAddr(
 		uintptr_t va
 	);
 
@@ -55,5 +55,19 @@ namespace Utils
 
 	HANDLE GetProcessId(
 		const char* process_name
+	);
+
+    KIRQL DisableWP();
+
+    void EnableWP(
+		KIRQL tempirql
+	);
+
+    uintptr_t FindPattern(
+		uintptr_t region_base, 
+		size_t region_size, 
+		const uint8_t* pattern, 
+		size_t pattern_size, 
+		char wildcard
 	);
 }

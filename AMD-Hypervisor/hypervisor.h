@@ -25,9 +25,9 @@ struct CoreVmcbData
 
 struct Hypervisor
 {
-    uintptr_t     normal_ncr3;
-    uintptr_t     noexecute_ncr3;
-    uintptr_t     tertiary_cr3;
+    uintptr_t normal_ncr3;
+    uintptr_t noexecute_ncr3;
+    uintptr_t tertiary_cr3;
 
     struct NptHookEntry* first_npt_hook;
     struct SplitTlbHook* first_itlb_hook;

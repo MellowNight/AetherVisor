@@ -4,6 +4,61 @@
 
 namespace Utils
 {
+    uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const uint8_t* pattern, size_t pattern_size, char wildcard)
+	{
+        for (uint8_t* byte = region_base; 
+            byte < region_base + region_size;
+            ++byte)
+        {
+            bool found = true;
+
+            for (uint8_t* pattern_byte = pattern, *begin = byte;
+                pattern_byte < pattern + pattern_size;
+                ++pattern_byte, ++begin)
+            {
+                if (*pattern_byte != *begin && *pattern_byte != wildcard)
+                {
+                    found = false;
+                }
+            }
+
+            if (found)
+            {
+                return (uintptr_t)byte;
+            }
+        }
+
+		return 0;
+	}
+
+    KIRQL DisableWP()
+    {
+        KIRQL	tempirql = KeRaiseIrqlToDpcLevel();
+
+        ULONG64  cr0 = __readcr0();
+
+        cr0 &= 0xfffffffffffeffff;
+
+        __writecr0(cr0);
+
+        _disable();
+
+        return tempirql;
+    }
+
+    void EnableWP(KIRQL	tempirql)
+    {
+        ULONG64	cr0 = __readcr0();
+
+        cr0 |= 0x10000;
+
+        _enable();
+
+        __writecr0(cr0);
+
+        KeLowerIrql(tempirql);
+    }
+
     bool IsInsideRange(uintptr_t address, uintptr_t range_base, uintptr_t range_size)
     {
         if ((range_base > address) &&

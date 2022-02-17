@@ -5,7 +5,7 @@ namespace TlbHooker
 	int hook_count;
 	SplitTlbHook* first_tlb_hook;
 
-	SplitTlbHook* SetTlbHook(uintptr_t address, char* patch, size_t patch_len)
+	SplitTlbHook* SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len)
 	{
 		auto hook_entry = first_tlb_hook;
 
@@ -19,12 +19,18 @@ namespace TlbHooker
 
 		memcpy(copy_page, (uint8_t*)address, PAGE_SIZE);
 
-		auto patch_offset = (uintptr_t)address & (PAGE_SIZE - 1);
+		auto irql = Utils::DisableWP();
 
-		if (hypervisor->IsHypervisorPresent())
-		{
-			
-		}
+		auto retptr = FindPattern(PAGE_ALIGN(address), PAGE_SIZE, "\xCC\xCC", 0x00);
+
+		memcpy(address, patch, patch_len);
+
+		/*	Find a 0xC3 in the page, for iTLB filling	*/
+		*(char*)retptr = 0xC3;
+
+		Utils::EnableWP();
+
+		hook_entry->ret_pointer = retptr;
 
 		return hook_entry;
 	}
