@@ -19,6 +19,13 @@ namespace TlbHooker
 
 		memcpy(copy_page, (uint8_t*)address, PAGE_SIZE);
 
+		auto patch_offset = (uintptr_t)address & (PAGE_SIZE - 1);
+
+		if (hypervisor->IsHypervisorPresent())
+		{
+			
+		}
+
 		return hook_entry;
 	}
 
@@ -71,7 +78,9 @@ namespace TlbHooker
 		PageFaultErrorCode fault_info;
 		fault_info.as_uint32 = vcpu->guest_vmcb.control_area.ExitInfo1;
 
-		auto hook_entry = FindByHooklessPhysicalPage(MmGetPhysicalAddress(fault_address).QuadPart);
+		auto hook_entry = TlbHooker::FindByHooklessPhysicalPage(
+			MmGetPhysicalAddress(fault_address).QuadPart
+		);
 
 		CR3 guest_cr3 = { vcpu->guest_vmcb.save_state_area.Cr3 };
 
@@ -88,11 +97,30 @@ namespace TlbHooker
 
 			hook_entry->ret_pointer();	/*	Add the iTLB entry	*/
 
-			pte->Present = 0;	/*	Mark page as non-present, so that we can intercept data access after dTLB miss	*/
+			pte->Present = 0;	/*	Make sure we can intercept memory access after iTLB miss	*/
 		}
-		else if (fault_info.fields.valid == 0)
+		else
 		{
+			auto pte = Utils::GetPte(fault_address, guest_cr3.AddressOfPageDirectory << PAGE_SHIFT);
+		
+			if (pte->PageFrameNumber == hook_entry->hooked_pte->PageFrameNumber)
+			{
+				/*	This is the page of one of our hooks, load the innocent page into dTLB	*/
+				pte->Present = 1;
+				pte->PageFrameNumber = hook_entry->hookless_pte->PageFrameNumber;
 
+				auto data = *(int*)fault_address;
+
+				pte->Present = 0;
+			}
+			else 
+			{
+				pte->Present = 1;
+
+				auto data = *(int*)fault_address /*	Add dTLB entry	*/
+
+				pte->Present = 0;	/*	Make sure we can intercept fetch after iTLB miss	*/
+			}
 		}
 	}
 };
