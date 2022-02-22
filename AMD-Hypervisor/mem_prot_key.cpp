@@ -23,7 +23,7 @@ namespace MpkHooks
 		hook_entry->the_pte = Utils::GetPte(address, cr3.AddressOfPageDirectory << PAGE_SHIFT);
         hook_entry->hooked_page = PAGE_ALIGN(address);
 
-        hook_entry->the_pte.
+        hook_entry->the_pte->ProtectionKey = hook_count;
 
         auto pkru = __rdpkru();
 
