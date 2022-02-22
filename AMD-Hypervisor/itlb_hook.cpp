@@ -30,15 +30,14 @@ namespace TlbHooker
 		memcpy(copy_page, (uint8_t*)PAGE_ALIGN(address), PAGE_SIZE);
 
 		auto irql = Utils::DisableWP();
-		auto retptr = Utils::FindPattern((uintptr_t)PAGE_ALIGN(address), PAGE_SIZE, "\xCC\xCC", 2, 0x00);
+		auto retptr = Utils::FindPattern((uintptr_t)PAGE_ALIGN(address), PAGE_SIZE, "\xCC", 1, 0x00);
 		
 		memcpy(address, patch, patch_len);
 
-		/*	Find a 0xC3 in the page, for iTLB filling	*/
-		*(char*)retptr = 0xC3;
 		Utils::EnableWP(irql);
 
-		hook_entry->ret_pointer = (void(*)())retptr;
+		/*	bp execution in guest context to fill iTLB in guest ASID	*/		
+		hook_entry->exec_gadget = (uint8_t*)retptr;
 		hook_entry->hooked_pte->Present = 0;
 
 		__invlpg(address);
@@ -62,6 +61,20 @@ namespace TlbHooker
 		return 0;
 	}
 
+	SplitTlbHook* FindByGadgetAddr(uint64_t guest_rip)
+	{
+		PFN_NUMBER pfn = page_physical >> PAGE_SHIFT;
+		auto hook_entry = &first_tlb_hook;
+
+		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
+		{
+			if (hook_entry->hooked_pte->PageFrameNumber == pfn)
+			{
+				return hook_entry;
+			}
+		}
+		return 0;
+	}
 
 	SplitTlbHook* FindByHookedPhysicalPage(uint64_t page_physical)
 	{
@@ -104,6 +117,13 @@ namespace TlbHooker
 		}
 
 		hook_count = 0;
+	}
+
+	void HandleTlbHookBreakpoint(CoreVmcbData* vcpu)
+	{
+		auto 
+
+		if (vcpu->guest_vmcb.save_state_area.Rip)
 	}
 
 	void HandlePageFaultTlb(CoreVmcbData* vcpu, GPRegs* guest_regs)

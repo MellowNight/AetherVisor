@@ -13,7 +13,8 @@ namespace TlbHooker
 		PT_ENTRY_64* hookless_pte;
 		PT_ENTRY_64* hooked_pte;
 		void* hooked_page_va;
-		void(*ret_pointer)();	
+		uint8_t* exec_gadget;
+		uint8_t* read_gadget;
 	};
 
 	extern int hook_count;

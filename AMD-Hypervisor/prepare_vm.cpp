@@ -173,7 +173,7 @@ void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 	InterceptVector2 intercept_vector2;
 
 	intercept_vector2.intercept_pf = 1;
-	intercept_vector2.intercept_bp = 0;
+	intercept_vector2.intercept_bp = 1;
 
 	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
 
