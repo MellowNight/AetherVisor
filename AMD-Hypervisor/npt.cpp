@@ -38,7 +38,7 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 
 		bool Switch = true;
 
-		int length = 10;
+		int length = 16;
 
 		/*	handle the case where the hook is split across 2 pages	*/
 
@@ -58,8 +58,8 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 			Switch = false;
 		}
 
-		VpData->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
-		VpData->guest_vmcb.control_area.TlbControl = 3;
+		//VpData->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+		//VpData->guest_vmcb.control_area.TlbControl = 3;
 
 		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
 		if (Switch)
@@ -165,10 +165,7 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 	return Pte;
 }
 
-
-
-
-uintptr_t	 BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
+uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 {
 	auto numberOfRuns = GetPhysicalMemoryRanges();
 
@@ -176,7 +173,7 @@ uintptr_t	 BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 
 	*NCr3 = MmGetPhysicalAddress(n_Pml4Virtual).QuadPart;
 
-	Logger::Log(L"[SETUP] pml4 at %p \n", n_Pml4Virtual);
+	Logger::Log("[SETUP] pml4 at %p \n", n_Pml4Virtual);
 
 	for (int run = 0; run < numberOfRuns; ++run)
 	{

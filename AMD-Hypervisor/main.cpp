@@ -8,19 +8,17 @@ extern "C" void __stdcall LaunchVm(
 	void* vm_launch_params
 );
 
-
-
 bool VirtualizeAllProcessors()
 {
 	if (!IsSvmSupported())
 	{
-		Logger::Log(L"[SETUP] SVM isn't supported on this processor! \n");
+		Logger::Log("[SETUP] SVM isn't supported on this processor! \n");
 		return false;
 	}
 
 	if (!IsSvmUnlocked())
 	{
-		Logger::Log(L"[SETUP] SVM operation is locked off in BIOS! \n");
+		Logger::Log("[SETUP] SVM operation is locked off in BIOS! \n");
 		return false;
 	}
 
@@ -38,9 +36,9 @@ bool VirtualizeAllProcessors()
 
 		KeSetSystemAffinityThread(affinity);
 
-		Logger::Log(L"============================================================================= \n");
-		Logger::Log(L"[SETUP] amount of active processors %i \n", hypervisor->core_count);
-		Logger::Log(L"[SETUP] Currently running on core %i \n", idx);
+		DbgPrint("=============================================================== \n");
+		DbgPrint("[SETUP] amount of active processors %i \n", hypervisor->core_count);
+		DbgPrint("[SETUP] Currently running on core %i \n", idx);
 
 		auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
 
@@ -62,28 +60,42 @@ bool VirtualizeAllProcessors()
 
 			if (IsProcessorReadyForVmrun(&vcpu_data[idx]->guest_vmcb, cs_attrib))
 			{
+				DbgPrint("address of guest vmcb save state area = %p \n", &vcpu_data[idx]->guest_vmcb.save_state_area.Rip);
+
 				LaunchVm(&vcpu_data[idx]->guest_vmcb_physicaladdr);
 			}
 			else
 			{
-				Logger::Log(L"[SETUP] A problem occured!! invalid guest state \n");
+				Logger::Log("[SETUP] A problem occured!! invalid guest state \n");
 				__debugbreak();
 			}
 		}
 		else
 		{
-			Logger::Log(L"===================== Hypervisor Successfully Launched rn !! =============================\n \n");
+			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 		}
 	}
 
-	/*	I had strange crashing issues when I just let the thread return normally	*/
+	LARGE_INTEGER delay = { 30000000 };	// 3 seconds
+	KeDelayExecutionThread(KernelMode, FALSE, &delay);
 
-	PsTerminateSystemThread(STATUS_SUCCESS);
+	auto code_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
+	memset(code_page, 0xCC, PAGE_SIZE);
+	*(char*)code_page = 0xC3;
+
+	TlbHooker::SetTlbHook(code_page, (uint8_t*)"\xCC\xC3", 2);
+
+	__debugbreak();
+	static_cast<void(*)()>(code_page)();
+
+	unsigned char firstbyte = *(unsigned char*)code_page & 0xFF;
+	Logger::Log("first byte of code page is %02x \n", firstbyte);
+	__debugbreak();
 }
 
 NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
 {
-	Logger::Log(L"[AMD-Hypervisor] - Devirtualizing system, Driver unloading!\n");
+	Logger::Log("[AMD-Hypervisor] - Devirtualizing system, Driver unloading!\n");
 
 	return STATUS_SUCCESS;
 }
@@ -95,7 +107,7 @@ NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	TlbHooker::Init();
 	NptHooker::Init();
 
-	Logger::Log(L"EntryPoint \n");
+	Logger::Log("EntryPoint \n");
 
 	HANDLE thread_handle;
 

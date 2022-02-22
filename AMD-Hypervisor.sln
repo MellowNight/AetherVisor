@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.32002.261
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AMD-Hypervisor", "AMD-Hypervisor\AMD-Hypervisor.vcxproj", "{EEBE7609-CF06-424A-99AA-088B5747D4DF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MatrixVisorLib", "MatrixVisorApi\MatrixVisorLib.vcxproj", "{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -41,6 +43,18 @@ Global
 		{EEBE7609-CF06-424A-99AA-088B5747D4DF}.Release|x86.ActiveCfg = Release|Win32
 		{EEBE7609-CF06-424A-99AA-088B5747D4DF}.Release|x86.Build.0 = Release|Win32
 		{EEBE7609-CF06-424A-99AA-088B5747D4DF}.Release|x86.Deploy.0 = Release|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|ARM.ActiveCfg = Debug|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|x64.ActiveCfg = Debug|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|x64.Build.0 = Debug|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|x86.ActiveCfg = Debug|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|x86.Build.0 = Debug|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|ARM.ActiveCfg = Release|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|ARM64.ActiveCfg = Release|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|x64.ActiveCfg = Release|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|x64.Build.0 = Release|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|x86.ActiveCfg = Release|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

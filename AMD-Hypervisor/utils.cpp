@@ -4,15 +4,15 @@
 
 namespace Utils
 {
-    uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const uint8_t* pattern, size_t pattern_size, char wildcard)
+    uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const char* pattern, size_t pattern_size, char wildcard)
 	{
-        for (uint8_t* byte = region_base; 
-            byte < region_base + region_size;
+        for (auto byte = (char*)region_base;
+            byte < (char*)region_base + region_size;
             ++byte)
         {
             bool found = true;
 
-            for (uint8_t* pattern_byte = pattern, *begin = byte;
+            for (char* pattern_byte = (char*)pattern, *begin = byte;
                 pattern_byte < pattern + pattern_size;
                 ++pattern_byte, ++begin)
             {
@@ -256,7 +256,7 @@ namespace Utils
 
             if (RtlCompareUnicodeString(&driver_name, &entry->BaseDllName, false) == 0)
             {
-                Logger::Log(L"found module! \n");
+                Logger::Log("found module! \n");
                 if (out_driver_size && MmIsAddressValid(out_driver_size))
                 {
                     *out_driver_size = entry->SizeOfImage;
@@ -281,7 +281,7 @@ namespace Utils
 
             if (!strcmp(PsGetProcessImageFileName(process), process_name))
             {
-                Logger::Log(L"found process!! PEPROCESS value %p \n", process);
+                Logger::Log("found process!! PEPROCESS value %p \n", process);
 
                 return process;
             }

@@ -69,6 +69,9 @@
     <ClInclude Include="npt_hook.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="vmexit.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

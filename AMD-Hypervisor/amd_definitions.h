@@ -141,9 +141,6 @@ typedef struct VmcbSaveStateArea
     UINT64 LastExcepFrom;               // +0x288
     UINT64 LastExcepTo;                 // +0x290
 };
-static_assert(sizeof(VmcbSaveStateArea) == 0x298,
-    "VMCB_STATE_SAVE_AREA Size Mismatch");
-
 
 struct SegmentDescriptor
 {
@@ -165,7 +162,7 @@ struct SegmentDescriptor
             UINT32 DefaultBit : 1;  // [54]
             UINT32 Granularity : 1; // [55]
             UINT32 BaseHigh : 8;    // [56:63]
-        } Fields;
+        };
     };
 };
 static_assert(sizeof(SegmentDescriptor) == 8,
@@ -234,11 +231,30 @@ union MsrVmcr
 
 /*  vector 2 for exceptions */
 
-struct InterceptVector2
+union InterceptVector2
 {
-    int32_t intercept_vec_1 : 1;
-    int32_t intercept_db : 1;
+    struct
+    {
+        int32_t intercept_de : 1;
+        int32_t intercept_db : 1;
+        int32_t intercept_nmi : 1;
+        int32_t intercept_bp : 1;
+        int32_t intercept_of : 1;
+        int32_t intercept_br : 1;
+        int32_t intercept_ud : 1;
+        int32_t intercept_nm : 1;
+        int32_t intercept_df : 1;
+        int32_t reserved1 : 1;
+        int32_t intercept_ts : 1;
+        int32_t intercept_np : 1;
+        int32_t intercept_ss : 1;
+        int32_t intercept_gp : 1;
+        int32_t intercept_pf : 1;
+        int32_t pad : 17;
+    };
+    int32_t as_int32;
 };
+static_assert(sizeof(InterceptVector2) == 0x4, "InterceptVector4 Size Mismatch");
 
 union InterceptVector4
 { 
@@ -254,7 +270,7 @@ static_assert(sizeof(InterceptVector4) == 0x4, "InterceptVector4 Size Mismatch")
 
 
 /*	#include <pshpack1.h> to remove struct alignment, so we wont have GDTR value issues	*/
-#pragma pack(push, 1)
+#include <pshpack1.h>
 struct DescriptorTableRegister
 {
     uint16_t limit;
@@ -262,7 +278,7 @@ struct DescriptorTableRegister
 };
 
 static_assert(sizeof(DescriptorTableRegister) == 0xA, "DESCRIPTOR_TABLE_REGISTER Size Mismatch");
-#pragma pack(pop)
+
 
 struct SegmentAttribute
 {

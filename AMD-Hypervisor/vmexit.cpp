@@ -1,23 +1,6 @@
-#include "itlb_hook.h"
-#include "npt_hook.h"
-#include "hv_interface.h"
-#include "logging.h"
-#include "prepare_vm.h"
+#include "vmexit.h"
 
-enum VMEXIT
-{
-    CPUID = 0x72,
-    MSR = 0x7C,
-    VMRUN = 0x80,
-    VMMCALL = 0x81,
-    NPF = 0x400,
-    PF = 0x4E,
-    INVALID = -1,
-    GP = 0x4D,
-    DB = 0x41,
-};
-
-void InjectException(CoreVmcbData* core_data, int vector, int error_code = 0)
+void InjectException(CoreVmcbData* core_data, int vector, int error_code)
 {
     EventInjection event_injection;
 
@@ -33,6 +16,7 @@ void InjectException(CoreVmcbData* core_data, int vector, int error_code = 0)
 
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
+
 
 void HandleCpuidExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 {
@@ -51,63 +35,69 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
 }
 
 
-extern "C" bool HandleVmexit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
+extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
 {
     /*	load host extra state	*/
-    __svm_vmload(VpData->host_vmcb_physicaladdr);
+    __svm_vmload(core_data->host_vmcb_physicaladdr);
 
     bool EndVm = false;
 
-    switch ((int)VpData->guest_vmcb.control_area.ExitCode) {
+    switch (core_data->guest_vmcb.control_area.ExitCode) 
+    {
+        case VMEXIT::CPUID:
+        {
+            HandleCpuidExit(core_data, GuestRegisters);
+            break;
+        }
+        case VMEXIT::MSR: 
+        {
+            HandleMsrExit(core_data, GuestRegisters);
+            break;
+        }
+        case VMEXIT::VMRUN: 
+        {
+            InjectException(core_data, 13);
+            break;
+        }
+        case VMEXIT::VMMCALL: 
+        {
+            HandleVmmcall(core_data, GuestRegisters, &EndVm);
+            break;
+        }
+        case VMEXIT::NPF:
+        {
+            HandleNestedPageFault(core_data, GuestRegisters);
+            break;
+        }
+        case VMEXIT::PF:
+        {
+            TlbHooker::HandlePageFaultTlb(core_data, GuestRegisters);
+            break;
+        }
+        case VMEXIT::GP: 
+        {
+            InjectException(core_data, 13, 0xC0000005);
+            break;
+        }
+        case VMEXIT::INVALID: 
+        {
+            SegmentAttribute CsAttrib;
+            CsAttrib.as_uint16 = core_data->guest_vmcb.save_state_area.CsAttrib;
 
-    case VMEXIT::CPUID:
-    {
-        HandleCpuidExit(VpData, GuestRegisters);
-        break;
-    }
-    case VMEXIT::MSR: 
-    {
-        HandleMsrExit(VpData, GuestRegisters);
-        break;
-    }
-    case VMEXIT::VMRUN: 
-    {
-        InjectException(VpData, 13);
-        break;
-    }
-    case VMEXIT::VMMCALL: 
-    {
-        HandleVmmcall(VpData, GuestRegisters, &EndVm);
-        break;
-    }
-    case VMEXIT::NPF:
-    {
-        HandleNestedPageFault(VpData, GuestRegisters);
-        break;
-    }
-    case VMEXIT::PF:
-    {
-        TlbHooker::HandlePageFaultTlb(VpData, GuestRegisters);
-        break;
-    }
-    case VMEXIT::GP: 
-    {
-        InjectException(VpData, 13, 0xC0000005);
-        break;
-    }
-    case VMEXIT::INVALID: 
-    {
-        SegmentAttribute CsAttrib;
-        CsAttrib.as_uint16 = VpData->guest_vmcb.save_state_area.CsAttrib;
+            IsProcessorReadyForVmrun(&core_data->guest_vmcb, CsAttrib);
 
-        IsProcessorReadyForVmrun(&VpData->guest_vmcb, CsAttrib);
+            break;
+        }
+        default:
+        {
+            Logger::Log("[VMEXIT] vmexit with unknown reason %p ! guest vmcb at %p \n",
+                core_data->guest_vmcb.control_area.ExitCode, &core_data->guest_vmcb);
 
-        break;
-    }
-    default:
-        Logger::Log(L"[VMEXIT] huh?? wtf why did I exit ?? exit code %p \n",
-            VpData->guest_vmcb.control_area.ExitCode);
-        break;
+            Logger::Log("[VMEXIT] RIP is %p \n", core_data->guest_vmcb.save_state_area.Rip);
+
+            __debugbreak();
+            break;
+        }
     }
 
     if (EndVm) 
@@ -126,7 +116,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
             8. return and jump back
         */
 
-        __svm_vmload(VpData->guest_vmcb_physicaladdr);
+        __svm_vmload(core_data->guest_vmcb_physicaladdr);
 
         __svm_stgi();
         _disable();
@@ -137,10 +127,10 @@ extern "C" bool HandleVmexit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
         msr.svme = 0;
 
         __writemsr(MSR::EFER, msr.flags);
-        __writeeflags(VpData->guest_vmcb.save_state_area.Rflags);
+        __writeeflags(core_data->guest_vmcb.save_state_area.Rflags);
 
-        GuestRegisters->rcx = VpData->guest_vmcb.save_state_area.Rsp;
-        GuestRegisters->rbx = VpData->guest_vmcb.control_area.NRip;
+        GuestRegisters->rcx = core_data->guest_vmcb.save_state_area.Rsp;
+        GuestRegisters->rbx = core_data->guest_vmcb.control_area.NRip;
     }
 
     return EndVm;

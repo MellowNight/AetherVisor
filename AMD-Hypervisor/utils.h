@@ -63,10 +63,10 @@ namespace Utils
 		KIRQL tempirql
 	);
 
-    uintptr_t FindPattern(
+	uintptr_t FindPattern(
 		uintptr_t region_base, 
 		size_t region_size, 
-		const uint8_t* pattern, 
+		const char* pattern, 
 		size_t pattern_size, 
 		char wildcard
 	);

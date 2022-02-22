@@ -10,19 +10,26 @@ namespace TlbHooker
 	struct SplitTlbHook
 	{
 		struct SplitTlbHook* next_hook;
-		PT_ENTRY_64 hookless_pte;
-		PT_ENTRY_64 hooked_pte;
+		PT_ENTRY_64* hookless_pte;
+		PT_ENTRY_64* hooked_pte;
+		void* hooked_page_va;
 		void(*ret_pointer)();	
 	};
 
 	extern int hook_count;
-	extern SplitTlbHook* first_tlb_hook;
+	extern SplitTlbHook first_tlb_hook;
 
 	void Init();
 
 	void HandlePageFaultTlb(
 		CoreVmcbData* vcpu,
 		GPRegs* guest_regs
+	);
+
+	SplitTlbHook* SetTlbHook(
+		void* address, 
+		uint8_t* patch, 
+		size_t patch_len
 	);
 
 }

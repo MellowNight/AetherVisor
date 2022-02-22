@@ -1,65 +1,94 @@
 #include "itlb_hook.h"
+#include "vmexit.h"
 
 namespace TlbHooker
 {
 	int hook_count;
-	SplitTlbHook* first_tlb_hook;
+	SplitTlbHook first_tlb_hook;
 
-	SplitTlbHook* SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len)
+	SplitTlbHook* SetTlbHook(void* address, uint8_t* patch, size_t patch_len)
 	{
-		auto hook_entry = first_tlb_hook;
+		__invlpg(address);
+
+		auto hook_entry = &first_tlb_hook;
 
 		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
 		{
 		}
 
-		auto hookless_pfn = hook_entry->hookless_pte.PageFrameNumber;
+		CR3 cr3;
+		cr3.Flags = __readcr3();
+
+		hook_entry->hooked_pte = Utils::GetPte(address, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+		hook_entry->hooked_pte->ExecuteDisable = 0;
+		hook_entry->hooked_page_va = PAGE_ALIGN(address);
+
+		auto hookless_pfn = hook_entry->hookless_pte->PageFrameNumber;
 
 		auto copy_page = Utils::VirtualAddrFromPfn(hookless_pfn);
 
-		memcpy(copy_page, (uint8_t*)address, PAGE_SIZE);
+		memcpy(copy_page, (uint8_t*)PAGE_ALIGN(address), PAGE_SIZE);
 
 		auto irql = Utils::DisableWP();
-
-		auto retptr = FindPattern(PAGE_ALIGN(address), PAGE_SIZE, "\xCC\xCC", 0x00);
-
+		auto retptr = Utils::FindPattern((uintptr_t)PAGE_ALIGN(address), PAGE_SIZE, "\xCC\xCC", 2, 0x00);
+		
 		memcpy(address, patch, patch_len);
 
 		/*	Find a 0xC3 in the page, for iTLB filling	*/
 		*(char*)retptr = 0xC3;
+		Utils::EnableWP(irql);
 
-		Utils::EnableWP();
+		hook_entry->ret_pointer = (void(*)())retptr;
+		hook_entry->hooked_pte->Present = 0;
 
-		hook_entry->ret_pointer = retptr;
+		__invlpg(address);
+		hook_count += 1;
 
 		return hook_entry;
 	}
 
 
-	SplitTlbHook* FindByHooklessPhysicalPage(uint64_t page_physical)
+	SplitTlbHook* FindByPage(void* virtual_addr)
 	{
-		PFN_NUMBER pfn = page_physical >> PAGE_SHIFT;
+		auto hook_entry = &first_tlb_hook;
 
-		for (auto hook_entry = first_tlb_hook; hook_entry->next_hook != NULL;
-			hook_entry = hook_entry->next_hook)
+		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
 		{
-			if (hook_entry->hookless_pte.PageFrameNumber == pfn)
+			if (hook_entry->hooked_page_va == virtual_addr)
 			{
 				return hook_entry;
 			}
 		}
+		return 0;
+	}
 
+
+	SplitTlbHook* FindByHookedPhysicalPage(uint64_t page_physical)
+	{
+		PFN_NUMBER pfn = page_physical >> PAGE_SHIFT;
+		auto hook_entry = &first_tlb_hook;
+
+		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
+		{
+			if (hook_entry->hooked_pte->PageFrameNumber == pfn)
+			{
+				return hook_entry;
+			}
+		}
 		return 0;
 	}
 
 	void Init()
 	{
-		auto first_hookless_page = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
-		
-		first_tlb_hook = (SplitTlbHook*)ExAllocatePool(NonPagedPool, sizeof(SplitTlbHook));
-		first_tlb_hook->hookless_pte.PageFrameNumber = Utils::PfnFromVirtualAddr(first_hookless_page);
+		auto first_hookless_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
 
-		auto hook_entry = first_tlb_hook;
+		CR3 cr3;
+		cr3.Flags = __readcr3();
+
+		first_tlb_hook.hookless_pte = Utils::GetPte(first_hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+		first_tlb_hook.next_hook = (SplitTlbHook*)ExAllocatePool(NonPagedPool, sizeof(SplitTlbHook));
+
+		auto hook_entry = &first_tlb_hook;
 
 		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
 
@@ -71,7 +100,7 @@ namespace TlbHooker
 
 			hook_entry->next_hook = (SplitTlbHook*)ExAllocatePool(NonPagedPool, sizeof(SplitTlbHook));
 
-			hook_entry->next_hook->hookless_pte.PageFrameNumber = Utils::PfnFromVirtualAddr(hookless_page);
+			hook_entry->next_hook->hookless_pte = Utils::GetPte(first_hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 		}
 
 		hook_count = 0;
@@ -81,20 +110,26 @@ namespace TlbHooker
 	{
 		auto fault_address = (void*)vcpu->guest_vmcb.control_area.ExitInfo2;
 
-		PageFaultErrorCode fault_info;
-		fault_info.as_uint32 = vcpu->guest_vmcb.control_area.ExitInfo1;
+		PageFaultErrorCode error_code;
+		error_code.as_uint32 = vcpu->guest_vmcb.control_area.ExitInfo1;
 
-		auto hook_entry = TlbHooker::FindByHooklessPhysicalPage(
-			MmGetPhysicalAddress(fault_address).QuadPart
-		);
+		auto hook_entry = TlbHooker::FindByPage(PAGE_ALIGN(fault_address));
 
-		CR3 guest_cr3 = { vcpu->guest_vmcb.save_state_area.Cr3 };
+		if (!hook_entry)
+		{
+			Logger::Log("[AMD-Hypervisor] - This is a normal page fault at %p \n", fault_address);
 
-		if (fault_info.fields.execute)
+			InjectException(vcpu, 14, error_code.as_uint32);
+			return;
+		}
+
+		Logger::Log("[AMD-Hypervisor] -This page fault is from our hooked page at %p \n", fault_address);
+
+		if (error_code.fields.execute)
 		{
 			/*	Mark the page as present	*/
 
-			auto pte = Utils::GetPte(fault_address, guest_cr3.AddressOfPageDirectory << PAGE_SHIFT,
+			auto pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3,
 				[](PT_ENTRY_64* pte) -> int {
 					pte->Present = 1;
 					return 0;
@@ -102,31 +137,26 @@ namespace TlbHooker
 			);
 
 			hook_entry->ret_pointer();	/*	Add the iTLB entry	*/
+			Logger::Log("[AMD-Hypervisor] - added iTLB entry! \n");
 
 			pte->Present = 0;	/*	Make sure we can intercept memory access after iTLB miss	*/
 		}
 		else
 		{
-			auto pte = Utils::GetPte(fault_address, guest_cr3.AddressOfPageDirectory << PAGE_SHIFT);
-		
-			if (pte->PageFrameNumber == hook_entry->hooked_pte->PageFrameNumber)
-			{
-				/*	This is the page of one of our hooks, load the innocent page into dTLB	*/
-				pte->Present = 1;
-				pte->PageFrameNumber = hook_entry->hookless_pte->PageFrameNumber;
+			auto pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
 
-				auto data = *(int*)fault_address;
+			Logger::Log(
+				"[AMD-Hypervisor] - Read access on hooked page, rip = 0x%p \n", 
+				vcpu->guest_vmcb.save_state_area.Rip
+			);
 
-				pte->Present = 0;
-			}
-			else 
-			{
-				pte->Present = 1;
+			/*	This is the page of one of our hooks, load the innocent page into dTLB	*/
+			pte->Present = 1;
+			pte->PageFrameNumber = hook_entry->hookless_pte->PageFrameNumber;
 
-				auto data = *(int*)fault_address /*	Add dTLB entry	*/
+			auto data = *(int*)fault_address;
 
-				pte->Present = 0;	/*	Make sure we can intercept fetch after iTLB miss	*/
-			}
+			pte->Present = 0;
 		}
 	}
 };

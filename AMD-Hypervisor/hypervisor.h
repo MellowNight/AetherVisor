@@ -16,7 +16,7 @@ struct CoreVmcbData
     uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(uint64_t) * 4];
     uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
     uintptr_t   host_vmcb_physicaladdr;
-    void* self;
+    struct CoreVmcbData* self;
     uint8_t     pad[8];
     Vmcb        guest_vmcb;
     Vmcb        host_vmcb;

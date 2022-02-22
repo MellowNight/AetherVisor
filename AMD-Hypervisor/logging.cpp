@@ -2,8 +2,7 @@
 
 namespace Logger
 {
-
-	// GUID: e4536023-1c9d-4f87-b369-ef2b023bc280
+	//// GUID: e4536023-1c9d-4f87-b369-ef2b023bc280
 
 	TRACELOGGING_DEFINE_PROVIDER(
 		log_provider, 
@@ -16,16 +15,16 @@ namespace Logger
 		return TraceLoggingRegister(log_provider);
 	}
 
-	void Log(const wchar_t* format, ...)
+	void Log(const char* format, ...)
 	{
-		wchar_t buffer[LOG_MAX_LEN];
+		char buffer[LOG_MAX_LEN] = { 0 };
 
 		va_list args;
 		va_start(args, format);
-		RtlStringCchPrintfW(buffer, LOG_MAX_LEN, format, args);
+		_vsnprintf(buffer, LOG_MAX_LEN - 1, format, args);
 		va_end(args);
 
-		TraceLoggingWrite(log_provider, "HV message", TraceLoggingWideString(buffer));
+		TraceLoggingWrite(log_provider, "HV message", TraceLoggingString(buffer));
 	}
 
 	void End()

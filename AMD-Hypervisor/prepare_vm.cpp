@@ -1,26 +1,34 @@
 #include "prepare_vm.h"
 #include "logging.h"
 
-
-
 extern "C" void _sgdt(
 	OUT void* Descriptor
 );
 
 bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 {
+	if (cs_attribute.fields.long_mode == 1)
+	{
+		DbgPrint("Long mode enabled\n");
+	}
+	else
+	{
+		DbgPrint("Long mode disabled\n");
+
+	}
+
 	MsrEfer efer_msr = { 0 };
 	efer_msr.flags = __readmsr(MSR::EFER);
 
 	if (efer_msr.svme == 1)
 	{
-		Logger::Log(L"SVME is off, invalid state! \n");
+		Logger::Log("SVME is off, invalid state! \n");
 		return false;
 	}
 
 	if ((efer_msr.reserved2 != 0) || (efer_msr.reserved3 != 0) || (efer_msr.reserved4 != 0))
 	{
-		Logger::Log(L"MBZ bit of EFER is set, Invalid state! \n");
+		Logger::Log("MBZ bit of EFER is set, Invalid state! \n");
 		return false;
 	}
 
@@ -29,13 +37,13 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if ((cr0.CacheDisable == 0) && (cr0.NotWriteThrough == 1))
 	{
-		Logger::Log(L"CR0.CD is zero and CR0.NW is set. \n");
+		Logger::Log("CR0.CD is zero and CR0.NW is set. \n");
 		return false;
 	}
 
 	if (cr0.Reserved4 != 0)
 	{
-		Logger::Log(L"CR0[63:32] are not zero. \n");
+		Logger::Log("CR0[63:32] are not zero. \n");
 		return false;
 	}
 	
@@ -50,13 +58,13 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if (rflags.Virtual8086ModeFlag == 1 && (cr4.Flags << 23 & 1))
 	{
-		Logger::Log(L"CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
+		Logger::Log("CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
 	}
 
 	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
 		|| (cr4.Reserved2 != 0) || (cr4.Reserved3 != 0) || (cr4.Reserved4 != 0))
 	{
-		Logger::Log(L"cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
+		Logger::Log("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
 		return false;
 	}
 
@@ -68,13 +76,13 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if ((dr6.Flags & (0xFFFFFFFF00000000)) || (dr7.Reserved4 != 0))
 	{
-		Logger::Log(L"DR6[63:32] are not zero, or DR7[63:32] are not zero. Invalid State! \n");
+		Logger::Log("DR6[63:32] are not zero, or DR7[63:32] are not zero.Invalid State!\n");
 		return false;
 	}
 
 	if (cr0.PagingEnable == 0)
 	{
-		Logger::Log(L"Paging disabled, Invalid state! \n");
+		Logger::Log("Paging disabled, Invalid state! \n");
 		return false;
 	}
 
@@ -82,36 +90,36 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 	{
 		if (cr4.PhysicalAddressExtension == 0)
 		{
-			Logger::Log(L"EFER.LME and CR0.PG are both set and CR4.PAE is zero, Invalid state! \n");
+			Logger::Log("EFER.LME and CR0.PG are both set and CR4.PAE is zero, Invalid state! \n");
 			return false;
 		}
 
 		if (cr0.ProtectionEnable == 0)
 		{
-			Logger::Log(L"EFER.LME and CR0.PG are both non-zero and CR0.PE is zero, Invalid state! \n");
+			Logger::Log("EFER.LME and CR0.PG are both non-zero and CR0.PE is zero, Invalid state! \n");
 			return false;
 		}
 
 		if (cs_attribute.fields.long_mode != 0 && cs_attribute.fields.long_mode != 0)
 		{
-			Logger::Log(L"EFER.LME, CR0.PG, CR4.PAE, CS.L, and CS.D are all non-zero. \n");
+			Logger::Log("EFER.LME, CR0.PG, CR4.PAE, CS.L, and CS.D are all non-zero. \n");
 			return false;
 		}
 	}
 
 	if (guest_vmcb->control_area.GuestAsid == 0)
 	{
-		Logger::Log(L"ASID is equal to zero. Invalid guest state \n");
+		Logger::Log("ASID is equal to zero. Invalid guest state \n");
 		return false;
 	}
 
 	if (!(guest_vmcb->control_area.InterceptVec4 & 1))
 	{
-		Logger::Log(L"The VMRUN intercept bit is clear. Invalid state! \n");
+		Logger::Log("The VMRUN intercept bit is clear. Invalid state! \n");
 		return false;
 	}
 
-	Logger::Log(L"consistency checks passed \n");
+	Logger::Log("consistency checks passed \n");
 	return true;
 
 	/*	to do: msr and IOIO map address checks, and some more. */
@@ -120,20 +128,22 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 /*	Copy bits bits 55:52 and 47:40 from segment descriptor	*/
 SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_base)
 {
-	auto selector = SEGMENT_SELECTOR{ segment_selector };
+	SEGMENT_SELECTOR	selector;
+
+	selector.Flags = segment_selector;
 
 	SegmentDescriptor	seg_descriptor = ((SegmentDescriptor*)gdt_base)[selector.Index];
 
 	SegmentAttribute	attribute;
 
-	attribute.fields.type = seg_descriptor.Fields.Type;
-	attribute.fields.system = seg_descriptor.Fields.System;
-	attribute.fields.dpl = seg_descriptor.Fields.Dpl;
-	attribute.fields.present = seg_descriptor.Fields.Present;
-	attribute.fields.avl = seg_descriptor.Fields.Avl;
-	attribute.fields.long_mode = seg_descriptor.Fields.LongMode;
-	attribute.fields.default_bit = seg_descriptor.Fields.DefaultBit;
-	attribute.fields.granularity = seg_descriptor.Fields.Granularity;
+	attribute.fields.type = seg_descriptor.Type;
+	attribute.fields.system = seg_descriptor.System;
+	attribute.fields.dpl = seg_descriptor.Dpl;
+	attribute.fields.present = seg_descriptor.Present;
+	attribute.fields.avl = seg_descriptor.Avl;
+	attribute.fields.long_mode = seg_descriptor.LongMode;
+	attribute.fields.default_bit = seg_descriptor.DefaultBit;
+	attribute.fields.granularity = seg_descriptor.Granularity;
 	attribute.fields.reserved1 = 0;
 
 	return attribute;
@@ -155,11 +165,17 @@ void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 
 	InterceptVector4 intercept_vector4;
 
-	intercept_vector4.intercept_vmmcall = 1; 
+	intercept_vector4.intercept_vmmcall = 1;
 	intercept_vector4.intercept_vmrun = 1;
 
 	core_data->guest_vmcb.control_area.InterceptVec4 = intercept_vector4.as_int32;
 
+	InterceptVector2 intercept_vector2;
+
+	intercept_vector2.intercept_pf = 1;
+	intercept_vector2.intercept_bp = 0;
+
+	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
 
 	core_data->guest_vmcb.control_area.GuestAsid = 1;
 	core_data->guest_vmcb.save_state_area.Cr0 = __readcr0();
@@ -195,8 +211,7 @@ void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.EsAttrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).as_uint16;
 	core_data->guest_vmcb.save_state_area.SsAttrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).as_uint16;
 
-	Logger::Log(L"VpData->guest_vmcb: %p\n", core_data->guest_vmcb);
-	Logger::Log(L"VpData->guest_vmcbPa: %p\n", core_data->guest_vmcb_physicaladdr);
+	Logger::Log("core_data: %p\n", core_data);
 
 	__svm_vmsave(core_data->guest_vmcb_physicaladdr);
 
@@ -227,7 +242,7 @@ bool IsSvmSupported()
 
 	vendor_name[12] = '\0';
 
-	Logger::Log(L"[SETUP] Vendor Name %s \n", vendor_name);
+	Logger::Log("[SETUP] Vendor Name %s \n", vendor_name);
 
 	if (strcmp(vendor_name, "AuthenticAMD") && strcmp(vendor_name, "VmwareVmware"))
 	{

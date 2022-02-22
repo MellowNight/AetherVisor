@@ -177,6 +177,7 @@
     <ClInclude Include="npt.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="prepare_vm.h" />
+    <ClInclude Include="vmexit.h" />
     <ClInclude Include="windows_structs.h" />
   </ItemGroup>
   <ItemGroup>
