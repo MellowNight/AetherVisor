@@ -121,9 +121,26 @@ namespace TlbHooker
 
 	void HandleTlbHookBreakpoint(CoreVmcbData* vcpu)
 	{
-		auto 
+		auto rip = vcpu->guest_vmcb.save_state_area.Rip;
 
-		if (vcpu->guest_vmcb.save_state_area.Rip)
+		auto pte = Utils::GetPte(rip, vcpu->guest_vmcb.save_state_area.Cr3);
+
+		SplitTlbHook* hook_entry = hook_entry = TlbHooker::FindByExecuteGadget(rip);
+
+		if (!hook_entry)
+		{
+			hook_entry = TlbHooker::FindByReadGadget(rip);
+			Logger::Log("[AMD-Hypervisor] - read gadget caught, added dTLB entry! \n");
+		
+			/*	Make sure we can intercept memory access after TLB miss	*/
+			pte->Present = 0;	
+		}
+		else 
+		{
+			Logger::Log("[AMD-Hypervisor] - exec gadget caught, added iTLB entry! \n");
+
+			pte->Present = 0;
+		}
 	}
 
 	void HandlePageFaultTlb(CoreVmcbData* vcpu, GPRegs* guest_regs)
@@ -144,10 +161,13 @@ namespace TlbHooker
 		}
 
 		Logger::Log("[AMD-Hypervisor] -This page fault is from our hooked page at %p \n", fault_address);
+		
+		/*	make room for our own TLB entries	*/
+		VpData->GuestVmcb.ControlArea.TlbControl = 3;
 
 		if (error_code.fields.execute)
 		{
-			/*	Mark the page as present	*/
+			/*	mark page as present	*/
 
 			auto pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3,
 				[](PT_ENTRY_64* pte) -> int {
@@ -156,10 +176,7 @@ namespace TlbHooker
 				}
 			);
 
-			hook_entry->ret_pointer();	/*	Add the iTLB entry	*/
-			Logger::Log("[AMD-Hypervisor] - added iTLB entry! \n");
-
-			pte->Present = 0;	/*	Make sure we can intercept memory access after iTLB miss	*/
+			vcpu->guest_vmcb.save_state_area.Rip = (uintptr_t)hook_entry->exec_gadget;
 		}
 		else
 		{
@@ -170,13 +187,11 @@ namespace TlbHooker
 				vcpu->guest_vmcb.save_state_area.Rip
 			);
 
-			/*	This is the page of one of our hooks, load the innocent page into dTLB	*/
+			/*	This is the page of one of our hooks, load the innocent page frame into dTLB	*/
 			pte->Present = 1;
 			pte->PageFrameNumber = hook_entry->hookless_pte->PageFrameNumber;
 
-			auto data = *(int*)fault_address;
-
-			pte->Present = 0;
+			vcpu->guest_vmcb.save_state_area.Rip = (uintptr_t)hook_entry->read_gadget;		
 		}
 	}
 };
