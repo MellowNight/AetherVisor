@@ -1,8 +1,7 @@
 #include "itlb_hook.h"
 #include "vmexit.h"
 
-namespace TlbHooker
-{
+namespace TlbHooks{
 	int hook_count;
 	SplitTlbHook first_tlb_hook;
 

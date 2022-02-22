@@ -1,7 +1,6 @@
 #include "npt_hook.h"
 
-namespace NptHooker
-{
+namespace NptHooks{
 	NptHook* first_npt_hook = NULL;
 
 	NptHook* FindByHooklessPhysicalPage(uint64_t page_physical)

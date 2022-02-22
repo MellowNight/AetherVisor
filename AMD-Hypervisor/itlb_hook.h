@@ -3,10 +3,8 @@
 #include "amd_definitions.h"
 #include "hypervisor.h"
 
-namespace TlbHooker
+namespace TlbHooks
 {
-	// ret_pointer = function pointer to 0xC3 on page, called to trigger an execute access on the target page
-
 	struct SplitTlbHook
 	{
 		struct SplitTlbHook* next_hook;

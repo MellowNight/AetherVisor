@@ -1,4 +1,4 @@
-#include "itlb_hook.h"
+NptHooksTlbHooks#include "itlb_hook.h"
 #include "npt_hook.h"
 #include "logging.h"
 #include "disassembly.h"

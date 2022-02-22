@@ -1,4 +1,4 @@
-#pragma once
+NptHooks#pragma once
 #include "hypervisor.h"
 #include "npt.h"
 

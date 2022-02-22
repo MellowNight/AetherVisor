@@ -1,4 +1,4 @@
-#include "npt_hook.h"
+NptHooks#include "npt_hook.h"
 #include "itlb_hook.h"
 #include "logging.h"
 #include "hypervisor.h"

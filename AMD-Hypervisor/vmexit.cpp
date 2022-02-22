@@ -1,4 +1,4 @@
-#include "vmexit.h"
+TlbHooks#include "vmexit.h"
 
 void InjectException(CoreVmcbData* core_data, int vector, int error_code)
 {
