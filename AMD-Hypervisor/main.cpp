@@ -1,4 +1,4 @@
-NptHooksTlbHooks#include "itlb_hook.h"
+#include "itlb_hook.h"
 #include "npt_hook.h"
 #include "logging.h"
 #include "disassembly.h"
@@ -83,7 +83,7 @@ bool VirtualizeAllProcessors()
 	memset(code_page, 0xCC, PAGE_SIZE);
 	*(char*)code_page = 0xC3;
 
-	TlbHooker::SetTlbHook(code_page, (uint8_t*)"\xCC\xC3", 2);
+	TlbHooks::SetTlbHook(code_page, (uint8_t*)"\xCC\xC3", 2);
 
 	__debugbreak();
 	static_cast<void(*)()>(code_page)();
@@ -104,8 +104,8 @@ NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
 	Logger::Start();
 	Disasm::Init();
-	TlbHooker::Init();
-	NptHooker::Init();
+	TlbHooks::Init();
+	NptHooks::Init();
 
 	Logger::Log("EntryPoint \n");
 

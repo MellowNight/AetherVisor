@@ -1,4 +1,4 @@
-TlbHooks#include "vmexit.h"
+#include "vmexit.h"
 
 void InjectException(CoreVmcbData* core_data, int vector, int error_code)
 {
@@ -28,12 +28,10 @@ void HandleMsrExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
     VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
-
 void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
 {
     VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
-
 
 extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
 {
@@ -71,7 +69,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         }
         case VMEXIT::PF:
         {
-            TlbHooker::HandlePageFaultTlb(core_data, GuestRegisters);
+            TlbHooks::HandlePageFaultTlb(core_data, GuestRegisters);
             break;
         }
         case VMEXIT::GP: 

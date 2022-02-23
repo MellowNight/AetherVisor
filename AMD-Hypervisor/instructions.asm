@@ -38,14 +38,14 @@ POPAQ macro
 endm
 
 
-vmmcall proc frame
+svm_vmmcall proc frame
 	
 	.endprolog
 
 	vmmcall
     ret
 	
-vmmcall endp
+svm_vmmcall endp
 
 __rdpkru proc frame
 	

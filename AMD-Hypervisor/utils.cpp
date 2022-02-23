@@ -4,6 +4,22 @@
 
 namespace Utils
 {
+    int Diff(uintptr_t a, uintptr_t b)
+    {
+        int diff = 0;
+
+        if (a > b)
+        {
+            diff = a - b;
+        }
+        else
+        {
+            diff = b - a;
+        }
+
+        return diff; 
+    }
+
     uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const char* pattern, size_t pattern_size, char wildcard)
 	{
         for (auto byte = (char*)region_base;

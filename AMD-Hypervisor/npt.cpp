@@ -1,4 +1,4 @@
-NptHooks#include "npt_hook.h"
+#include "npt_hook.h"
 #include "itlb_hook.h"
 #include "logging.h"
 #include "hypervisor.h"
@@ -31,10 +31,9 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 		return;
 	}
 
-
 	if (exit_info1.fields.execute == 1)
 	{
-		auto nptHook = NptHooker::FindByHooklessPhysicalPage(fail_address);
+		auto nptHook = NptHooks::FindByHooklessPhysicalPage(fail_address);
 
 		bool Switch = true;
 

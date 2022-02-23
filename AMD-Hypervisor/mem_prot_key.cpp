@@ -1,9 +1,13 @@
 #include "mem_prot_key.h"
 
 extern "C" __int64 __rdpkru();
+extern "C" __int64 __wrpkru(__int64 pkru);
 
 namespace MpkHooks
 {
+    int hook_count;
+    MpkHook first_mpk_hook;
+
 	void Init()
     {
 
@@ -34,5 +38,7 @@ namespace MpkHooks
         __wrpkru(pkru);
 
         hook_count += 1;
+
+        return hook_entry;
     }
 }

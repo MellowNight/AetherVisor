@@ -72,6 +72,9 @@
     <ClInclude Include="vmexit.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="mem_prot_key.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -104,9 +107,15 @@
     <ClCompile Include="npt_hook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mem_prot_key.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="vm_launch.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="instructions.asm">
       <Filter>Source Files</Filter>
     </MASM>
   </ItemGroup>

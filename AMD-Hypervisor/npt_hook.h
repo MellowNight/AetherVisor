@@ -1,8 +1,8 @@
-NptHooks#pragma once
+#pragma once
 #include "hypervisor.h"
 #include "npt.h"
 
-namespace NptHooker
+namespace NptHooks
 {
 	struct NptHook
 	{

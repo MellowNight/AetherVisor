@@ -3,6 +3,11 @@
 
 namespace Utils
 {
+	int Diff(
+		uintptr_t a,
+		uintptr_t b
+	);
+
 	bool IsInsideRange(
 		uintptr_t address, 
 		uintptr_t range_base, 

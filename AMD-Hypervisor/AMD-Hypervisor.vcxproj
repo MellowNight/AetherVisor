@@ -173,6 +173,7 @@
     <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="itlb_hook.h" />
+    <ClInclude Include="mem_prot_key.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt.h" />
     <ClInclude Include="utils.h" />
@@ -186,6 +187,7 @@
     <ClCompile Include="hv_interface.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="itlb_hook.cpp" />
+    <ClCompile Include="mem_prot_key.cpp" />
     <ClCompile Include="npt_hook.cpp" />
     <ClCompile Include="npt.cpp" />
     <ClCompile Include="utils.cpp" />
@@ -193,6 +195,7 @@
     <ClCompile Include="vmexit.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <MASM Include="instructions.asm" />
     <MASM Include="vm_launch.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -5,7 +5,7 @@ include  instructions.asm
 	MACHINE_FRAME_SIZE          equ     28h
 
 .code
-
+extern svm_vmmcall : proc
 extern HandleVmexit : proc
 
 LaunchVm proc frame
@@ -50,7 +50,7 @@ EnterVm:
 
 	test al, al	; if return 1, then end VM
 
-	POPAQ		; restore general purpose registers, RSP pops back to guest_vmcbPa
+	POPAQ	; restore general purpose registers, RSP pops back to guest_vmcbPa
 
 	jz	EnterVm
 	jmp	EndVm

@@ -1,7 +1,8 @@
 #include "itlb_hook.h"
 #include "vmexit.h"
 
-namespace TlbHooks{
+namespace TlbHooks
+{
 	int hook_count;
 	SplitTlbHook first_tlb_hook;
 
@@ -60,7 +61,7 @@ namespace TlbHooks{
 		return 0;
 	}
 
-	SplitTlbHook* FindByGadgetAddr(uint64_t guest_rip)
+	SplitTlbHook* FindByHookedPhysicalPage(uint64_t page_physical)
 	{
 		PFN_NUMBER pfn = page_physical >> PAGE_SHIFT;
 		auto hook_entry = &first_tlb_hook;
@@ -75,14 +76,27 @@ namespace TlbHooks{
 		return 0;
 	}
 
-	SplitTlbHook* FindByHookedPhysicalPage(uint64_t page_physical)
+	SplitTlbHook* FindByReadGadget(uintptr_t rip)
 	{
-		PFN_NUMBER pfn = page_physical >> PAGE_SHIFT;
 		auto hook_entry = &first_tlb_hook;
 
 		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
 		{
-			if (hook_entry->hooked_pte->PageFrameNumber == pfn)
+			if (Utils::Diff((uintptr_t)hook_entry->read_gadget, rip) < 16)
+			{
+				return hook_entry;
+			}
+		}
+		return 0;
+	}
+
+	SplitTlbHook* FindByExecuteGadget(uintptr_t rip)
+	{
+		auto hook_entry = &first_tlb_hook;
+
+		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
+		{
+			if (Utils::Diff((uintptr_t)hook_entry->exec_gadget, rip) < 16)
 			{
 				return hook_entry;
 			}
@@ -108,11 +122,14 @@ namespace TlbHooks{
 
 		for (int i = 0; i < max_hooks; hook_entry = hook_entry->next_hook, ++i)
 		{
-			auto hookless_page = (uintptr_t)ExAllocatePool(NonPagedPool, PAGE_SIZE);
+			auto hookless_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
+
+			hook_entry->read_gadget = (uint8_t*)ExAllocatePool(NonPagedPool, 12);
 
 			hook_entry->next_hook = (SplitTlbHook*)ExAllocatePool(NonPagedPool, sizeof(SplitTlbHook));
+			hook_entry->next_hook->hookless_pte = Utils::GetPte(hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 
-			hook_entry->next_hook->hookless_pte = Utils::GetPte(first_hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+			memcpy(hook_entry->read_gadget, "\x48\xA1\x00\x00\x00\x00\x00\x00\x00\x00\xCC", 11);
 		}
 
 		hook_count = 0;
@@ -122,13 +139,16 @@ namespace TlbHooks{
 	{
 		auto rip = vcpu->guest_vmcb.save_state_area.Rip;
 
-		auto pte = Utils::GetPte(rip, vcpu->guest_vmcb.save_state_area.Cr3);
+		PHYSICAL_ADDRESS ncr3;
+		ncr3.QuadPart = vcpu->guest_vmcb.control_area.NCr3;
 
-		SplitTlbHook* hook_entry = hook_entry = TlbHooker::FindByExecuteGadget(rip);
+		auto pte = Utils::GetPte((void*)rip, ncr3.QuadPart);
+
+		SplitTlbHook* hook_entry = hook_entry = TlbHooks::FindByExecuteGadget(rip);
 
 		if (!hook_entry)
 		{
-			hook_entry = TlbHooker::FindByReadGadget(rip);
+			hook_entry = TlbHooks::FindByReadGadget(rip);
 			Logger::Log("[AMD-Hypervisor] - read gadget caught, added dTLB entry! \n");
 		
 			/*	Make sure we can intercept memory access after TLB miss	*/
@@ -149,7 +169,7 @@ namespace TlbHooks{
 		PageFaultErrorCode error_code;
 		error_code.as_uint32 = vcpu->guest_vmcb.control_area.ExitInfo1;
 
-		auto hook_entry = TlbHooker::FindByPage(PAGE_ALIGN(fault_address));
+		auto hook_entry = TlbHooks::FindByPage(PAGE_ALIGN(fault_address));
 
 		if (!hook_entry)
 		{
@@ -162,7 +182,7 @@ namespace TlbHooks{
 		Logger::Log("[AMD-Hypervisor] -This page fault is from our hooked page at %p \n", fault_address);
 		
 		/*	make room for our own TLB entries	*/
-		VpData->GuestVmcb.ControlArea.TlbControl = 3;
+		vcpu->guest_vmcb.control_area.TlbControl = 3;
 
 		if (error_code.fields.execute)
 		{
