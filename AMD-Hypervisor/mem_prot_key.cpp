@@ -87,11 +87,27 @@ namespace MpkHooks
 		{
 			/*	set PFN to copy page	*/
 
-			auto pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
+			auto fault_pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
 
-			pte->PageFrameNumber = hook_entry->hookless_pte->PageFrameNumber;
+			fault_pte->PageFrameNumber = Utils::GetPte(
+				hook_entry->hookless_page, 
+				vcpu->guest_vmcb.save_state_area.Cr3
+			)->PageFrameNumber;
 
-			vcpu->guest_vmcb.save_state_area.Rip = (uintptr_t)hook_entry->read_gadget;		
+			fault_pte->ExecuteDisable = 1;
+		}
+		if (error_code.fields.execute)
+		{
+			/*	restore PFN to hooked page	*/
+
+			auto fault_pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
+
+			fault_pte->PageFrameNumber = Utils::GetPte(
+				hook_entry->hooked_page, 
+				vcpu->guest_vmcb.save_state_area.Cr3
+			)->PageFrameNumber;
+
+			fault_pte->ExecuteDisable = 0;
 		}
 	}
 }
