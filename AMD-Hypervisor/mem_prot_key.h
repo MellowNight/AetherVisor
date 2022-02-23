@@ -24,4 +24,9 @@ namespace MpkHooks
 		uint8_t* patch, 
 		size_t patch_len
 	);
+
+	void HandlePageFaultMpk(
+		CoreVmcbData* vcpu, 
+		GPRegs* guest_regs
+	);
 }

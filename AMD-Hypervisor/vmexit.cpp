@@ -70,6 +70,8 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         case VMEXIT::PF:
         {
             TlbHooks::HandlePageFaultTlb(core_data, GuestRegisters);
+            MpkHooks::HandlePageFaultMpk(core_data, GuestRegisters);
+
             break;
         }
         case VMEXIT::GP: 
