@@ -83,33 +83,12 @@ namespace MpkHooks
 
 		Logger::Log("[AMD-Hypervisor] -This page fault is from our hooked page at %p \n", fault_address);
 		
-		/*	make room for our own TLB entries	*/
-		vcpu->guest_vmcb.control_area.TlbControl = 3;
-
-		if (error_code.fields.execute)
+		if (error_code.fields.protection_key)
 		{
-			/*	mark page as present	*/
+			/*	set PFN to copy page	*/
 
-			auto pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3,
-				[](PT_ENTRY_64* pte) -> int {
-					pte->Present = 1;
-					return 0;
-				}
-			);
-
-			vcpu->guest_vmcb.save_state_area.Rip = (uintptr_t)hook_entry->exec_gadget;
-		}
-		else
-		{
 			auto pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
 
-			Logger::Log(
-				"[AMD-Hypervisor] - Read access on hooked page, rip = 0x%p \n", 
-				vcpu->guest_vmcb.save_state_area.Rip
-			);
-
-			/*	This is the page of one of our hooks, load the innocent page frame into dTLB	*/
-			pte->Present = 1;
 			pte->PageFrameNumber = hook_entry->hookless_pte->PageFrameNumber;
 
 			vcpu->guest_vmcb.save_state_area.Rip = (uintptr_t)hook_entry->read_gadget;		
