@@ -7,7 +7,6 @@ c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\npt_hook.obj
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\mem_prot_key.obj
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\itlb_hook.obj
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\logging.obj
-c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\hv_interface.obj
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\main.obj
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\hypervisor.obj
 c:\users\lolxd\source\repos\amd-hypervisor\x64\debug\amd-hypervisor\amd-hypervisor.cat
@@ -21,8 +20,8 @@ c:\users\lolxd\source\repos\amd-hypervisor\x64\debug\amd-hypervisor.inf
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\cl.command.1.tlog
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\cl.read.1.tlog
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\cl.write.1.tlog
-c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\inf2cat-expand.8204.read.1.tlog
-c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\inf2cat-expand.8204.write.1.tlog
+c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\inf2cat-expand.12996.read.1.tlog
+c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\inf2cat-expand.12996.write.1.tlog
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\inf2cat-expand.read.1.tlog
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\inf2cat-expand.write.1.tlog
 c:\users\lolxd\source\repos\amd-hypervisor\amd-hypervisor\x64\debug\amd-hypervisor.tlog\inf2cat.command.1.tlog

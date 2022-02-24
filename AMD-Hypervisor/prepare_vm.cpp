@@ -151,14 +151,21 @@ SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_b
 
 void SetupMSRPM(CoreVmcbData* core_data)
 {
-	int32_t bits_per_msr = 16000 / 8000;
+	size_t bits_per_msr = 16000 / 8000;
+	size_t msr_per_byte = sizeof(uint8_t) / 2;
 	size_t msrpm_size = PAGE_SIZE * 2;
+
+	auto section2 = 0x800;
 
 	auto msrpm = ExAllocatePoolZero(NonPagedPool, msrpm_size, 'msr0');
 
-	core_data->guest_vmcb->control_area.MsrpmBasePa = MmGetPhysicalAddress(msrpm).QuadPart;
+	core_data->guest_vmcb.control_area.MsrpmBasePa = MmGetPhysicalAddress(msrpm).QuadPart;
 
-	auto 
+	auto efer_offset = (0x80 * bits_per_msr) / msr_per_byte;
+
+	uint8_t* msr_80 = section2 + (uint8_t*)efer_offset;
+
+	*msr_80 |= ((1 << 0) | (1 << 1));	/*	set first 2 bits	*/
 }
 
 void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)

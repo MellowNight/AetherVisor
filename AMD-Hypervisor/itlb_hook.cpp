@@ -104,7 +104,7 @@ namespace TlbHooks
 		SplitTlbHook* hook_entry = TlbHooks::ForEachHook(
 			[](SplitTlbHook* hook_entry, void* data) -> bool {
 
-				if (Utils::Diff((uintptr_t)data, (uintptr_t)hook_entry->exec_gadget))
+				if (Utils::Diff((uintptr_t)data, (uintptr_t)hook_entry->exec_gadget) < 16)
 				{
 					return true;
 				}
@@ -117,23 +117,23 @@ namespace TlbHooks
 			hook_entry = TlbHooks::ForEachHook(
 				[](SplitTlbHook* hook_entry, void* data) -> bool {
 
-					if (Utils::Diff((uintptr_t)data, (uintptr_t)hook_entry->read_gadget))
+					if (Utils::Diff((uintptr_t)data, (uintptr_t)hook_entry->read_gadget) < 16)
 					{
 						return true;
 					}
 
 				}, (void*)rip
 			);
-
-			Logger::Log("[AMD-Hypervisor] - read gadget caught, added dTLB entry! \n");
-		
-			/*	Make sure we can intercept memory access after TLB miss	*/
-			pte->Present = 0;	
 		}
-		else 
+		
+		if (hook_entry)
 		{
-			Logger::Log("[AMD-Hypervisor] - exec gadget caught, added iTLB entry! \n");
+			/*	Return to the saved page fault RIP	*/
+			vcpu->guest_vmcb.save_state_area.Rip = hook_entry->page_fault_rip;
 
+			Logger::Log("[AMD-Hypervisor] - r/x gadget caught, added TLB entry! \n");
+
+			/*	Make sure we can intercept memory access after TLB miss	*/
 			pte->Present = 0;
 		}
 	}
@@ -163,6 +163,9 @@ namespace TlbHooks
 			InjectException(vcpu, 14, error_code.as_uint32);
 			return;
 		}
+
+		/*	get back to this RIP once TLB entries have been added	*/
+		hook_entry->page_fault_rip = vcpu->guest_vmcb.save_state_area.Rip;
 
 		Logger::Log("[AMD-Hypervisor] -This page fault is from our hooked page at %p \n", fault_address);
 		

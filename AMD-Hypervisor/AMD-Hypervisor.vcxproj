@@ -165,7 +165,6 @@
   <ItemGroup>
     <ClInclude Include="amd_definitions.h" />
     <ClInclude Include="disassembly.h" />
-    <ClInclude Include="hv_interface.h" />
     <ClInclude Include="hypervisor.h" />
     <ClInclude Include="ia32.h" />
     <ClInclude Include="includes.h" />
@@ -179,12 +178,10 @@
     <ClInclude Include="utils.h" />
     <ClInclude Include="prepare_vm.h" />
     <ClInclude Include="vmexit.h" />
-    <ClInclude Include="windows_structs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="hypervisor.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="hv_interface.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="itlb_hook.cpp" />
     <ClCompile Include="mem_prot_key.cpp" />

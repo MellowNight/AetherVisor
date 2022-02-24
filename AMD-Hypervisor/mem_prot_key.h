@@ -13,15 +13,15 @@ namespace MpkHooks
 		void* hooked_page;
     };
 
-
 	extern int hook_count;
 	extern MpkHook first_mpk_hook;
 
 	void Init();
 
 	MpkHook* SetMpkHook(
-		void* address, 
-		uint8_t* patch, 
+		CoreVmcbData* vcpu,
+		void* address,
+		uint8_t* patch,
 		size_t patch_len
 	);
 

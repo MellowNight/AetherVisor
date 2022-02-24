@@ -1,10 +1,15 @@
 #pragma once
 #include "itlb_hook.h"
 #include "npt_hook.h"
-#include "hv_interface.h"
 #include "logging.h"
 #include "prepare_vm.h"
 
+enum VMMCALL_ID : uintptr_t
+{
+    set_mpk_hook = 0x22FFAA1166,
+    set_tlb_hook = 0xAAFF226611,
+    disable_hv = 0xFFAA221166,
+};
 
 enum VMEXIT
 {

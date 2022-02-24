@@ -33,17 +33,28 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
 
     switch (id)
     {
-        case VMMCALL::set_mpk_hook:
+        case VMMCALL_ID::set_mpk_hook:
         {
-            MpkHooks::SetMpkHook(GuestRegisters->rdx, GuestRegisters->r8, GuestRegisters->r9);
+            MpkHooks::SetMpkHook(
+                VpData,
+                (void*)GuestRegisters->rdx, 
+                (uint8_t*)GuestRegisters->r8,
+                GuestRegisters->r9
+            );
+            
             break;
         }
-        case VMMCALL::set_tlb_hook:
+        case VMMCALL_ID::set_tlb_hook:
         {
-            TlbHooks::SetTlbHook(GuestRegisters->rdx, GuestRegisters->r8, GuestRegisters->r9);
+            TlbHooks::SetTlbHook(
+                (void*)GuestRegisters->rdx,
+                (uint8_t*)GuestRegisters->r8,
+                GuestRegisters->r9
+            );
+            
             break;
         }
-        case VMMCALL::disable_hv:
+        case VMMCALL_ID::disable_hv:
         {
             *EndVM = true;
             break;
@@ -66,11 +77,6 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
 
     switch (core_data->guest_vmcb.control_area.ExitCode) 
     {
-        case VMEXIT::CPUID:
-        {
-            HandleCpuidExit(core_data, GuestRegisters);
-            break;
-        }
         case VMEXIT::MSR: 
         {
             HandleMsrExit(core_data, GuestRegisters);

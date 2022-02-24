@@ -38,7 +38,7 @@ namespace HyperApi
             []() -> void {
                 vmmcall(VMMCALL_ID::disable_hv);
             }
-        )
+        );
         return 0;
     }
 
