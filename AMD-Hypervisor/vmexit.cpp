@@ -19,18 +19,41 @@ void InjectException(CoreVmcbData* core_data, int vector, int error_code)
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
 
-void HandleCpuidExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
-{
-    VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
-}
-
 void HandleMsrExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 {
     VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
+/*  HandleVmmcall only handles the vmmcall for 1 core. 
+    It is the guest's responsibility to set thread affinity.
+*/
 void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
 {
+    auto id = GuestRegisters->rcx;
+
+    switch (id)
+    {
+        case VMMCALL::set_mpk_hook:
+        {
+            MpkHooks::SetMpkHook(GuestRegisters->rdx, GuestRegisters->r8, GuestRegisters->r9);
+            break;
+        }
+        case VMMCALL::set_tlb_hook:
+        {
+            TlbHooks::SetTlbHook(GuestRegisters->rdx, GuestRegisters->r8, GuestRegisters->r9);
+            break;
+        }
+        case VMMCALL::disable_hv:
+        {
+            *EndVM = true;
+            break;
+        }
+        default: 
+        {
+            break;
+        }
+    }
+
     VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 

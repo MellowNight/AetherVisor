@@ -149,6 +149,14 @@ SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_b
 	return attribute;
 }
 
+void SetupMSRPM()
+{
+	int32_t bits_per_msr = 16000 / 8000;
+	size_t msrpm_size = PAGE_SIZE * 2;
+	
+	ExAllocatePool(NonPagedPool, msrpm_size);
+}
+
 void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 {
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
