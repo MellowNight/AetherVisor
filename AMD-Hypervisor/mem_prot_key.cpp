@@ -1,22 +1,36 @@
 #include "mem_prot_key.h"
+#include "logging.h"
+#include "vmexit.h"
 
-extern "C" __int64 __rdpkru();
-extern "C" __int64 __wrpkru(__int64 pkru);
+extern "C" int __rdpkru();
+extern "C" int __wrpkru(int pkru);
 
 namespace MpkHooks
 {
     int hook_count;
     MpkHook first_mpk_hook;
 
+	MpkHook* ForEachHook(bool(HookCallback)(MpkHook* hook_entry, void* data), void* callback_data)
+	{
+		auto hook_entry = &first_mpk_hook;
+
+		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
+		{
+			if (HookCallback(hook_entry, callback_data))
+			{
+				return hook_entry;
+			}
+		}
+		return 0;
+	}
+
 	void Init()
     {
-        auto first_hookless_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
-
 		CR3 cr3;
 		cr3.Flags = __readcr3();
 
-		first_tlb_hook.hookless_pte = Utils::GetPte(first_hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
-		first_tlb_hook.next_hook = (MpkHook*)ExAllocatePool(NonPagedPool, sizeof(MpkHook));
+		first_mpk_hook.hookless_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
+		first_mpk_hook.next_hook = (MpkHook*)ExAllocatePool(NonPagedPool, sizeof(MpkHook));
 
 		auto hook_entry = &first_mpk_hook;
 
@@ -26,16 +40,14 @@ namespace MpkHooks
 
 		for (int i = 0; i < max_hooks; hook_entry = hook_entry->next_hook, ++i)
 		{
-			auto hookless_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
-
 			hook_entry->next_hook = (MpkHook*)ExAllocatePool(NonPagedPool, sizeof(MpkHook));
-			hook_entry->next_hook->hookless_pte = Utils::GetPte(hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+			hook_entry->next_hook->hookless_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
 		}
 
 		hook_count = 0;
     }
 
-	MpkHook* SetMpkHook(void* address, uint8_t* patch, size_t patch_len)
+	MpkHook* SetMpkHook(CoreVmcbData* vcpu, void* address, uint8_t* patch, size_t patch_len)
     {	
         auto hook_entry = &first_mpk_hook;
 
@@ -44,7 +56,7 @@ namespace MpkHooks
 		}
 
         PHYSICAL_ADDRESS cr3;
-        cr3.QuadPart = VpData->guest_vmcb.save_state_area.Cr3;
+        cr3.QuadPart = vcpu->guest_vmcb.save_state_area.Cr3;
 
 		hook_entry->the_pte = Utils::GetPte(address, cr3.QuadPart);
         hook_entry->hooked_page = PAGE_ALIGN(address);
@@ -71,7 +83,16 @@ namespace MpkHooks
 		PageFaultErrorCode error_code;
 		error_code.as_uint32 = vcpu->guest_vmcb.control_area.ExitInfo1;
 
-		auto hook_entry = TlbHooks::FindByPage(PAGE_ALIGN(fault_address));
+		auto hook_entry = MpkHooks::ForEachHook(
+			[](MpkHook* hook_entry, void* data) -> bool {
+
+				if (PAGE_ALIGN((uintptr_t)data) == hook_entry->hooked_page)
+				{
+					return true;
+				}
+
+			}, (void*)fault_address
+		);
 
 		if (!hook_entry)
 		{

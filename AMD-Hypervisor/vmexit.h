@@ -14,6 +14,7 @@ enum VMEXIT
     VMMCALL = 0x81,
     NPF = 0x400,
     PF = 0x4E,
+    BP = 0x43,
     INVALID = -1,
     GP = 0x4D,
     DB = 0x41,

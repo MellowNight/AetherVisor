@@ -1,4 +1,6 @@
 #include "vmexit.h"
+#include "mem_prot_key.h"
+
 
 void InjectException(CoreVmcbData* core_data, int vector, int error_code)
 {
@@ -16,7 +18,6 @@ void InjectException(CoreVmcbData* core_data, int vector, int error_code)
 
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
-
 
 void HandleCpuidExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 {
@@ -70,7 +71,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         case VMEXIT::PF:
         {
             TlbHooks::HandlePageFaultTlb(core_data, GuestRegisters);
-            MpkHooks::HandlePageFaultMpk(core_data, GuestRegisters);
+            //MpkHooks::HandlePageFaultMpk(core_data, GuestRegisters);
 
             break;
         }
@@ -86,6 +87,11 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
 
             IsProcessorReadyForVmrun(&core_data->guest_vmcb, CsAttrib);
 
+            break;
+        }
+        case VMEXIT::BP:
+        {
+            TlbHooks::HandleTlbHookBreakpoint(core_data);
             break;
         }
         default:

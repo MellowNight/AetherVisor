@@ -37,6 +37,7 @@ namespace TlbHooks
 		Utils::EnableWP(irql);
 
 		/*	bp execution in guest context to fill iTLB in guest ASID	*/		
+		memcpy(hook_entry->read_gadget + 2, &address, sizeof(uintptr_t));
 		hook_entry->exec_gadget = (uint8_t*)retptr;
 		hook_entry->hooked_pte->Present = 0;
 
@@ -46,57 +47,13 @@ namespace TlbHooks
 		return hook_entry;
 	}
 
-
-	SplitTlbHook* FindByPage(void* virtual_addr)
+	SplitTlbHook* ForEachHook(bool(HookCallback)(SplitTlbHook* hook_entry, void* data), void* callback_data)
 	{
 		auto hook_entry = &first_tlb_hook;
 
 		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
 		{
-			if (hook_entry->hooked_page_va == virtual_addr)
-			{
-				return hook_entry;
-			}
-		}
-		return 0;
-	}
-
-	SplitTlbHook* FindByHookedPhysicalPage(uint64_t page_physical)
-	{
-		PFN_NUMBER pfn = page_physical >> PAGE_SHIFT;
-		auto hook_entry = &first_tlb_hook;
-
-		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
-		{
-			if (hook_entry->hooked_pte->PageFrameNumber == pfn)
-			{
-				return hook_entry;
-			}
-		}
-		return 0;
-	}
-
-	SplitTlbHook* FindByReadGadget(uintptr_t rip)
-	{
-		auto hook_entry = &first_tlb_hook;
-
-		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
-		{
-			if (Utils::Diff((uintptr_t)hook_entry->read_gadget, rip) < 16)
-			{
-				return hook_entry;
-			}
-		}
-		return 0;
-	}
-
-	SplitTlbHook* FindByExecuteGadget(uintptr_t rip)
-	{
-		auto hook_entry = &first_tlb_hook;
-
-		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
-		{
-			if (Utils::Diff((uintptr_t)hook_entry->exec_gadget, rip) < 16)
+			if (HookCallback(hook_entry, callback_data))
 			{
 				return hook_entry;
 			}
@@ -144,11 +101,30 @@ namespace TlbHooks
 
 		auto pte = Utils::GetPte((void*)rip, ncr3.QuadPart);
 
-		SplitTlbHook* hook_entry = hook_entry = TlbHooks::FindByExecuteGadget(rip);
+		SplitTlbHook* hook_entry = TlbHooks::ForEachHook(
+			[](SplitTlbHook* hook_entry, void* data) -> bool {
+
+				if (Utils::Diff((uintptr_t)data, (uintptr_t)hook_entry->exec_gadget))
+				{
+					return true;
+				}
+
+			}, (void*)rip
+		);
 
 		if (!hook_entry)
 		{
-			hook_entry = TlbHooks::FindByReadGadget(rip);
+			hook_entry = TlbHooks::ForEachHook(
+				[](SplitTlbHook* hook_entry, void* data) -> bool {
+
+					if (Utils::Diff((uintptr_t)data, (uintptr_t)hook_entry->read_gadget))
+					{
+						return true;
+					}
+
+				}, (void*)rip
+			);
+
 			Logger::Log("[AMD-Hypervisor] - read gadget caught, added dTLB entry! \n");
 		
 			/*	Make sure we can intercept memory access after TLB miss	*/
@@ -169,7 +145,16 @@ namespace TlbHooks
 		PageFaultErrorCode error_code;
 		error_code.as_uint32 = vcpu->guest_vmcb.control_area.ExitInfo1;
 
-		auto hook_entry = TlbHooks::FindByPage(PAGE_ALIGN(fault_address));
+		auto hook_entry = TlbHooks::ForEachHook(
+			[](SplitTlbHook* hook_entry, void* data) -> bool {
+
+				if (PAGE_ALIGN(data) == hook_entry->hooked_page_va)
+				{
+					return true;
+				}
+
+			}, (void*)fault_address
+		);
 
 		if (!hook_entry)
 		{

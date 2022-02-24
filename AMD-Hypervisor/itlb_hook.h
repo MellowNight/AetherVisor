@@ -25,6 +25,10 @@ namespace TlbHooks
 		GPRegs* guest_regs
 	);
 
+	void HandleTlbHookBreakpoint(
+		CoreVmcbData* vcpu
+	);
+
 	SplitTlbHook* SetTlbHook(
 		void* address, 
 		uint8_t* patch, 
