@@ -3,12 +3,13 @@
 
 namespace HyperApi
 {
+    /*  Not on each core, because it's only relevant in 1 process context */
     int SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len)
     {
         return vmmcall(VMMCALL_ID::set_tlb_hook, address, patch, patch_len);
     }
 
-    int DisableHv()
+    int ForEachCore(void(*callback)())
     {
         SYSTEM_INFO sys_info;
         GetSystemInfo(&sys_info);
@@ -20,9 +21,20 @@ namespace HyperApi
             
             SetThreadAffinityMask(GetCurrentThread(), affinity);
 
-            vmmcall(VMMCALL_ID::disable_hv);
+            callback();
         }
 
         return 0;
     }
+
+    int DisableHv()
+    {
+        ForEachCore(
+            []() -> void {
+                vmmcall(VMMCALL_ID::disable_hv);
+            }
+        )
+        return 0;
+    }
+
 };
