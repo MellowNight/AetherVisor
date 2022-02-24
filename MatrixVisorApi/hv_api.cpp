@@ -9,6 +9,11 @@ namespace HyperApi
         return vmmcall(VMMCALL_ID::set_tlb_hook, address, patch, patch_len);
     }
 
+    int SetMpkHook(uintptr_t address, uint8_t* patch, size_t patch_len)
+    {
+        return vmmcall(VMMCALL_ID::set_mpk_hook, address, patch, patch_len);
+    }
+
     int ForEachCore(void(*callback)())
     {
         SYSTEM_INFO sys_info;
