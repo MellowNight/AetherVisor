@@ -13,7 +13,7 @@ enum VMMCALL_ID : uintptr_t
 
 extern "C" int __stdcall vmmcall(VMMCALL_ID vmmcall_id, ...);
 
-namespace HyperApi
+namespace MatrixVisor
 {
     int SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len);
 

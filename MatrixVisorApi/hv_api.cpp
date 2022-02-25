@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "hv_api.h"
 
-namespace HyperApi
+namespace MatrixVisor
 {
     /*  Not on each core, because it's only relevant in 1 process context */
     int SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len)
