@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "hv_api.h"
+#include "forte_hv_api.h"
 
-namespace MatrixVisor
+namespace ForteVisor
 {
     /*  Not on each core, because it's only relevant in 1 process context */
     int SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len)
@@ -14,14 +14,26 @@ namespace MatrixVisor
         return vmmcall(VMMCALL_ID::set_mpk_hook, address, patch, patch_len);
     }
 
+    int Exponent(int base, int power)
+    {
+        int start = 1;
+        for (int i = 0; i < power; ++i)
+        {
+            start *= base;
+        }
+
+        return start;
+    }
+
     int ForEachCore(void(*callback)())
     {
-        SYSTEM_INFO sys_info;
-        GetSystemInfo(&sys_info);
-        auto core_count = sys_info.dwNumberOfProcessors;
+	    auto core_count = KeQueryActiveProcessorCount(0);
 
-        for (auto idx = 0; idx < core_count; ++idx)
+        for (int idx = 0; idx < core_count; ++idx)
         {
+            KAFFINITY affinity = Exponent(2, idx);
+
+            KeSetSystemAffinityThread(affinity);
             auto affinity = pow(2, idx);
             
             SetThreadAffinityMask(GetCurrentThread(), affinity);
@@ -41,5 +53,4 @@ namespace MatrixVisor
         );
         return 0;
     }
-
 };

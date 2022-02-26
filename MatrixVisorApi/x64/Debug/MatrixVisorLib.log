@@ -1,5 +1,0 @@
-﻿  pch.cpp
-  hv_api.cpp
-C:\Users\lolxd\source\repos\AMD-Hypervisor\MatrixVisorApi\hv_api.cpp(23,32): warning C4018: '<': signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\MatrixVisorApi\hv_api.cpp(27,55): warning C4244: 'argument': conversion from 'double' to 'DWORD_PTR', possible loss of data
-  MatrixVisorLib.vcxproj -> C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Debug\MatrixVisorLib.lib

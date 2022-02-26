@@ -1,3 +1,4 @@
+#pragma once
 #include "pch.h"
 #include "framework.h"
 #include <cstdint>
@@ -13,9 +14,14 @@ enum VMMCALL_ID : uintptr_t
 
 extern "C" int __stdcall vmmcall(VMMCALL_ID vmmcall_id, ...);
 
-namespace MatrixVisor
+namespace ForteVisor
 {
+    /*  Not on each core, because it's only relevant in 1 process context */
     int SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len);
+
+    int SetMpkHook(uintptr_t address, uint8_t* patch, size_t patch_len);
+
+    int ForEachCore(void(*callback)());
 
     int DisableHv();
 };
