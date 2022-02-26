@@ -21,7 +21,7 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hv_api.h">
+    <ClInclude Include="forte_hv_api.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -29,7 +29,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hv_api.cpp">
+    <ClCompile Include="forte_hv_api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
