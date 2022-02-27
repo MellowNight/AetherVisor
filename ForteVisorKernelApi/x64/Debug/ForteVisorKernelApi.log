@@ -1,0 +1,16 @@
+﻿  Building 'ForteVisorKernelApi' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
+  Assembling vmmcall.asm...
+  forte_api_kernel.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(85): message : see previous definition of '_CRT_STRINGIZE'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(114,1): warning C4005: '_CRT_WIDE': macro redefinition
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(88): message : see previous definition of '_CRT_WIDE'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(155,1): warning C4005: '__CRTDECL': macro redefinition
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(640): message : see previous definition of '__CRTDECL'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\stdint.h(16,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
+C:\Users\lolxd\source\repos\AMD-hypervisor\ForteVisorKernelApi\forte_api_kernel.cpp(60,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-hypervisor\ForteVisorKernelApi\forte_api_kernel.cpp(77,13): warning C4100: 'param': unreferenced formal parameter
+  pch.cpp
+  Generating Code...
+  ForteVisorKernelApi.vcxproj -> C:\Users\lolxd\source\repos\AMD-hypervisor\x64\Debug\ForteVisorKernelApi.lib

@@ -14,7 +14,36 @@ namespace ForteVisor
         return vmmcall(VMMCALL_ID::set_mpk_hook, address, patch, patch_len);
     }
 
-    int ForEachCore(void(*callback)())
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len)
+    {
+        struct HookParams
+        {
+            uintptr_t address;
+            uint8_t* patch;
+            size_t patch_len;
+        };
+
+        HookParams hook_param = HookParams{ address, patch, patch_len };
+
+        ForEachCore(
+            [](void* param) -> void {
+
+                auto hook = (HookParams*)param;
+
+                vmmcall(
+                    VMMCALL_ID::set_npt_hook,
+                    hook->address,
+                    hook->patch,
+                    hook->patch_len
+                );
+            },
+            (void*)&hook_param
+        );
+        
+        return 0;
+    }
+
+    int ForEachCore(void(*callback)(void* params), void* params)
     {
         SYSTEM_INFO sys_info;
         GetSystemInfo(&sys_info);
@@ -26,7 +55,7 @@ namespace ForteVisor
             
             SetThreadAffinityMask(GetCurrentThread(), affinity);
 
-            callback();
+            callback(params);
         }
 
         return 0;
@@ -35,7 +64,7 @@ namespace ForteVisor
     int DisableHv()
     {
         ForEachCore(
-            []() -> void {
+            [](void* params) -> void {
                 vmmcall(VMMCALL_ID::disable_hv);
             }
         );
