@@ -128,13 +128,12 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 /*	Copy bits bits 55:52 and 47:40 from segment descriptor	*/
 SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_base)
 {
-	SEGMENT_SELECTOR	selector;
-
+	SEGMENT_SELECTOR selector;
 	selector.Flags = segment_selector;
 
-	SegmentDescriptor	seg_descriptor = ((SegmentDescriptor*)gdt_base)[selector.Index];
+	SegmentDescriptor seg_descriptor = ((SegmentDescriptor*)gdt_base)[selector.Index];
 
-	SegmentAttribute	attribute;
+	SegmentAttribute attribute;
 
 	attribute.fields.type = seg_descriptor.Type;
 	attribute.fields.system = seg_descriptor.System;
@@ -147,6 +146,11 @@ SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_b
 	attribute.fields.reserved1 = 0;
 
 	return attribute;
+}
+
+void SetupTssIst()
+{
+	
 }
 
 void SetupMSRPM(CoreVmcbData* core_data)

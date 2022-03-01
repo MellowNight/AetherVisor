@@ -12,5 +12,4 @@ namespace Logger
 	void Log(const char* format, ...);
 
 	void End();
-
 };
