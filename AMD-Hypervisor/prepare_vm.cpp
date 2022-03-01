@@ -161,14 +161,15 @@ void SetupMSRPM(CoreVmcbData* core_data)
 
 	RTL_BITMAP bitmap;
 
-    RtlInitializeBitMap(&bitmap, msrpm, msrpm_size * 8);
+    RtlInitializeBitMap(&bitmap, (PULONG)msrpm, msrpm_size * 8);
     RtlClearAllBits(&bitmap);
 
 	auto section2_offset = (0x800 * bits_per_byte);
-    auto efer_offset = section2_offset + (bits_per_msr * (IA32_EFER_REGISTER - 0xC0000000));
+	auto efer_offset = section2_offset + (bits_per_msr * (MSR::EFER - 0xC0000000));
 
 	/*	intercept EFER read and write	*/
-    RtlSetBits(&bitmapHeader, efer_offset, 2);}
+    RtlSetBits(&bitmap, efer_offset, 2);
+}
 
 void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 {

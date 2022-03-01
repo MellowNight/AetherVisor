@@ -158,7 +158,15 @@ namespace TlbHooks
 
 		if (!hook_entry)
 		{
-			Logger::Log("[AMD-Hypervisor] - This is a normal page fault at %p \n", fault_address);
+			Logger::Log("[AMD-Hypervisor] - This is a normal page fault at %p, error code %d \n", fault_address, error_code.as_uint32);
+
+			if (error_code.as_uint32 == 2)
+			{
+				Logger::Log("[AMD-Hypervisor] - guest_regs %p, guest rsp %p \n", guest_regs, vcpu->guest_vmcb.save_state_area.Rsp);
+
+				__debugbreak();
+				return;
+			}
 
 			InjectException(vcpu, 14, error_code.as_uint32);
 			return;
