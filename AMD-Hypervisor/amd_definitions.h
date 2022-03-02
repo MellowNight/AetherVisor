@@ -1,5 +1,5 @@
 #pragma once
-#include "includes.h"        
+#include "includes.h"
 
 enum CPUID
 {
@@ -15,6 +15,30 @@ enum MSR
     EFER = 0xC0000080,
     PAT = 0x277,  /*  Page Atrribute Table, see   MSR0000_0277    */
     VM_HSAVE_PA = 0xC0010117
+};
+
+/*  TSS */
+struct TaskStateSegment 
+{ 
+    int32_t reserved1;
+    uintptr_t stack_rings[3];
+    uintptr_t reserved2;
+    void* ist[7];
+    int64_t reserved3;
+    int16_t reserved4;
+    uint16_t iomap_base;
+};
+
+/*  from osdev wiki */
+struct InterruptDescriptor64 
+{
+   uint16_t offset_1;        // offset bits 0..15
+   uint16_t selector;        // a code segment selector in GDT or LDT
+   uint8_t  ist;             // bits 0..2 holds Interrupt Stack Table offset, rest of bits zero.
+   uint8_t  type_attributes; // gate type, dpl, and p fields
+   uint16_t offset_2;        // offset bits 16..31
+   uint32_t offset_3;        // offset bits 32..63
+   uint32_t zero;            // reserved
 };
 
 /*  the vmcb structures are typed out by Satoshi Tanda @tandasat    */

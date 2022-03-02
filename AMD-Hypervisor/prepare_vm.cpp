@@ -5,6 +5,8 @@ extern "C" void _sgdt(
 	OUT void* Descriptor
 );
 
+extern "C" int16_t __readtr();
+
 bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 {
 	if (cs_attribute.fields.long_mode == 1)
@@ -149,8 +151,36 @@ SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_b
 }
 
 void SetupTssIst()
-{
-	
+{	
+	DescriptorTableRegister	gdtr;
+	_sgdt(&gdtr);
+
+	SEGMENT_SELECTOR selector;
+	selector.Flags = __readtr();
+
+	SegmentDescriptor seg_descriptor = ((SegmentDescriptor*)gdtr.base)[selector.Index];
+
+	auto tss_base = (TaskStateSegment*)seg_descriptor.BaseLow + seg_descriptor.BaseMiddle + seg_descriptor.BaseHigh;
+
+	/*	Find free IST entry for page fault	*/
+
+	int idx = 0;
+	for (idx = 0; idx < 7; ++idx)
+	{
+		if (tss_base->ist[i])
+		{
+			break;
+		}
+	}
+
+	auto pf_stack = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE * 2, 'abcd');
+
+	tss_base->ist[idx] = pf_stack + (PAGE_SIZE * 2);
+
+	DescriptorTableRegister	idtr;
+	__sidt(&idtr);
+
+	((InterruptDescriptor64*)idtr.base)[idx].ist = idx; 
 }
 
 void SetupMSRPM(CoreVmcbData* core_data)
