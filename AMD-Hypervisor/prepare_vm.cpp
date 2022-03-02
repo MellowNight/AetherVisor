@@ -180,7 +180,7 @@ void SetupTssIst()
 	DescriptorTableRegister	idtr;
 	__sidt(&idtr);
 
-	((InterruptDescriptor64*)idtr.base)[idx].ist = idx; 
+	((InterruptDescriptor64*)idtr.base)[14].ist = idx; 
 }
 
 void SetupMSRPM(CoreVmcbData* core_data)
@@ -267,6 +267,8 @@ void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.EsAttrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).as_uint16;
 	core_data->guest_vmcb.save_state_area.SsAttrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).as_uint16;
 
+	SetupTssIst();
+	
 	Logger::Log("core_data: %p\n", core_data);
 
 	__svm_vmsave(core_data->guest_vmcb_physicaladdr);
