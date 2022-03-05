@@ -10,12 +10,10 @@ namespace NptHooks
 		PT_ENTRY_64* hookless_npte;
 		PT_ENTRY_64* hooked_npte;
 	};
+	
+	extern	int hook_count;
+	extern	NptHook first_npt_hook;
 
-	extern NptHook* first_npt_hook;
-
-	NptHook* FindByHooklessPhysicalPage(
-		uint64_t page_physical
-	);
-
+	void SetNptHook();
 	void Init();
 };
