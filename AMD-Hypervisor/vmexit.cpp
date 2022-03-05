@@ -27,6 +27,7 @@ void HandleMsrExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
 {
     auto id = GuestRegisters->rcx;
+    Logger::Log("[AMD-Hypervisor] - vmmcall id %d \n", id); 
 
     switch (id)
     {
