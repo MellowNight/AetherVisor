@@ -39,13 +39,12 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 
 		int length = 16;
 
-		/*	handle the case where the hook is split across 2 pages	*/
+		/*	handle cases where an instruction is split across 2 pages	*/
 
-		if (PAGE_ALIGN(GuestRip + length) != PAGE_ALIGN(GuestRip)) {
-
+		if (PAGE_ALIGN(GuestRip + length) != PAGE_ALIGN(GuestRip)) 
+		{
 			PT_ENTRY_64* N_Pte = Utils::GetPte((void*)
 				MmGetPhysicalAddress(PAGE_ALIGN(GuestRip)).QuadPart, NCr3.QuadPart);
-
 
 			PT_ENTRY_64* N_Pte2 = Utils::GetPte((void*)
 				MmGetPhysicalAddress(PAGE_ALIGN(GuestRip + length)).QuadPart, NCr3.QuadPart);
@@ -57,7 +56,9 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 			Switch = false;
 		}
 
-		//VpData->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+		/*	clean ncr3 cache	*/
+
+		VpData->guest_vmcb.control_area.VmcbClean &= ~(1 << 4);
 		//VpData->guest_vmcb.control_area.TlbControl = 3;
 
 		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
@@ -75,8 +76,11 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 	}
 }
 
+/*	guest physical addresses are 1:1 mapped to host physical
+	addresses
+*/
 
-void*	AllocateNewTable(PML4E_64* PageEntry)
+void* AllocateNewTable(PML4E_64* PageEntry)
 {
 	void* Table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
@@ -91,23 +95,22 @@ void*	AllocateNewTable(PML4E_64* PageEntry)
 
 int GetPhysicalMemoryRanges()
 {
-	int numberOfRuns = 0;
+	int number_of_runs = 0;
 
 	PPHYSICAL_MEMORY_RANGE MmPhysicalMemoryRange = MmGetPhysicalMemoryRanges();
 
-	for (int number_of_runs = 0;
+	for (number_of_runs = 0;
 		(MmPhysicalMemoryRange[number_of_runs].BaseAddress.QuadPart) || (MmPhysicalMemoryRange[number_of_runs].NumberOfBytes.QuadPart);
 		number_of_runs++)
 	{
 		hypervisor->phys_mem_range[number_of_runs] = MmPhysicalMemoryRange[number_of_runs];
-
-		numberOfRuns += 1;
 	}
 
-	return numberOfRuns;
+	return number_of_runs;
 }
 
 /*	assign a new NPT entry to an unmapped guest physical address	*/
+
 PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 {
 	ADDRESS_TRANSLATION_HELPER	Helper;

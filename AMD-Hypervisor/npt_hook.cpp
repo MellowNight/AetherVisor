@@ -48,13 +48,18 @@ namespace NptHooks
 		hook_entry->hooked_npte = Utils::GetPte(physical_addr, hypervisor->SecondaryNCr3);
 
 		auto hooked_copy = ExAllocatePool(NonPagedPool, PAGE_SIZE);
-
+		auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
+		
 		memcpy(hooked_copy, address, PAGE_SIZE);
+		memcpy((uint8_t*)hooked_copy + page_offset, patch, patch_len);
 
 		hook_entry->hooked_npte->ExecuteDisable = 0;
+
+		/*	gPTE pfn would be equal to nPTE pfn, 
+			as guest physical addresses are 1:1 mapped to host physical	
+		*/
 		hook_entry->hooked_npte->PageFrameNumber = Utils::PfnFromVirtualAddr(hooked_copy);
 
-		auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
-
+		hook_entry->hookless_npte->ExecuteDisable = 1;
 	}
 };
