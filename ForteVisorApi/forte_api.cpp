@@ -6,12 +6,12 @@ namespace ForteVisor
     /*  Not on each core, because it's only relevant in 1 process context */
     int SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len)
     {
-        return vmmcall(VMMCALL_ID::set_tlb_hook, address, patch, patch_len);
+        return svm_vmmcall(VMMCALL_ID::set_tlb_hook, address, patch, patch_len);
     }
 
     int SetMpkHook(uintptr_t address, uint8_t* patch, size_t patch_len)
     {
-        return vmmcall(VMMCALL_ID::set_mpk_hook, address, patch, patch_len);
+        return svm_vmmcall(VMMCALL_ID::set_mpk_hook, address, patch, patch_len);
     }
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len)
@@ -30,7 +30,7 @@ namespace ForteVisor
 
                 auto hook = (HookParams*)param;
 
-                vmmcall(
+                svm_vmmcall(
                     VMMCALL_ID::set_npt_hook,
                     hook->address,
                     hook->patch,
@@ -65,7 +65,7 @@ namespace ForteVisor
     {
         ForEachCore(
             [](void* params) -> void {
-                vmmcall(VMMCALL_ID::disable_hv);
+                svm_vmmcall(VMMCALL_ID::disable_hv);
             }
         );
         return 0;

@@ -14,7 +14,7 @@ enum VMMCALL_ID : uintptr_t
 };
 
 
-extern "C" int __stdcall vmmcall(VMMCALL_ID vmmcall_id, ...);
+extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
 namespace ForteVisor
 {

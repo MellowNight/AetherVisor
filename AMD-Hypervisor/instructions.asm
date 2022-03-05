@@ -19,6 +19,14 @@ __rdpkru proc frame
 	
 __rdpkru endp
 
+__readtr proc frame
+
+	.endprolog
+
+	str     ax
+	ret
+__readtr endp
+
 __wrpkru proc frame
 	
 	.endprolog

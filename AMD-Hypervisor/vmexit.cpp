@@ -10,11 +10,8 @@ void InjectException(CoreVmcbData* core_data, int vector, int error_code)
     event_injection.type = 3;
     event_injection.valid = 1;
 
-    if (error_code != 0)
-    {
-        event_injection.push_error_code = 1;
-        event_injection.error_code = error_code;
-    }
+    event_injection.push_error_code = 1;
+    event_injection.error_code = error_code;
 
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
@@ -53,6 +50,20 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
             );
             
             break;
+        }
+        case VMMCALL_ID::set_npt_hook:
+        {
+            Logger::Log("[AMD-Hypervisor] - set npt hook request address %p, patch %02x, patch_len %d \n", 
+                GuestRegisters->rdx,
+                GuestRegisters->r9,
+                GuestRegisters->r8
+            );
+
+            NptHooks::SetNptHook(
+                (void*)GuestRegisters->rdx,
+                (uint8_t*)GuestRegisters->r8,
+                GuestRegisters->r9
+            );
         }
         case VMMCALL_ID::disable_hv:
         {

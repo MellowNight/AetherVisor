@@ -34,8 +34,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="vmmcall.asm">
+    <MASM Include="vmmcall.asm">
       <Filter>Source Files</Filter>
-    </None>
+    </MASM>
   </ItemGroup>
 </Project>

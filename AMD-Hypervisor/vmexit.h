@@ -9,6 +9,7 @@ enum VMMCALL_ID : uintptr_t
     set_mpk_hook = 0x22FFAA1166,
     set_tlb_hook = 0xAAFF226611,
     disable_hv = 0xFFAA221166,
+    set_npt_hook = 0x6611AAFF22,
 };
 
 enum VMEXIT
