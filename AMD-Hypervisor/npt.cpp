@@ -5,16 +5,15 @@
 
 void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 {
-	NestedPageFaultInfo1 exit_info1 = { VpData->guest_vmcb.control_area.ExitInfo1 };
+	NestedPageFaultInfo1 exit_info1;
+	exit_info1.flags = VpData->guest_vmcb.control_area.ExitInfo1;
 
 	uintptr_t fail_address = VpData->guest_vmcb.control_area.ExitInfo2;
 
 	PHYSICAL_ADDRESS NCr3;
-
 	NCr3.QuadPart = VpData->guest_vmcb.control_area.NCr3;
 
 	auto GuestRip = VpData->guest_vmcb.save_state_area.Rip;
-
 
 	if (exit_info1.fields.valid == 0)
 	{
