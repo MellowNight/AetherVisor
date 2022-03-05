@@ -3,8 +3,6 @@
 #include "logging.h"
 #include "hypervisor.h"
 
-uintptr_t GuestRip = 0;
-
 void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 {
 	NestedPageFaultInfo1 exit_info1 = { VpData->guest_vmcb.control_area.ExitInfo1 };
@@ -15,7 +13,7 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 
 	NCr3.QuadPart = VpData->guest_vmcb.control_area.NCr3;
 
-	GuestRip = VpData->guest_vmcb.save_state_area.Rip;
+	auto GuestRip = VpData->guest_vmcb.save_state_area.Rip;
 
 
 	if (exit_info1.fields.valid == 0)
@@ -58,7 +56,7 @@ void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
 
 		/*	clean ncr3 cache	*/
 
-		VpData->guest_vmcb.control_area.VmcbClean &= ~(1 << 4);
+		VpData->guest_vmcb.control_area.VmcbClean &= ~(1ULL << 4);
 		//VpData->guest_vmcb.control_area.TlbControl = 3;
 
 		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
