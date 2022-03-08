@@ -54,17 +54,14 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
         }
         case VMMCALL_ID::set_npt_hook:
         {
-            Logger::Log("[AMD-Hypervisor] - set npt hook request address %p, patch %02x, patch_len %d \n", 
-                GuestRegisters->rdx,
-                GuestRegisters->r9,
-                GuestRegisters->r8
-            );
-
             NptHooks::SetNptHook(
+                VpData,
                 (void*)GuestRegisters->rdx,
                 (uint8_t*)GuestRegisters->r8,
                 GuestRegisters->r9
             );
+
+            break;
         }
         case VMMCALL_ID::disable_hv:
         {

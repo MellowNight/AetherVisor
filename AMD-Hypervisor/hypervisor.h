@@ -29,9 +29,6 @@ struct Hypervisor
     uintptr_t noexecute_ncr3;
     uintptr_t tertiary_cr3;
 
-    struct NptHookEntry* first_npt_hook;
-    struct SplitTlbHook* first_itlb_hook;
-
     PHYSICAL_MEMORY_RANGE phys_mem_range[12]; 
     CoreVmcbData* vcpu_data[32];
     int core_count;

@@ -162,23 +162,17 @@ void SetupTssIst()
 		gdtr.base + (selector.Index * 8));
 
 	auto base = (uintptr_t)(
-		seg_descriptor.base_address_low +
-		(seg_descriptor.base_address_middle << SEGMENT__BASE_ADDRESS_MIDDLE_BIT) +
-		(seg_descriptor.base_address_high << SEGMENT__BASE_ADDRESS_HIGH_BIT)
+		seg_descriptor.BaseAddressLow +
+		(seg_descriptor.BaseAddressMiddle << SEGMENT__BASE_ADDRESS_MIDDLE_BIT) +
+		(seg_descriptor.BaseAddressHigh << SEGMENT__BASE_ADDRESS_HIGH_BIT)
 	);
 
-	if (!seg_descriptor.descriptor_type)
+	if (!seg_descriptor.DescriptorType)
 	{
-		base += ((uint64_t)seg_descriptor.base_address_upper << 32);
+		base += ((uint64_t)seg_descriptor.BaseAddressUpper << 32);
 	}
 
 	auto tss_base = (TaskStateSegment*)base;
-
-	DbgPrint("gdtr.base %p \n", gdtr.base);
-	DbgPrint("selector.Index %p \n", selector.Index);
-	DbgPrint("seg_descriptor.baselow %p \n", seg_descriptor.base_address_low);
-	DbgPrint("seg_descriptor.BaseMiddle %p \n", seg_descriptor.base_address_middle);
-	DbgPrint("seg_descriptor.BaseHigh %p \n", seg_descriptor.base_address_high);
 
 	/*	Find free IST entry for page fault	*/
 
@@ -259,14 +253,11 @@ void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 	InterceptVector2 intercept_vector2;
 
 	intercept_vector2.intercept_pf = 1;
-	intercept_vector2.intercept_bp = 1;
+	// intercept_vector2.intercept_bp = 1;
 
 	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
 	
 	core_data->guest_vmcb.control_area.GuestAsid = 1;
-
-	VpData->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
-	VpData->guest_vmcb.control_area.NpEnable = (1UL << 0);
 
 	core_data->guest_vmcb.save_state_area.Cr0 = __readcr0();
 	core_data->guest_vmcb.save_state_area.Cr2 = __readcr2();

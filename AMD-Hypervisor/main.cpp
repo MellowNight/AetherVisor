@@ -3,10 +3,11 @@
 #include "logging.h"
 #include "disassembly.h"
 #include "prepare_vm.h"
+#include "vmexit.h"
 
-extern "C" void __stdcall LaunchVm(
-	void* vm_launch_params
-);
+extern "C" void __stdcall LaunchVm(void* vm_launch_params);
+extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
+
 
 bool VirtualizeAllProcessors()
 {

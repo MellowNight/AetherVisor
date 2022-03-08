@@ -21,10 +21,11 @@ namespace TlbHooks
 
 	void Init();
 
-	void HandlePageFaultTlb(
+	bool HandlePageFaultTlb(
 		CoreVmcbData* vcpu,
 		GPRegs* guest_regs
 	);
+
 
 	void HandleTlbHookBreakpoint(
 		CoreVmcbData* vcpu

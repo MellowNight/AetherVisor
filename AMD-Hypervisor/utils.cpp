@@ -158,8 +158,8 @@ namespace Utils
         {
             page_table_callback((PT_ENTRY_64*)pde);
         }
-
-        if ((pde->Present == FALSE) || (pde->LargePage != FALSE))
+    
+        if ((pde->Present == FALSE) || pde->LargePage == TRUE)
         {
             return (PT_ENTRY_64*)pde;
         }

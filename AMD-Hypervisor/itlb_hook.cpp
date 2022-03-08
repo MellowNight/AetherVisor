@@ -138,7 +138,7 @@ namespace TlbHooks
 		}
 	}
 
-	void HandlePageFaultTlb(CoreVmcbData* vcpu, GPRegs* guest_regs)
+	bool HandlePageFaultTlb(CoreVmcbData* vcpu, GPRegs* guest_regs)
 	{
 		auto fault_address = (void*)vcpu->guest_vmcb.control_area.ExitInfo2;
 
@@ -163,7 +163,7 @@ namespace TlbHooks
 
 			InjectException(vcpu, 14, error_code.as_uint32);
 
-			return;
+			return false;
 		}
 
 		/*	get back to this RIP once TLB entries have been added	*/
@@ -202,5 +202,7 @@ namespace TlbHooks
 
 			vcpu->guest_vmcb.save_state_area.Rip = (uintptr_t)hook_entry->read_gadget;		
 		}
+
+		return true;
 	}
 };

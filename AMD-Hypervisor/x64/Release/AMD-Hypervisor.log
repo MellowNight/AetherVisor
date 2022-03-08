@@ -1,6 +1,6 @@
 ﻿  Building 'AMD-Hypervisor' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Release\AMD-Hypervisor.inf
-  Stamping [Version] section with DriverVer=03/04/2022,23.22.44.389
+  Stamping [Version] section with DriverVer=03/08/2022,0.33.25.958
   Assembling instructions.asm...
   Assembling vm_launch.asm...
   hypervisor.cpp
@@ -595,9 +595,9 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(97,38): warning C4100: 'DriverObject': unreferenced formal parameter
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(104,66): warning C4100: 'RegistryPath': unreferenced formal parameter
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(104,36): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(98,38): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(105,66): warning C4100: 'RegistryPath': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(105,36): warning C4100: 'DriverObject': unreferenced formal parameter
   logging.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -1781,6 +1781,7 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(69,95): warning C4133: '-': incompatible types - from 'PVOID' to 'uint8_t *'
   npt.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2077,11 +2078,11 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(8,58): warning C4100: 'GuestContext': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(6,61): warning C4100: 'GuestContext': unreferenced formal parameter
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(23,7): warning C4189: 'num_bytes': local variable is initialized but not referenced
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(25,8): warning C4189: 'insn_bytes': local variable is initialized but not referenced
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(29,8): warning C4189: 'pte': local variable is initialized but not referenced
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(149,11): warning C4189: 'Pte': local variable is initialized but not referenced
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(160,11): warning C4189: 'Pte': local variable is initialized but not referenced
   utils.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2681,25 +2682,21 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(23,38): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(196,1): warning C4005: 'SEGMENT__BASE_ADDRESS_MIDDLE_BIT': macro redefinition
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(15308): message : see previous definition of 'SEGMENT__BASE_ADDRESS_MIDDLE_BIT'
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(339,4): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(414,52): warning C4242: '=': conversion from 'int' to 'uint8_t', possible loss of data
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(432,63): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(436,66): warning C4308: negative integral constant converted to unsigned type
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(439,39): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(458,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(459,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(465,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(466,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(481,66): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(510,83): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(550,34): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(556,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(557,35): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(570,33): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(571,13): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(572,33): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(204,52): warning C4242: '=': conversion from 'int' to 'uint8_t', possible loss of data
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(222,63): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(226,66): warning C4308: negative integral constant converted to unsigned type
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(229,39): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(248,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(249,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(255,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(271,66): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(300,83): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(340,34): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(346,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(347,35): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(360,33): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(361,13): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(362,33): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
   vmexit.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2999,15 +2996,32 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(11,29): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(13,39): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(19,50): warning C4100: 'GuestRegisters': unreferenced formal parameter
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(62,23): error C2039: 'SetNptHook': is not a member of 'NptHooks'
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.h(5): message : see declaration of 'NptHooks'
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(62,33): error C3861: 'SetNptHook': identifier not found
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(172,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(175,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(170,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(173,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
   Generating Code...
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\utils.cpp(307): warning C4715: 'Utils::GetProcessId': not all control paths return a value
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(44): warning C4715: '<lambda_13ad3251ddebddd4eb1c87063dc7b297>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(94): warning C4715: '<lambda_72fc1bab80f871f309fdf1bb7693789e>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(112): warning C4715: '<lambda_441064ca4ee701f5a3467f8282a58ea5>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(125): warning C4715: '<lambda_0847edb684c318b36c933325e60ded8f>::operator()': not all control paths return a value
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(156): warning C4715: '<lambda_30be49f3af0e078e3c51548bbd57cb12>::operator()': not all control paths return a value
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(95): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(156): warning C4715: '<lambda_4573477ffc6a0b743765e70519af9d62>::operator()': not all control paths return a value
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(96): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
+  AMD-Hypervisor.vcxproj -> C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\AMD-Hypervisor.sys
+  Done Adding Additional Store
+  Successfully signed: C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\AMD-Hypervisor.sys
+  
+  Driver is 'Universal'.
+  ........................
+  Signability test complete.
+  
+  Errors:
+  None
+  
+  Warnings:
+  None
+  
+  Catalog generation complete.
+  C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\AMD-Hypervisor\amd-hypervisor.cat
+  Done Adding Additional Store
+  Successfully signed: C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\AMD-Hypervisor\amd-hypervisor.cat
+  

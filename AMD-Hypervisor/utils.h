@@ -29,10 +29,11 @@ namespace Utils
 		with this virtual address
 	*/
 	PT_ENTRY_64* GetPte(
-		void* virtual_addr, 
-		uintptr_t pml4_base_pa, 
+		void* virtual_address,
+		uintptr_t pml4_base_pa,
 		int (*page_table_callback)(PT_ENTRY_64*) = NULL
 	);
+
 
 	PT_ENTRY_64* GetPte(
 		void* virtual_address, 

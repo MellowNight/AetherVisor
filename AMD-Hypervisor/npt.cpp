@@ -3,80 +3,91 @@
 #include "logging.h"
 #include "hypervisor.h"
 
-void HandleNestedPageFault(CoreVmcbData* VpData, GPRegs* GuestContext)
+void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 {
-	NestedPageFaultInfo1 exit_info1;
-	exit_info1.flags = VpData->guest_vmcb.control_area.ExitInfo1;
+	PHYSICAL_ADDRESS faulting_physical;
+	faulting_physical.QuadPart = vcpu_data->guest_vmcb.control_area.ExitInfo2;
 
-	uintptr_t fail_address = VpData->guest_vmcb.control_area.ExitInfo2;
+	auto faulting_virtual = MmGetVirtualForPhysical(faulting_physical);
+
+	NestedPageFaultInfo1 exit_info1;
+	exit_info1.as_uint64 = vcpu_data->guest_vmcb.control_area.ExitInfo1;
 
 	PHYSICAL_ADDRESS NCr3;
-	NCr3.QuadPart = VpData->guest_vmcb.control_area.NCr3;
+	NCr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3;
 
-	auto GuestRip = VpData->guest_vmcb.save_state_area.Rip;
+	auto GuestRip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
 	if (exit_info1.fields.valid == 0)
 	{
-		int num_bytes = VpData->guest_vmcb.control_area.NumOfBytesFetched;
+		int num_bytes = vcpu_data->guest_vmcb.control_area.NumOfBytesFetched;
 
-		auto insn_bytes = VpData->guest_vmcb.control_area.GuestInstructionBytes;
+		auto insn_bytes = vcpu_data->guest_vmcb.control_area.GuestInstructionBytes;
 
 		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(NCr3);
 
-		auto pte = AssignNPTEntry((PML4E_64*)pml4_base, fail_address, true);
+		auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, true);
 
 		return;
 	}
 
 	if (exit_info1.fields.execute == 1)
 	{
-		auto nptHook = NptHooks::FindByHooklessPhysicalPage(fail_address);
+		auto npt_hook = NptHooks::ForEachHook(
+			[](NptHooks::NptHook* hook_entry, void* data) -> bool {
+				
+				if (PAGE_ALIGN(data) == PAGE_ALIGN(hook_entry->hook_address))
+				{
+					return true;
+				}
 
-		bool Switch = true;
+			}, faulting_virtual
+		);
 
-		int length = 16;
+		bool switch_ncr3 = true;
+
+		int insn_len = 16;
 
 		/*	handle cases where an instruction is split across 2 pages	*/
 
-		if (PAGE_ALIGN(GuestRip + length) != PAGE_ALIGN(GuestRip)) 
+		if (PAGE_ALIGN(GuestRip + insn_len) != PAGE_ALIGN(GuestRip))
 		{
-			PT_ENTRY_64* N_Pte = Utils::GetPte((void*)
-				MmGetPhysicalAddress(PAGE_ALIGN(GuestRip)).QuadPart, NCr3.QuadPart);
+			auto page1 = MmGetPhysicalAddress(PAGE_ALIGN(GuestRip)).QuadPart;
+			auto page2 = MmGetPhysicalAddress(PAGE_ALIGN(GuestRip + insn_len)).QuadPart;
 
-			PT_ENTRY_64* N_Pte2 = Utils::GetPte((void*)
-				MmGetPhysicalAddress(PAGE_ALIGN(GuestRip + length)).QuadPart, NCr3.QuadPart);
+			auto npte1 = Utils::GetPte((void*)page1, NCr3.QuadPart);
+			auto npte2 = Utils::GetPte((void*)page2, NCr3.QuadPart);
 
 
-			N_Pte->ExecuteDisable = 0;
-			N_Pte2->ExecuteDisable = 0;
+			npte1->ExecuteDisable = 0;
+			npte2->ExecuteDisable = 0;
 
-			Switch = false;
+			switch_ncr3 = false;
 		}
 
 		/*	clean ncr3 cache	*/
 
-		VpData->guest_vmcb.control_area.VmcbClean &= ~(1ULL << 4);
-		//VpData->guest_vmcb.control_area.TlbControl = 3;
+		vcpu_data->guest_vmcb.control_area.VmcbClean &= ~(1ULL << 4);
+		vcpu_data->guest_vmcb.control_area.TlbControl = 3;
 
 		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
-		if (Switch)
+		if (switch_ncr3)
 		{
-			if (nptHook)
+			if (npt_hook)
 			{
-				VpData->guest_vmcb.control_area.NCr3 = hypervisor->noexecute_ncr3;
+				vcpu_data->guest_vmcb.control_area.NCr3 = hypervisor->noexecute_ncr3;
 			}
 			else
 			{
-				VpData->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
+				vcpu_data->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
 			}
 		}
 	}
 }
 
-/*	guest physical addresses are 1:1 mapped to host physical
-	addresses
+/*	gPTE pfn would be equal to nPTE pfn,
+	because guest physical addresses are 1:1 mapped to host physical
 */
-
 void* AllocateNewTable(PML4E_64* PageEntry)
 {
 	void* Table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
