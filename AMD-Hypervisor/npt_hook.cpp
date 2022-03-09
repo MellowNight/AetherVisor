@@ -55,6 +55,8 @@ namespace NptHooks
 		{
 		}
 
+		Utils::LockPages(address, IoReadAccess);
+
 		/*	get the guest pte and physical address of the hooked page	*/
 
 		auto guest_pte = Utils::GetPte(address, VpData->guest_vmcb.save_state_area.Cr3);
@@ -80,10 +82,11 @@ namespace NptHooks
 		/*	get the nested pte of the guest physical address in the 2nd NCR3, and map it to our hook page	*/
 
 		auto hooked_npte = Utils::GetPte((void*)physical_page, hypervisor->noexecute_ncr3);
+		Logger::Log("hooked_npte = %p \n", hooked_npte);
+		Logger::Log("*hooked_npte = %p \n", (*hooked_npte).Flags);
 
 		hooked_npte->PageFrameNumber = hook_entry->hooked_npte->PageFrameNumber;
 		hooked_npte->ExecuteDisable = 0;
-
 		auto hooked_copy = Utils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
 
 		auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);

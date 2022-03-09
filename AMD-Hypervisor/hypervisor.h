@@ -27,7 +27,6 @@ struct Hypervisor
 {
     uintptr_t normal_ncr3;
     uintptr_t noexecute_ncr3;
-    uintptr_t tertiary_cr3;
 
     PHYSICAL_MEMORY_RANGE phys_mem_range[12]; 
     CoreVmcbData* vcpu_data[32];

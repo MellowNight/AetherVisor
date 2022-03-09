@@ -27,7 +27,9 @@ bool VirtualizeAllProcessors()
 
 	BuildNestedPagingTables(&hypervisor->normal_ncr3, true);
 	BuildNestedPagingTables(&hypervisor->noexecute_ncr3, false);
-	BuildNestedPagingTables(&hypervisor->tertiary_cr3, true);
+
+	DbgPrint("[SETUP] hypervisor->noexecute_ncr3 %p \n", hypervisor->noexecute_ncr3); 
+	DbgPrint("[SETUP] hypervisor->normal_ncr3 %p \n", hypervisor->normal_ncr3);
 
 	hypervisor->core_count = KeQueryActiveProcessorCount(0);
 

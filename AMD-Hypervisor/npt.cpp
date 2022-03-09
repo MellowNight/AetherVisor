@@ -3,6 +3,7 @@
 #include "logging.h"
 #include "hypervisor.h"
 
+uintptr_t ntos;
 void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 {
 	PHYSICAL_ADDRESS faulting_physical;
@@ -16,7 +17,7 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 	PHYSICAL_ADDRESS NCr3;
 	NCr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3;
 
-	auto GuestRip = vcpu_data->guest_vmcb.save_state_area.Rip;
+	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
 	if (exit_info1.fields.valid == 0)
 	{
@@ -50,10 +51,11 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 
 		/*	handle cases where an instruction is split across 2 pages	*/
 
-		if (PAGE_ALIGN(GuestRip + insn_len) != PAGE_ALIGN(GuestRip))
+		if (PAGE_ALIGN(guest_rip + insn_len) != PAGE_ALIGN(guest_rip))
 		{
-			auto page1 = MmGetPhysicalAddress(PAGE_ALIGN(GuestRip)).QuadPart;
-			auto page2 = MmGetPhysicalAddress(PAGE_ALIGN(GuestRip + insn_len)).QuadPart;
+			Logger::Log("instruction is split! \n");
+			auto page1 = MmGetPhysicalAddress(PAGE_ALIGN(guest_rip)).QuadPart;
+			auto page2 = MmGetPhysicalAddress(PAGE_ALIGN(guest_rip + insn_len)).QuadPart;
 
 			auto npte1 = Utils::GetPte((void*)page1, NCr3.QuadPart);
 			auto npte2 = Utils::GetPte((void*)page2, NCr3.QuadPart);
@@ -67,8 +69,17 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 
 		/*	clean ncr3 cache	*/
 
-		vcpu_data->guest_vmcb.control_area.VmcbClean &= ~(1ULL << 4);
-		vcpu_data->guest_vmcb.control_area.TlbControl = 3;
+		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+		vcpu_data->guest_vmcb.control_area.TlbControl = 1;
+		//Logger::Log("===============\n");
+
+		//Logger::Log("npt_hook found = %p guest RIP = %p \n", npt_hook, GuestRip);
+		//Logger::Log("(PAGE_ALIGN(guest_rip + insn_len) = %p PAGE_ALIGN(guest_rip) = %p \n", PAGE_ALIGN(guest_rip + insn_len), PAGE_ALIGN(guest_rip));
+		
+		if (guest_rip == 0xFFFFF8076C011B80)
+		{
+		}
+		Logger::Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = ntosktnl+0x%p \n", npt_hook, switch_ncr3, guest_rip - ntos);
 
 		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
 		if (switch_ncr3)
@@ -90,19 +101,20 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 */
 void* AllocateNewTable(PML4E_64* PageEntry)
 {
-	void* Table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+	void* page_table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
-	PageEntry->PageFrameNumber = MmGetPhysicalAddress(Table).QuadPart >> PAGE_SHIFT;
+	PageEntry->PageFrameNumber = MmGetPhysicalAddress(page_table).QuadPart >> PAGE_SHIFT;
 	PageEntry->Write = 1;
 	PageEntry->Supervisor = 1;
 	PageEntry->Present = 1;
 	PageEntry->ExecuteDisable = 0;
 
-	return Table;
+	return page_table;
 }
 
 int GetPhysicalMemoryRanges()
 {
+	ntos = (uintptr_t)Utils::getDriverBaseAddress(0, "ntoskrnl.exe");
 	int number_of_runs = 0;
 
 	PPHYSICAL_MEMORY_RANGE MmPhysicalMemoryRange = MmGetPhysicalMemoryRanges();

@@ -3,6 +3,8 @@
 
 namespace Utils
 {
+	PVOID getDriverBaseAddress(OUT PULONG pSize, const char* driverName);
+
 	int Diff(
 		uintptr_t a,
 		uintptr_t b
