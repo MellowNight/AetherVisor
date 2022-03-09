@@ -3,7 +3,6 @@
 #include "logging.h"
 #include "hypervisor.h"
 
-uintptr_t ntos;
 void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 {
 	PHYSICAL_ADDRESS faulting_physical;
@@ -79,7 +78,7 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 		if (guest_rip == 0xFFFFF8076C011B80)
 		{
 		}
-		Logger::Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = ntosktnl+0x%p \n", npt_hook, switch_ncr3, guest_rip - ntos);
+		Logger::Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p \n", npt_hook, switch_ncr3, guest_rip);
 
 		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
 		if (switch_ncr3)
@@ -114,7 +113,6 @@ void* AllocateNewTable(PML4E_64* PageEntry)
 
 int GetPhysicalMemoryRanges()
 {
-	ntos = (uintptr_t)Utils::getDriverBaseAddress(0, "ntoskrnl.exe");
 	int number_of_runs = 0;
 
 	PPHYSICAL_MEMORY_RANGE MmPhysicalMemoryRange = MmGetPhysicalMemoryRanges();
