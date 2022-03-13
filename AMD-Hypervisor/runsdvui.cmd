@@ -1,0 +1,2 @@
+cd /d "C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor" &msbuild "AMD-Hypervisor.vcxproj" /t:sdvViewer /p:configuration="Release" /p:platform="x64" /p:SolutionDir="C:\Users\lolxd\source\repos\AMD-Hypervisor" 
+exit %errorlevel% 
