@@ -67,7 +67,7 @@ namespace MpkHooks
 
         /* set Pkru ADi bit at hook_count index, to block reads  */
         auto flag = 1 << (hook_count * 2);     
-        pkru = pkru | flag;     
+        pkru |= flag;     
 
         __wrpkru(pkru);
 
