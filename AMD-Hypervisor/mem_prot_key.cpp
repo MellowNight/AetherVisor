@@ -34,7 +34,7 @@ namespace MpkHooks
 
 		auto hook_entry = &first_mpk_hook;
 
-		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
+		/*	reserve memory for hooks because we shouldn't allocate memory in VM root	*/
 
 		int max_hooks = 20;
 
