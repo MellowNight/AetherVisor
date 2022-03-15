@@ -79,6 +79,8 @@ bool VirtualizeAllProcessors()
 		}
 	}       
 
+    __readmsr(MSR::EFER, );
+
 	/*	experiment with TLB spliting	*/
 	//LARGE_INTEGER delay = { 30000000 };	// 3 seconds
 	//KeDelayExecutionThread(KernelMode, FALSE, &delay);
