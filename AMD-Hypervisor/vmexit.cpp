@@ -27,7 +27,6 @@ void HandleMsrExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
 {
     auto id = GuestRegisters->rcx;
-    Logger::Log("[AMD-Hypervisor] - vmmcall id %d \n", id); 
 
     switch (id)
     {
@@ -64,7 +63,8 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
             break;
         }
         case VMMCALL_ID::disable_hv:
-        {
+        {    Logger::Log("[AMD-Hypervisor] - disable_hv vmmcall id %p \n", id);
+
             *EndVM = true;
             break;
         }
@@ -84,7 +84,11 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
 
     bool EndVm = false;		
     
-   // Logger::Log("HandleVmexit core_data->guest_vmcb.control_area.ExitCode = %p \n", core_data->guest_vmcb.control_area.ExitCode);
+    if (core_data->guest_vmcb.control_area.ExitCode != 0x4e)
+    {
+        Logger::Log("HandleVmexit core_data->guest_vmcb.control_area.ExitCode = %p \n", core_data->guest_vmcb.control_area.ExitCode);
+
+    }
 
     switch (core_data->guest_vmcb.control_area.ExitCode) 
     {

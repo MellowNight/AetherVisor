@@ -1,6 +1,6 @@
 ﻿  Building 'AMD-Hypervisor' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Release\AMD-Hypervisor.inf
-  Stamping [Version] section with DriverVer=03/12/2022,23.54.43.137
+  Stamping [Version] section with DriverVer=03/15/2022,0.28.6.852
   Assembling instructions.asm...
   Assembling vm_launch.asm...
   hypervisor.cpp
@@ -2995,8 +2995,8 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(11,29): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(13,39): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(19,50): warning C4100: 'GuestRegisters': unreferenced formal parameter
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(172,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(175,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(176,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(179,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
   Generating Code...
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\utils.cpp(307): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(44): warning C4715: '<lambda_13ad3251ddebddd4eb1c87063dc7b297>::operator()': not all control paths return a value
