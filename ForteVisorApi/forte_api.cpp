@@ -11,7 +11,24 @@ namespace ForteVisor
 
     int SetMpkHook(uintptr_t address, uint8_t* patch, size_t patch_len)
     {
-        return svm_vmmcall(VMMCALL_ID::set_mpk_hook, address, patch, patch_len);
+        struct HookInfo
+        {
+            uintptr_t address;
+            uint8_t* patch;
+            size_t patch_len;
+        } hook_info;
+
+        hook_info = { address, patch, patch_len };
+
+        ForEachCore(
+            [](void* params) -> void 
+            {
+                auto hook_info = (HookInfo*)params;
+
+                svm_vmmcall(VMMCALL_ID::set_mpk_hook, hook_info->address, hook_info->patch, hook_info->patch_len);
+            },
+            (void*)&hook_info
+        );
     }
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len)

@@ -8,7 +8,7 @@ Class=Sample ; TODO: edit Class
 ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
 Provider=%ManufacturerName%
 CatalogFile=AMD-Hypervisor.cat
-DriverVer = 03/15/2022,0.28.6.852
+DriverVer = 03/17/2022,22.55.16.10
 PnpLockDown=1
 
 [DestinationDirs]

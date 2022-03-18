@@ -1,6 +1,6 @@
 ﻿  Building 'AMD-Hypervisor' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Release\AMD-Hypervisor.inf
-  Stamping [Version] section with DriverVer=03/15/2022,0.28.6.852
+  Stamping [Version] section with DriverVer=03/17/2022,22.55.16.10
   Assembling instructions.asm...
   Assembling vm_launch.asm...
   hypervisor.cpp
@@ -293,12 +293,12 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21377,4): warni
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21475,4): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(167,2): warning C4091: 'typedef ': ignored on left of 'VmcbSaveStateArea' when no variable is declared
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(189,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(215,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(233,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(218,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(236,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
   main.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -589,15 +589,15 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21377,4): warni
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21475,4): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(167,2): warning C4091: 'typedef ': ignored on left of 'VmcbSaveStateArea' when no variable is declared
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(189,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(215,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(233,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(110,38): warning C4100: 'DriverObject': unreferenced formal parameter
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(117,66): warning C4100: 'RegistryPath': unreferenced formal parameter
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(117,36): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(218,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(236,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(111,38): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(118,66): warning C4100: 'RegistryPath': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(118,36): warning C4100: 'DriverObject': unreferenced formal parameter
   logging.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -1176,12 +1176,12 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21377,4): warni
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21475,4): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(167,2): warning C4091: 'typedef ': ignored on left of 'VmcbSaveStateArea' when no variable is declared
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(189,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(215,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(233,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(218,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(236,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(146,55): warning C4244: '=': conversion from 'UINT64' to 'uint32_t', possible loss of data
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(141,54): warning C4100: 'guest_regs': unreferenced formal parameter
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(181,9): warning C4189: 'pte': local variable is initialized but not referenced
@@ -1475,12 +1475,12 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21377,4): warni
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21475,4): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(167,2): warning C4091: 'typedef ': ignored on left of 'VmcbSaveStateArea' when no variable is declared
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(189,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(215,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(233,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(218,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(236,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(50,80): warning C4100: 'patch_len': unreferenced formal parameter
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(50,66): warning C4100: 'patch': unreferenced formal parameter
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(84,55): warning C4244: '=': conversion from 'UINT64' to 'uint32_t', possible loss of data
@@ -1775,12 +1775,13 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21377,4): warni
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21475,4): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(167,2): warning C4091: 'typedef ': ignored on left of 'VmcbSaveStateArea' when no variable is declared
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(189,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(215,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(233,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(218,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(236,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(74,95): warning C4133: '-': incompatible types - from 'PVOID' to 'uint8_t *'
   npt.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2071,12 +2072,12 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21377,4): warni
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21475,4): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(167,2): warning C4091: 'typedef ': ignored on left of 'VmcbSaveStateArea' when no variable is declared
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(189,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(215,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(233,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(218,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(236,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(6,61): warning C4100: 'GuestContext': unreferenced formal parameter
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(23,7): warning C4189: 'num_bytes': local variable is initialized but not referenced
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(25,8): warning C4189: 'insn_bytes': local variable is initialized but not referenced
@@ -2372,12 +2373,12 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21377,4): warni
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21475,4): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(167,2): warning C4091: 'typedef ': ignored on left of 'VmcbSaveStateArea' when no variable is declared
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(189,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(215,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(233,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(218,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(236,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\kernel_structures.h(49,10): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\utils.cpp(13,22): warning C4244: '=': conversion from 'uintptr_t' to 'int', possible loss of data
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\utils.cpp(17,22): warning C4244: '=': conversion from 'uintptr_t' to 'int', possible loss of data
@@ -2674,28 +2675,19 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21377,4): warni
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21475,4): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(167,2): warning C4091: 'typedef ': ignored on left of 'VmcbSaveStateArea' when no variable is declared
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(189,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(215,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(233,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(23,38): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(204,52): warning C4242: '=': conversion from 'int' to 'uint8_t', possible loss of data
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(222,63): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(226,66): warning C4308: negative integral constant converted to unsigned type
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(229,39): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(248,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(249,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(255,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(271,66): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(300,83): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(340,34): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(346,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(347,35): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(360,33): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(361,13): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(362,33): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(218,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(236,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(198,52): warning C4242: '=': conversion from 'int' to 'uint8_t', possible loss of data
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(216,63): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(223,36): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(250,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(251,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(257,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\prepare_vm.cpp(351,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
   vmexit.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2986,17 +2978,15 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21377,4): warni
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\ia32.h(21475,4): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(167,2): warning C4091: 'typedef ': ignored on left of 'VmcbSaveStateArea' when no variable is declared
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(189,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(215,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(233,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(251,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(278,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(290,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(339,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(218,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(236,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(11,29): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(13,39): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(19,50): warning C4100: 'GuestRegisters': unreferenced formal parameter
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(176,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(179,40): warning C4245: 'argument': conversion from 'MSR' to 'unsigned long', signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(25,36): warning C4244: 'argument': conversion from 'UINT64' to 'unsigned long', possible loss of data
   Generating Code...
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\utils.cpp(307): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(44): warning C4715: '<lambda_13ad3251ddebddd4eb1c87063dc7b297>::operator()': not all control paths return a value
@@ -3004,7 +2994,7 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(94): 
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(112): warning C4715: '<lambda_441064ca4ee701f5a3467f8282a58ea5>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(125): warning C4715: '<lambda_0847edb684c318b36c933325e60ded8f>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(156): warning C4715: '<lambda_4573477ffc6a0b743765e70519af9d62>::operator()': not all control paths return a value
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(98): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(99): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
   AMD-Hypervisor.vcxproj -> C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\AMD-Hypervisor.sys
   Done Adding Additional Store
   Successfully signed: C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\AMD-Hypervisor.sys

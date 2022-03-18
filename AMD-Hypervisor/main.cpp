@@ -79,7 +79,6 @@ bool VirtualizeAllProcessors()
 		}
 	}       
 
-    __readmsr(MSR::EFER, );
 
 	/*	experiment with TLB spliting	*/
 	//LARGE_INTEGER delay = { 30000000 };	// 3 seconds
@@ -126,7 +125,6 @@ NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 		(PKSTART_ROUTINE)Initialize,
 		NULL
 	);
-
 
 	Logger::Log("EntryPoint \n");
 

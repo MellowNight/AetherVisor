@@ -8,7 +8,7 @@ enum CPUID
     MEMORY_ENCRYPTION_FEATURES = 0x8000001F,
 };
 
-enum MSR
+enum MSR : UINT64
 {
     APIC_BAR = 0x1b,
     VM_CR = 0xC0010114,
@@ -194,26 +194,29 @@ static_assert(sizeof(SegmentDescriptor) == 8,
 
 
 /*	Core::X86::Msr::EFER	*/
-union  MsrEfer
+struct  MsrEfer
 {
-    struct {
-        int		syscall : 1;
-        int		reserved : 7;
-        int		long_mode_enable : 1;
-        int		reserved2 : 1;
-        int		long_mode_active : 1;
-        int		nxe : 1;
-        int		svme : 1;
-        int		lmsle : 1;
-        int		ffxse : 1;
-        int		tce : 1;
-        int     reserved3 : 1;
-        int     m_commit : 1;
-        int     intwb : 1;
-        __int64	 reserved4 : 45;
-
+    union 
+    {
+        __int64	flags;
+        struct
+        {
+            uint32_t    syscall : 1;
+            uint32_t    reserved : 7;
+            uint32_t    long_mode_enable : 1;
+            uint32_t    reserved2 : 1;
+            uint32_t    long_mode_active : 1;
+            uint32_t    nxe : 1;
+            uint32_t    svme : 1;
+            uint32_t    lmsle : 1;
+            uint32_t    ffxse : 1;
+            uint32_t    tce : 1;
+            uint32_t    reserved3 : 1;
+            uint32_t    m_commit : 1;
+            uint32_t    intwb : 1;
+            __int64	 reserved4 : 45;
+        };
     };
-    __int64	flags;
 };
 
 /*	 Core::X86::Msr::APIC_BAR	*/

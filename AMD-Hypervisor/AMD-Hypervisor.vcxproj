@@ -186,6 +186,7 @@
     <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="itlb_hook.h" />
+    <ClInclude Include="memory_reader.h" />
     <ClInclude Include="mem_prot_key.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt.h" />

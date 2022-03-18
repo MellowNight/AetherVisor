@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ForteVisorApi", "ForteVisor
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ForteVisorKernelApi", "ForteVisorKernelApi\ForteVisorKernelApi.vcxproj", "{4F8B1376-6F78-4A00-AAED-0F62D351BCC0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ForteVisorTool", "ForteVisorTool\ForteVisorTool.vcxproj", "{C23FF3DC-9549-4440-A3D2-835C619C383C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -81,6 +83,18 @@ Global
 		{4F8B1376-6F78-4A00-AAED-0F62D351BCC0}.Release|x86.ActiveCfg = Release|Win32
 		{4F8B1376-6F78-4A00-AAED-0F62D351BCC0}.Release|x86.Build.0 = Release|Win32
 		{4F8B1376-6F78-4A00-AAED-0F62D351BCC0}.Release|x86.Deploy.0 = Release|Win32
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Debug|ARM.ActiveCfg = Debug|Win32
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Debug|x64.ActiveCfg = Debug|x64
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Debug|x64.Build.0 = Debug|x64
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Debug|x86.ActiveCfg = Debug|Win32
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Debug|x86.Build.0 = Debug|Win32
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Release|ARM.ActiveCfg = Release|Win32
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Release|ARM64.ActiveCfg = Release|Win32
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Release|x64.ActiveCfg = Release|x64
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Release|x64.Build.0 = Release|x64
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Release|x86.ActiveCfg = Release|Win32
+		{C23FF3DC-9549-4440-A3D2-835C619C383C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

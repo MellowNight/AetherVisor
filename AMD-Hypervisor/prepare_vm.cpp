@@ -22,9 +22,9 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 	MsrEfer efer_msr = { 0 };
 	efer_msr.flags = __readmsr(MSR::EFER);
 
-	if (efer_msr.svme == 1)
+	if (efer_msr.svme == (uint32_t)0)
 	{
-		Logger::Log("SVME is off, invalid state! \n");
+		Logger::Log("SVME is %p, invalid state! \n", efer_msr.svme);
 		return false;
 	}
 
@@ -99,12 +99,6 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 		if (cr0.ProtectionEnable == 0)
 		{
 			Logger::Log("EFER.LME and CR0.PG are both non-zero and CR0.PE is zero, Invalid state! \n");
-			return false;
-		}
-
-		if (cs_attribute.fields.long_mode != 0 && cs_attribute.fields.long_mode != 0)
-		{
-			Logger::Log("EFER.LME, CR0.PG, CR4.PAE, CS.L, and CS.D are all non-zero. \n");
 			return false;
 		}
 	}
@@ -210,7 +204,7 @@ void SetupTssIst()
 void SetupMSRPM(CoreVmcbData* core_data)
 {
 	size_t bits_per_msr = 16000 / 8000;
-	size_t bits_per_byte = sizeof(uint8_t) / 8;
+	size_t bits_per_byte = sizeof(uint8_t) * 8;
 	size_t msrpm_size = PAGE_SIZE * 2;
 
 	auto msrpm = ExAllocatePoolZero(NonPagedPool, msrpm_size, 'msr0');
@@ -226,7 +220,7 @@ void SetupMSRPM(CoreVmcbData* core_data)
 	auto efer_offset = section2_offset + (bits_per_msr * (MSR::EFER - 0xC0000000));
 
 	/*	intercept EFER read and write	*/
-    RtlSetBits(&bitmap, efer_offset, 2);
+	RtlSetBits(&bitmap, efer_offset, 2);
 }
 
 void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
@@ -243,6 +237,14 @@ void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 	_sgdt(&gdtr);
 	__sidt(&idtr);
 
+	CR4 cr4;
+	cr4.Flags = __readcr4();
+	/*	for MPK hooking		*/
+	cr4.ProtectionKeyEnable = 1;
+
+	//__writecr4(cr4.Flags);
+
+
 	InterceptVector4 intercept_vector4;
 
 	intercept_vector4.intercept_vmmcall = 1;
@@ -254,6 +256,9 @@ void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 
 	intercept_vector2.intercept_pf = 1;
 	// intercept_vector2.intercept_bp = 1;
+
+	/*	intercept MSR access	*/
+	core_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << 28);
 
 	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
 	
@@ -291,10 +296,10 @@ void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.EsAttrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).as_uint16;
 	core_data->guest_vmcb.save_state_area.SsAttrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).as_uint16;
 
+	SetupMSRPM(core_data);
+
 	// SetupTssIst();
 	
-	Logger::Log("core_data: %p\n", core_data);
-
 	__svm_vmsave(core_data->guest_vmcb_physicaladdr);
 
 	__writemsr(VM_HSAVE_PA, MmGetPhysicalAddress(&core_data->host_save_area).QuadPart);

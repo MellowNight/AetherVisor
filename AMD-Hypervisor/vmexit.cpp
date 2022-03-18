@@ -18,6 +18,29 @@ void InjectException(CoreVmcbData* core_data, int vector, int error_code)
 
 void HandleMsrExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 {
+    auto msr_id = GuestRegisters->rcx;
+
+    LARGE_INTEGER msr_value;
+
+    msr_value.QuadPart = __readmsr(msr_id);
+
+    switch (msr_id)
+    {
+    case MSR::EFER:
+    {
+        auto efer = (MsrEfer*)&msr_value.QuadPart;
+        Logger::Log(" MSR::EFER caught, msr_value.QuadPart = %p \n", msr_value.QuadPart);
+
+        efer->svme = 0;
+        break;
+    }
+    default:
+        break;
+    }
+
+    VpData->guest_vmcb.save_state_area.Rax = msr_value.LowPart;
+    GuestRegisters->rdx = msr_value.HighPart;
+
     VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
 }
 
@@ -63,7 +86,8 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
             break;
         }
         case VMMCALL_ID::disable_hv:
-        {    Logger::Log("[AMD-Hypervisor] - disable_hv vmmcall id %p \n", id);
+        {    
+            Logger::Log("[AMD-Hypervisor] - disable_hv vmmcall id %p \n", id);
 
             *EndVM = true;
             break;
@@ -83,12 +107,6 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
     __svm_vmload(core_data->host_vmcb_physicaladdr);
 
     bool EndVm = false;		
-    
-    if (core_data->guest_vmcb.control_area.ExitCode != 0x4e)
-    {
-        Logger::Log("HandleVmexit core_data->guest_vmcb.control_area.ExitCode = %p \n", core_data->guest_vmcb.control_area.ExitCode);
-
-    }
 
     switch (core_data->guest_vmcb.control_area.ExitCode) 
     {
