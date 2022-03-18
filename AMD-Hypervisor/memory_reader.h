@@ -22,7 +22,7 @@ namespace PhysicalReader
         }
     }
     
-    T ReadPhysicalMemory(void* phys_addr)
+    uint8_t* MapPhysicalMemory(void* phys_addr)
     {
         __invlpg(page_map_view.reserved_page);
 
@@ -30,23 +30,14 @@ namespace PhysicalReader
         page_map_view.reserved_page_pte->Present = true;
         page_map_view.reserved_page_pte->PageFrameNumber = (uintptr_t)phys_addr >> PAGE_SHIFT;
 
-        return (uintptr_t)page_map_views.reserved_page + ((uintptr_t)phys_addr & (PAGE_SIZE - 1));
+        return (uint8_t*)page_map_views.reserved_page + ((uintptr_t)phys_addr & (PAGE_SIZE - 1));
     }
 
-    T ReadVirtualMemory(void* virtual_addr, CR3 context)
+    uint8_t* MapVirtualMemory(void* virtual_addr, CR3 context)
     {
-        CR3 cr3;
-        cr3.flags = __readcr3;
+        auto guest_pte = Utils::GetPte(address, context.AddressOfPageDirectory << PAGE_SHIFT);
 
-        auto guest_pte = Utils::GetPte(address, VpData->guest_vmcb.save_state_area.Cr3);
-
-        __invlpg(page_map_view.reserved_page);
-
-        page_map_view.reserved_page_pte->Write = true;
-        page_map_view.reserved_page_pte->Present = true;
-        page_map_view.reserved_page_pte->PageFrameNumber = (uintptr_t)phys_addr >> PAGE_SHIFT;
-
-        return (uintptr_t)page_map_views.reserved_page + ((uintptr_t)phys_addr & (PAGE_SIZE - 1));
+        return MapPhysicalMemory(guest_pte->PageFrameNumber << PAGE_SHIFT);
     }
 };
 

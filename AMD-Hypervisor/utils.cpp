@@ -109,7 +109,7 @@ namespace Utils
 
         helper.AsUInt64 = (uintptr_t)virtual_address;
 
-        PHYSICAL_ADDRESS    pml4_base_physical;
+        PHYSICAL_ADDRESS pml4_base_physical;
 
         pml4_base_physical.QuadPart = pml4_base_pa;
 
