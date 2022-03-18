@@ -7,48 +7,46 @@ namespace PhysicalReader
     {
         void* reserved_page;
         PTE_64* reserved_page_pte;
-    };
-
-    MappingWindow page_map_views[5];
+    } page_map_view;
 
     void Initialize()
     {
         CR3 cr3;
-
         cr3.Flags = __readcr3();
 
         for (int i = 0; i < 5; ++i)
         {
-            page_map_views[i].reserved_page = ExAllocatePoolZero(PAGE_SIZE, i);
+            page_map_view.reserved_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, i);
 
-            page_map_views[i].reserved_page_pte = (PTE_64*)Utils::GetPte(page_map_views[i].reserved_page, cr3);
+            page_map_view.reserved_page_pte = (PTE_64*)Utils::GetPte(page_map_views[i].reserved_page, cr3);
         }
     }
-
-    PVOID mapPage(PVOID physicalAddr, int id, CR3 cr3)
+    
+    T ReadPhysicalMemory(void* phys_addr)
     {
-        page_map_views[id].reserved_page_pte->Write = true;
-        page_map_views[id].reserved_page_pte->Present = true;
+        __invlpg(page_map_view.reserved_page);
 
-        page_map_views[id].reserved_page_pte->PageFrameNumber = (DWORD64)physicalAddr >> PAGE_SHIFT;
+        page_map_view.reserved_page_pte->Write = true;
+        page_map_view.reserved_page_pte->Present = true;
+        page_map_view.reserved_page_pte->PageFrameNumber = (uintptr_t)phys_addr >> PAGE_SHIFT;
 
-        __invlpg(page_map_views[id].reserved_page);
-
-        return (PVOID)((DWORD64)(page_map_views[id].reserved_page) + ((DWORD64)physicalAddr & PAGE_MASK));
+        return (uintptr_t)page_map_views.reserved_page + ((uintptr_t)phys_addr & (PAGE_SIZE - 1));
     }
 
-
-
-
-    PVOID    UnmapPage(PVOID   physicalAddr, int id)
+    T ReadVirtualMemory(void* virtual_addr, CR3 context)
     {
-        page_map_views[id].reserved_page_pte->Flags = 0;
+        CR3 cr3;
+        cr3.flags = __readcr3;
 
-        __invlpg(page_map_views[id].reserved_page);
+        auto guest_pte = Utils::GetPte(address, VpData->guest_vmcb.save_state_area.Cr3);
 
-        return 0;
+        __invlpg(page_map_view.reserved_page);
+
+        page_map_view.reserved_page_pte->Write = true;
+        page_map_view.reserved_page_pte->Present = true;
+        page_map_view.reserved_page_pte->PageFrameNumber = (uintptr_t)phys_addr >> PAGE_SHIFT;
+
+        return (uintptr_t)page_map_views.reserved_page + ((uintptr_t)phys_addr & (PAGE_SIZE - 1));
     }
-
-
 };
 
