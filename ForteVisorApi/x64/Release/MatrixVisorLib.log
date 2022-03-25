@@ -1,6 +1,6 @@
 ﻿  Assembling vmmcall.asm...
   pch.cpp
   forte_api.cpp
-C:\Users\lolxd\source\repos\AMD-Hypervisor\ForteVisorApi\forte_api.cpp(51,32): warning C4018: '<': signed/unsigned mismatch
-C:\Users\lolxd\source\repos\AMD-Hypervisor\ForteVisorApi\forte_api.cpp(55,55): warning C4244: 'argument': conversion from 'double' to 'DWORD_PTR', possible loss of data
+C:\Users\lolxd\source\repos\AMD-Hypervisor\ForteVisorApi\forte_api.cpp(53,32): warning C4018: '<': signed/unsigned mismatch
+C:\Users\lolxd\source\repos\AMD-Hypervisor\ForteVisorApi\forte_api.cpp(57,55): warning C4244: 'argument': conversion from 'double' to 'DWORD_PTR', possible loss of data
   MatrixVisorLib.vcxproj -> C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\ForteVisorApi.lib

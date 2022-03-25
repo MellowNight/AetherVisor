@@ -7,9 +7,11 @@ namespace NptHooks
 	struct NptHook
 	{
 		struct NptHook* next_hook;
-		void* hook_address;
+		void* guest_phys_addr;
+		CR3 hook_guest_context;
 		PT_ENTRY_64* hookless_npte;
 		PT_ENTRY_64* hooked_npte;
+		void* hookless_copy_page;
 	};
 	
 	extern	int hook_count;

@@ -237,14 +237,6 @@ void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
 	_sgdt(&gdtr);
 	__sidt(&idtr);
 
-	CR4 cr4;
-	cr4.Flags = __readcr4();
-	/*	for MPK hooking		*/
-	cr4.ProtectionKeyEnable = 1;
-
-	//__writecr4(cr4.Flags);
-
-
 	InterceptVector4 intercept_vector4;
 
 	intercept_vector4.intercept_vmmcall = 1;

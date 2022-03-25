@@ -199,6 +199,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="itlb_hook.cpp" />
+    <ClCompile Include="memory_reader.cpp" />
     <ClCompile Include="mem_prot_key.cpp" />
     <ClCompile Include="npt_hook.cpp" />
     <ClCompile Include="npt.cpp" />

@@ -4,10 +4,11 @@
 #include "disassembly.h"
 #include "prepare_vm.h"
 #include "vmexit.h"
+#include "memory_reader.h"
+#include "mem_prot_key.h"
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
-
 
 bool VirtualizeAllProcessors()
 {
@@ -26,7 +27,7 @@ bool VirtualizeAllProcessors()
 	hypervisor = (Hypervisor*)ExAllocatePoolZero(NonPagedPool, sizeof(Hypervisor), 'HvDa');
 
 	BuildNestedPagingTables(&hypervisor->normal_ncr3, true);
-	BuildNestedPagingTables(&hypervisor->noexecute_ncr3, false);
+	BuildNestedPagingTables(&hypervisor->noexecute_ncr3, true);
 
 	DbgPrint("[SETUP] hypervisor->noexecute_ncr3 %p \n", hypervisor->noexecute_ncr3); 
 	DbgPrint("[SETUP] hypervisor->normal_ncr3 %p \n", hypervisor->normal_ncr3);
@@ -105,7 +106,8 @@ void Initialize()
 	Disasm::Init();
 	TlbHooks::Init();
 	NptHooks::Init();
-
+	MemoryUtils::Init();
+	MpkHooks::Init();
 }
 
 NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
@@ -117,6 +119,15 @@ NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
 
 NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
+
+	CR4 cr4;
+	cr4.Flags = __readcr4();
+	/*	for MPK hooking		*/
+	cr4.FsgsbaseEnable = 1;
+
+	__writecr4(cr4.Flags);
+
+
 	HANDLE init_thread;
 
 	PsCreateSystemThread(
@@ -137,5 +148,5 @@ NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 		NULL
 	);
 
-	return	STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }

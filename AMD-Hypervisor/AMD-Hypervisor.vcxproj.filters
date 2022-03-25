@@ -78,9 +78,6 @@
     <ClInclude Include="prepare_vm.h">
       <Filter>Source Files\preparation</Filter>
     </ClInclude>
-    <ClInclude Include="mem_prot_key.h">
-      <Filter>Source Files\hooking</Filter>
-    </ClInclude>
     <ClInclude Include="ia32.h">
       <Filter>Source Files\amd structs</Filter>
     </ClInclude>
@@ -89,6 +86,9 @@
     </ClInclude>
     <ClInclude Include="memory_reader.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mem_prot_key.h">
+      <Filter>Source Files\hooking</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +121,9 @@
     </ClCompile>
     <ClCompile Include="mem_prot_key.cpp">
       <Filter>Source Files\hooking</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_reader.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

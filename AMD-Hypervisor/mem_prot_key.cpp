@@ -1,6 +1,7 @@
 #include "mem_prot_key.h"
 #include "logging.h"
 #include "vmexit.h"
+#include "memory_reader.h"
 
 extern "C" int __rdpkru();
 extern "C" int __wrpkru(int pkru);
@@ -48,20 +49,20 @@ namespace MpkHooks
     }
 
 	MpkHook* SetMpkHook(CoreVmcbData* vcpu, void* address, uint8_t* patch, size_t patch_len)
-    {	
-        auto hook_entry = &first_mpk_hook;
+    {        
+		auto hook_entry = &first_mpk_hook;
 
 		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
 		{
 		}
 
-        PHYSICAL_ADDRESS cr3;
-        cr3.QuadPart = vcpu->guest_vmcb.save_state_area.Cr3;
+        CR3 cr3;
+        cr3.Flags = vcpu->guest_vmcb.save_state_area.Cr3;
 
-		hook_entry->the_pte = Utils::GetPte(address, cr3.QuadPart);
+		hook_entry->the_pte = Utils::GetPte(address, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+		hook_entry->the_pte->ProtectionKey = hook_count;
+
         hook_entry->hooked_page = PAGE_ALIGN(address);
-
-        hook_entry->the_pte->ProtectionKey = hook_count;
 
         auto pkru = __rdpkru();
 
@@ -70,6 +71,13 @@ namespace MpkHooks
         pkru |= flag;     
 
         __wrpkru(pkru);
+
+		auto irql = Utils::DisableWP();
+
+		uint8_t shellcode[100];
+
+		MemoryUtils::ReadVirtualMemory(shellcode, patch_len, address, cr3);
+		MemoryUtils::WriteVirtualMemory(shellcode, patch_len, address, cr3);
 
         hook_count += 1;
 

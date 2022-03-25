@@ -8,8 +8,6 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 	PHYSICAL_ADDRESS faulting_physical;
 	faulting_physical.QuadPart = vcpu_data->guest_vmcb.control_area.ExitInfo2;
 
-	auto faulting_virtual = MmGetVirtualForPhysical(faulting_physical);
-
 	NestedPageFaultInfo1 exit_info1;
 	exit_info1.as_uint64 = vcpu_data->guest_vmcb.control_area.ExitInfo1;
 
@@ -36,13 +34,15 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 		auto npt_hook = NptHooks::ForEachHook(
 			[](NptHooks::NptHook* hook_entry, void* data) -> bool {
 				
-				if (PAGE_ALIGN(data) == PAGE_ALIGN(hook_entry->hook_address))
+				if (PAGE_ALIGN(data) == PAGE_ALIGN(hook_entry->guest_phys_addr))
 				{
 					return true;
 				}
 
-			}, faulting_virtual
+			}, (void*)faulting_physical.QuadPart
 		);
+
+		Logger::Log("guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
 
 		bool switch_ncr3 = true;
 
@@ -70,8 +70,8 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 				switch_ncr3 = false;
 			}
 
-			auto page1 = MmGetPhysicalAddress(PAGE_ALIGN(guest_rip)).QuadPart;
-			auto page2 = MmGetPhysicalAddress(PAGE_ALIGN(guest_rip + insn_len)).QuadPart;
+			auto page1 = faulting_physical.QuadPart;
+			auto page2 = Utils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3);
 
 			auto npte1 = Utils::GetPte((void*)page1, NCr3.QuadPart);
 			auto npte2 = Utils::GetPte((void*)page2, NCr3.QuadPart);
@@ -79,6 +79,46 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 			npte1->ExecuteDisable = 0;
 			npte2->ExecuteDisable = 0;
 		}
+
+		if (npt_hook && 
+			(vcpu_data->guest_vmcb.save_state_area.Cr3 != __readcr3()) &&
+			(vcpu_data->guest_vmcb.save_state_area.Cr3 != npt_hook->hook_guest_context.Flags))
+		{
+			vcpu_data->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
+
+			Logger::Log("vcpu_data->guest_vmcb.save_state_area.Cr3 = %p __readcr3 = %p npt_hook->hook_guest_context.Flags = %p \n", 
+				vcpu_data->guest_vmcb.save_state_area.Cr3, 
+				__readcr3(),
+				npt_hook->hook_guest_context.Flags
+			);
+
+			/*	If our hook was placed in a global page mapped inside of a non-system context,
+				we need to make sure that the hook isn't mapped in other process contexts.
+			
+				FUCK large pages.
+			*/
+
+			auto gpte = Utils::GetPte(
+				(void*)vcpu_data->guest_vmcb.save_state_area.Rip,
+				vcpu_data->guest_vmcb.save_state_area.Cr3
+			);
+
+			vcpu_data->guest_vmcb.save_state_area.Rip += 1;
+
+			Logger::Log("gpte->Present = %p gpte->PageFrameNumber = %p \n", gpte->Present, gpte->PageFrameNumber);
+
+			gpte->PageFrameNumber = (uintptr_t)npt_hook->hookless_copy_page >> PAGE_SHIFT;
+			vcpu_data->guest_vmcb.control_area.TlbControl = 1;
+
+			if (gpte->LargePage)
+			{
+				Logger::Log("gpte->LargePage = 1 \n");
+			}
+
+			return;
+		}
+
+		Logger::Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
 
 		/*	clean ncr3 cache	*/
 
@@ -89,8 +129,6 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 		//Logger::Log("npt_hook found = %p guest RIP = %p \n", npt_hook, GuestRip);
 		//Logger::Log("(PAGE_ALIGN(guest_rip + insn_len) = %p PAGE_ALIGN(guest_rip) = %p \n", PAGE_ALIGN(guest_rip + insn_len), PAGE_ALIGN(guest_rip));
 		
-		Logger::Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
-
 		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
 		if (switch_ncr3)
 		{
