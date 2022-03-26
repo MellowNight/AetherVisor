@@ -11,7 +11,7 @@ namespace NptHooks
 		CR3 hook_guest_context;
 		PT_ENTRY_64* hookless_npte;
 		PT_ENTRY_64* hooked_npte;
-		void* hookless_copy_page;
+		uint8_t* hookless_copy_page;
 	};
 	
 	extern	int hook_count;

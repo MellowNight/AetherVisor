@@ -25,7 +25,7 @@ namespace NptHooks
 			auto hooked_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 			auto hookless_copy_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
-			hook_entry->hookless_copy_page = (void*)(Utils::GetPte(
+			hook_entry->hookless_copy_page = (uint8_t*)(Utils::GetPte(
 				hookless_copy_page, 
 				cr3.AddressOfPageDirectory << PAGE_SHIFT
 			)->PageFrameNumber << PAGE_SHIFT);
@@ -69,10 +69,17 @@ namespace NptHooks
 		auto guest_cr3 = VpData->guest_vmcb.save_state_area.Cr3;
 		auto guest_pte = Utils::GetPte(address, guest_cr3);
 
-		auto guest_physical_page = (uintptr_t)(guest_pte->PageFrameNumber << PAGE_SHIFT);
+		Logger::Log("\n guest_cr3 %p, __readcr3() %p \n", guest_cr3, __readcr3());
+
+		/*	create a brand new copy page for hook pages in a different context	*/
+		if (guest_cr3 != __readcr3())
+		{
+			Logger::Log("\n guest_pte %p \n", guest_pte);
+			guest_pte->PageFrameNumber = (uintptr_t)hook_entry->hookless_copy_page >> PAGE_SHIFT;
+		}
 
 		PHYSICAL_ADDRESS phys_page;
-		phys_page.QuadPart = (uintptr_t)guest_physical_page;
+		phys_page.QuadPart = (uintptr_t)hook_entry->hookless_copy_page;
 
 		auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
 
@@ -85,22 +92,26 @@ namespace NptHooks
 
 			auto large_page_offset = (uint8_t*)PAGE_ALIGN(address) - MmGetVirtualForPhysical(phys_page);
 
-			guest_physical_page += large_page_offset;
+			hook_entry->hookless_copy_page += large_page_offset;
 		}
 
-		Logger::Log("\n physical_page %p \n", guest_physical_page);
+		Logger::Log("\n physical_page %p \n", hook_entry->hookless_copy_page);
 
 		/*	get the nested pte of the guest physical address	*/
 
-		hook_entry->guest_phys_addr = (uint8_t*)guest_physical_page + page_offset;
-		hook_entry->hookless_npte = Utils::GetPte((void*)guest_physical_page, hypervisor->normal_ncr3);
+		hook_entry->guest_phys_addr = (uint8_t*)hook_entry->hookless_copy_page + page_offset;
 
-		/*	get the nested pte of the guest physical address in the 2nd NCR3, and map it to our hook page	*/
+		/*	get the npte of the gpa in the 1st NCR3, and set it to execute disable	*/
 
-		auto hooked_npte = Utils::GetPte((void*)guest_physical_page, hypervisor->noexecute_ncr3);
+		hook_entry->hookless_npte = Utils::GetPte((void*)hook_entry->hookless_copy_page, hypervisor->normal_ncr3);
+		hook_entry->hookless_npte->ExecuteDisable = 1;
+
+		/*	get the nested pte of the guest physical address in the 2nd NCR3, and point it to our hook page	*/
+
+		auto hooked_npte = Utils::GetPte((void*)hook_entry->hookless_copy_page, hypervisor->noexecute_ncr3);
 
 		hooked_npte->PageFrameNumber = hook_entry->hooked_npte->PageFrameNumber;
-		hooked_npte->ExecuteDisable = 0;
+		hooked_npte->ExecuteDisable = 1;
 
 		auto hooked_copy = Utils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
 
@@ -114,9 +125,6 @@ namespace NptHooks
 			MemoryUtils::MapVirtualMem(PAGE_ALIGN(address), hook_entry->hook_guest_context), 
 			PAGE_SIZE
 		);
-		Logger::Log("Utils::VirtualAddrFromPfn((uintptr_t)hook_entry->hookless_copy_page >> PAGE_SHIFT) %p hooked_copy %p \n", 
-			Utils::VirtualAddrFromPfn((uintptr_t)hook_entry->hookless_copy_page >> PAGE_SHIFT),
-			hooked_copy);
 
 		memcpy(
 			Utils::VirtualAddrFromPfn((uintptr_t)hook_entry->hookless_copy_page >> PAGE_SHIFT),
@@ -129,8 +137,6 @@ namespace NptHooks
 			MemoryUtils::MapVirtualMem(patch, hook_entry->hook_guest_context), 
 			patch_len
 		);
-
-		hook_entry->hookless_npte->ExecuteDisable = 1;
 
 		VpData->guest_vmcb.control_area.TlbControl = 3;
 

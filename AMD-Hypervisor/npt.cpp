@@ -80,44 +80,6 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 			npte2->ExecuteDisable = 0;
 		}
 
-		if (npt_hook && 
-			(vcpu_data->guest_vmcb.save_state_area.Cr3 != __readcr3()) &&
-			(vcpu_data->guest_vmcb.save_state_area.Cr3 != npt_hook->hook_guest_context.Flags))
-		{
-			vcpu_data->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
-
-			Logger::Log("vcpu_data->guest_vmcb.save_state_area.Cr3 = %p __readcr3 = %p npt_hook->hook_guest_context.Flags = %p \n", 
-				vcpu_data->guest_vmcb.save_state_area.Cr3, 
-				__readcr3(),
-				npt_hook->hook_guest_context.Flags
-			);
-
-			/*	If our hook was placed in a global page mapped inside of a non-system context,
-				we need to make sure that the hook isn't mapped in other process contexts.
-			
-				FUCK large pages.
-			*/
-
-			auto gpte = Utils::GetPte(
-				(void*)vcpu_data->guest_vmcb.save_state_area.Rip,
-				vcpu_data->guest_vmcb.save_state_area.Cr3
-			);
-
-			vcpu_data->guest_vmcb.save_state_area.Rip += 1;
-
-			Logger::Log("gpte->Present = %p gpte->PageFrameNumber = %p \n", gpte->Present, gpte->PageFrameNumber);
-
-			gpte->PageFrameNumber = (uintptr_t)npt_hook->hookless_copy_page >> PAGE_SHIFT;
-			vcpu_data->guest_vmcb.control_area.TlbControl = 1;
-
-			if (gpte->LargePage)
-			{
-				Logger::Log("gpte->LargePage = 1 \n");
-			}
-
-			return;
-		}
-
 		Logger::Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
 
 		/*	clean ncr3 cache	*/

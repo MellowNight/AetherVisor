@@ -1,6 +1,6 @@
 ﻿  Building 'AMD-Hypervisor' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Release\AMD-Hypervisor.inf
-  Stamping [Version] section with DriverVer=03/25/2022,17.42.44.627
+  Stamping [Version] section with DriverVer=03/25/2022,23.8.22.122
   Assembling instructions.asm...
   Assembling vm_launch.asm...
   hypervisor.cpp
@@ -2078,7 +2078,7 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(12,8): warning C4189: 'first_hookless_page': local variable is initialized but not referenced
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(86,95): warning C4133: '-': incompatible types - from 'PVOID' to 'uint8_t *'
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(93,95): warning C4133: '-': incompatible types - from 'PVOID' to 'uint8_t *'
   npt.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2379,7 +2379,7 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(6,61): warning
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(21,7): warning C4189: 'num_bytes': local variable is initialized but not referenced
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(23,8): warning C4189: 'insn_bytes': local variable is initialized but not referenced
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(27,8): warning C4189: 'pte': local variable is initialized but not referenced
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(219,11): warning C4189: 'Pte': local variable is initialized but not referenced
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(181,11): warning C4189: 'Pte': local variable is initialized but not referenced
   utils.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
