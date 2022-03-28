@@ -62,6 +62,7 @@ namespace NptHooks
 		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
 		{
 		}
+		__invlpg(address);
 
 		/*	get the guest pte and physical address of the hooked page	*/
 		auto guest_cr3 = VpData->guest_vmcb.save_state_area.Cr3;
@@ -76,6 +77,7 @@ namespace NptHooks
 				*guest_pte, guest_pte->PageFrameNumber << PAGE_SHIFT, MmGetPhysicalAddress(PAGE_ALIGN(address)));
 			
 			guest_pte->PageFrameNumber = (uintptr_t)hook_entry->hookless_copy_page >> PAGE_SHIFT;
+			guest_pte->ExecuteDisable = 1;
 		}
 
 		PHYSICAL_ADDRESS phys_page;
@@ -116,9 +118,6 @@ namespace NptHooks
 		auto hooked_copy = Utils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
 
 		Logger::Log("hooked_copy %p \n", hooked_copy);
-		
-		/*	place our hook in the copied page for the 2nd NCR3	*/
-		Logger::Log("the address is %p \n", address);
 
 		memcpy(
 			hooked_copy, 
@@ -126,17 +125,24 @@ namespace NptHooks
 			PAGE_SIZE
 		);
 
+		/*	place our hook in the copied page for the 2nd NCR3	*/
+		Logger::Log("memcpy 1 \n");
+
 		memcpy(
 			Utils::VirtualAddrFromPfn((uintptr_t)hook_entry->hookless_copy_page >> PAGE_SHIFT),
 			hooked_copy,
 			PAGE_SIZE
 		);
 
+		Logger::Log("memcpy 2 \n");
+
 		memcpy(
 			(uint8_t*)hooked_copy + page_offset, 
 			MemoryUtils::MapVirtualMem(patch, hook_entry->hook_guest_context), 
 			patch_len
 		);
+
+		Logger::Log("memcpy 3 \n");
 
 		VpData->guest_vmcb.control_area.TlbControl = 1;
 
