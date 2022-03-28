@@ -87,11 +87,7 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 
 		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
 		vcpu_data->guest_vmcb.control_area.TlbControl = 1;
-		//Logger::Log("===============\n");
 
-		//Logger::Log("npt_hook found = %p guest RIP = %p \n", npt_hook, GuestRip);
-		//Logger::Log("(PAGE_ALIGN(guest_rip + insn_len) = %p PAGE_ALIGN(guest_rip) = %p \n", PAGE_ALIGN(guest_rip + insn_len), PAGE_ALIGN(guest_rip));
-		
 		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
 		if (switch_ncr3)
 		{

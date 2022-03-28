@@ -11,17 +11,16 @@ namespace MemoryUtils
         CR3 cr3;
         cr3.Flags = __readcr3();
 
-        page_map_view.reserved_page = MmAllocateMappingAddress(PAGE_SIZE, 'ENON');
-        page_map_view.reserved_page_pte = (PTE_64*)GetSystemCtxPte(page_map_view.reserved_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+        page_map_view.reserved_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
     }
 
     uint8_t* MapPhysicalMem(void* phys_addr)
     {
-        __invlpg(page_map_view.reserved_page);
+        MM_COPY_ADDRESS copy_address = { 0 };
+        copy_address.PhysicalAddress.QuadPart = (uintptr_t)PAGE_ALIGN(phys_addr);
 
-        page_map_view.reserved_page_pte->Write = true;
-        page_map_view.reserved_page_pte->Present = true;
-        page_map_view.reserved_page_pte->PageFrameNumber = (uintptr_t)phys_addr >> PAGE_SHIFT;
+        SIZE_T bytes_read;
+        MmCopyMemory(page_map_view.reserved_page, copy_address, PAGE_SIZE, MM_COPY_MEMORY_PHYSICAL, &bytes_read);
 
         return (uint8_t*)page_map_view.reserved_page + ((uintptr_t)phys_addr & (PAGE_SIZE - 1));
     }
@@ -45,8 +44,6 @@ namespace MemoryUtils
 
     PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, int (*page_table_callback)(PT_ENTRY_64*))
     {
-        Logger::Log("\n \n \n \n virtual_address %p pml4_base_pa %p \n \n", virtual_address, pml4_base_pa);
-
         ADDRESS_TRANSLATION_HELPER helper;
 
         PT_ENTRY_64* final_entry;
@@ -59,7 +56,6 @@ namespace MemoryUtils
         pml4 = (PML4E_64*)MapPhysicalMem((void*)pml4_base_pa);
 
         pml4e = &pml4[helper.AsIndex.Pml4];
-        Logger::Log("pml4e->PageFrameNumber << PAGE_SHIFT %p pml4e %p \n", pml4e->PageFrameNumber << PAGE_SHIFT, pml4e);
 
         if (page_table_callback)
         {
@@ -90,7 +86,6 @@ namespace MemoryUtils
 
         PDE_64* pd;
         PDE_64* pde;
-        Logger::Log("pdpte->PageFrameNumber << PAGE_SHIFT %p \n", pdpte->PageFrameNumber << PAGE_SHIFT);
 
         pd = (PDE_64*)MapPhysicalMem((void*)(pdpte->PageFrameNumber << PAGE_SHIFT));
 
@@ -109,8 +104,6 @@ namespace MemoryUtils
 
         PTE_64* pt;
         PTE_64* pte;
-
-        Logger::Log("pde->PageFrameNumber << PAGE_SHIFT %p \n", pde->PageFrameNumber << PAGE_SHIFT);
 
         pt = (PTE_64*)MapPhysicalMem((void*)(pde->PageFrameNumber << PAGE_SHIFT));
 
