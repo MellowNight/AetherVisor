@@ -2,6 +2,7 @@
 #include "itlb_hook.h"
 #include "logging.h"
 #include "hypervisor.h"
+#include "memory_reader.h"
 
 void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 {
@@ -71,10 +72,10 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 			}
 
 			auto page1 = faulting_physical.QuadPart;
-			auto page2 = Utils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3);
+			auto page2 = MemoryUtils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3);
 
-			auto npte1 = Utils::GetPte((void*)page1, NCr3.QuadPart);
-			auto npte2 = Utils::GetPte((void*)page2, NCr3.QuadPart);
+			auto npte1 = MemoryUtils::GetPte((void*)page1, NCr3.QuadPart);
+			auto npte2 = MemoryUtils::GetPte((void*)page2, NCr3.QuadPart);
 
 			npte1->ExecuteDisable = 0;
 			npte2->ExecuteDisable = 0;

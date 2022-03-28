@@ -59,7 +59,7 @@ namespace MpkHooks
         CR3 cr3;
         cr3.Flags = vcpu->guest_vmcb.save_state_area.Cr3;
 
-		hook_entry->the_pte = Utils::GetPte(address, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+		hook_entry->the_pte = MemoryUtils::GetPte(address, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 		hook_entry->the_pte->ProtectionKey = hook_count;
 
         hook_entry->hooked_page = PAGE_ALIGN(address);
@@ -116,9 +116,9 @@ namespace MpkHooks
 		{
 			/*	set PFN to copy page	*/
 
-			auto fault_pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
+			auto fault_pte = MemoryUtils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
 
-			fault_pte->PageFrameNumber = Utils::GetPte(
+			fault_pte->PageFrameNumber = MemoryUtils::GetPte(
 				hook_entry->hookless_page, 
 				vcpu->guest_vmcb.save_state_area.Cr3
 			)->PageFrameNumber;
@@ -129,9 +129,9 @@ namespace MpkHooks
 		{
 			/*	restore PFN to hooked page	*/
 
-			auto fault_pte = Utils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
+			auto fault_pte = MemoryUtils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
 
-			fault_pte->PageFrameNumber = Utils::GetPte(
+			fault_pte->PageFrameNumber = MemoryUtils::GetPte(
 				hook_entry->hooked_page, 
 				vcpu->guest_vmcb.save_state_area.Cr3
 			)->PageFrameNumber;

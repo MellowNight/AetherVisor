@@ -102,12 +102,20 @@ bool VirtualizeAllProcessors()
 
 void Initialize()
 {
+	MemoryUtils::Init();
 	Logger::Start();
 	Disasm::Init();
 	TlbHooks::Init();
 	NptHooks::Init();
-	MemoryUtils::Init();
 	MpkHooks::Init();
+
+	CR3 guest_cr3;
+	guest_cr3.Flags = 0x0000000841ff000;
+
+	auto guest_pte = MemoryUtils::GetPte(PAGE_ALIGN(0x07FFBAA335A40), guest_cr3.AddressOfPageDirectory << PAGE_SHIFT);
+
+	Logger::Log("\n guest_pte %p, Physical address %p, MmGetPhysicalAddress %p \n",
+		*guest_pte, guest_pte->PageFrameNumber << PAGE_SHIFT, MmGetPhysicalAddress(PAGE_ALIGN(0x07FFBAA335A40)));
 }
 
 NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
@@ -119,15 +127,6 @@ NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
 
 NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
-
-	CR4 cr4;
-	cr4.Flags = __readcr4();
-	/*	for MPK hooking		*/
-	cr4.FsgsbaseEnable = 1;
-
-	__writecr4(cr4.Flags);
-
-
 	HANDLE init_thread;
 
 	PsCreateSystemThread(
