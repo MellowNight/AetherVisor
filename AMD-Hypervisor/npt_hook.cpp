@@ -62,11 +62,13 @@ namespace NptHooks
 		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
 		{
 		}
-		__invlpg(address);
 
 		/*	get the guest pte and physical address of the hooked page	*/
 		auto guest_cr3 = VpData->guest_vmcb.save_state_area.Cr3;
-		auto guest_pte = MemoryUtils::GetPte(PAGE_ALIGN(address), guest_cr3);
+		auto guest_pte = MemoryUtils::GetSystemCtxPte(PAGE_ALIGN(address), guest_cr3);
+
+		__writecr3(guest_cr3);
+		__invlpg(address);
 
 		Logger::Log("\n guest_cr3 %p, __readcr3() %p address %p \n", guest_cr3, __readcr3(), address);
 

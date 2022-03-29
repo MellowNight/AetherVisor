@@ -29,11 +29,5 @@ namespace MemoryUtils
         uintptr_t pml4_base_pa, 
         int (*page_table_callback)(PT_ENTRY_64*) = NULL
     );
-
-    PT_ENTRY_64* GetSystemCtxPte(
-        void* virtual_address, 
-        uintptr_t pml4_base_pa, 
-        int (*page_table_callback)(PT_ENTRY_64*) = NULL
-    );
 };
 
