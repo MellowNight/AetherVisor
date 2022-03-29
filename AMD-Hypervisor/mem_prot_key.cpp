@@ -74,11 +74,6 @@ namespace MpkHooks
 
 		auto irql = Utils::DisableWP();
 
-		uint8_t shellcode[100];
-
-		MemoryUtils::ReadVirtualMemory(shellcode, patch_len, address, cr3);
-		MemoryUtils::WriteVirtualMemory(shellcode, patch_len, address, cr3);
-
         hook_count += 1;
 
         return hook_entry;

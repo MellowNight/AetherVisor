@@ -1,6 +1,6 @@
 ﻿  Building 'AMD-Hypervisor' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Release\AMD-Hypervisor.inf
-  Stamping [Version] section with DriverVer=03/28/2022,16.22.42.702
+  Stamping [Version] section with DriverVer=03/29/2022,16.36.32.936
   Assembling instructions.asm...
   Assembling vm_launch.asm...
   hypervisor.cpp
@@ -595,9 +595,9 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(113,38): warning C4100: 'DriverObject': unreferenced formal parameter
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(120,66): warning C4100: 'RegistryPath': unreferenced formal parameter
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(120,36): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(121,38): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(128,66): warning C4100: 'RegistryPath': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\main.cpp(128,36): warning C4100: 'DriverObject': unreferenced formal parameter
   logging.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -1481,8 +1481,7 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\memory_reader.cpp(49,22): warning C4101: 'final_entry': unreferenced local variable
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\memory_reader.cpp(124,22): warning C4101: 'final_entry': unreferenced local variable
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\memory_reader.cpp(46,22): warning C4101: 'final_entry': unreferenced local variable
   mem_prot_key.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -1779,10 +1778,11 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(254,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(51,80): warning C4100: 'patch_len': unreferenced formal parameter
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(51,66): warning C4100: 'patch': unreferenced formal parameter
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(75,8): warning C4189: 'irql': local variable is initialized but not referenced
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(92,55): warning C4244: '=': conversion from 'UINT64' to 'uint32_t', possible loss of data
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(87,57): warning C4100: 'guest_regs': unreferenced formal parameter
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(87,55): warning C4244: '=': conversion from 'UINT64' to 'uint32_t', possible loss of data
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(82,57): warning C4100: 'guest_regs': unreferenced formal parameter
   npt_hook.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2080,7 +2080,7 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(12,8): warning C4189: 'first_hookless_page': local variable is initialized but not referenced
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(95,95): warning C4133: '-': incompatible types - from 'PVOID' to 'uint8_t *'
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(91,95): warning C4133: '-': incompatible types - from 'PVOID' to 'uint8_t *'
   npt.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -3288,7 +3288,7 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(25,36): war
   Generating Code...
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\utils.cpp(227): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(43): warning C4715: '<lambda_cd060a5eed42f925721bb23b6733bd30>::operator()': not all control paths return a value
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(102): warning C4715: '<lambda_72fc1bab80f871f309fdf1bb7693789e>::operator()': not all control paths return a value
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\mem_prot_key.cpp(97): warning C4715: '<lambda_72fc1bab80f871f309fdf1bb7693789e>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(113): warning C4715: '<lambda_441064ca4ee701f5a3467f8282a58ea5>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(126): warning C4715: '<lambda_0847edb684c318b36c933325e60ded8f>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(157): warning C4715: '<lambda_4573477ffc6a0b743765e70519af9d62>::operator()': not all control paths return a value

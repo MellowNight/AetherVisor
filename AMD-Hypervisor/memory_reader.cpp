@@ -2,6 +2,7 @@
 #include "memory_reader.h"
 #include "utils.h"
 #include  "logging.h"
+
 namespace MemoryUtils
 {
     MappingWindow page_map_view;
@@ -11,35 +12,31 @@ namespace MemoryUtils
         CR3 cr3;
         cr3.Flags = __readcr3();
 
-        page_map_view.reserved_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
+        page_map_view.reserved_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+        page_map_view.reserved_page_pte = GetPte(page_map_view.reserved_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+        page_map_view.reserved_page_pte->Present = 0;
+
+        Logger::Log("page_map_view.reserved_page_pte %p  page_map_view.reserved_page %p \n", page_map_view.reserved_page_pte, page_map_view.reserved_page);
+
+        __debugbreak();
     }
 
-    uint8_t* MapPhysicalMem(void* phys_addr)
+    uint8_t* MapPhysical(void* phys_addr)
     {
-        MM_COPY_ADDRESS copy_address = { 0 };
-        copy_address.PhysicalAddress.QuadPart = (uintptr_t)PAGE_ALIGN(phys_addr);
+        __invlpg(page_map_view.reserved_page);
 
-        SIZE_T bytes_read;
-        MmCopyMemory(page_map_view.reserved_page, copy_address, PAGE_SIZE, MM_COPY_MEMORY_PHYSICAL, &bytes_read);
+        page_map_view.reserved_page_pte->Present = 0;
+        page_map_view.reserved_page_pte->Write = 1;
+        page_map_view.reserved_page_pte->PageFrameNumber = 0;
 
         return (uint8_t*)page_map_view.reserved_page + ((uintptr_t)phys_addr & (PAGE_SIZE - 1));
     }
 
-    uint8_t* MapVirtualMem(void* virtual_addr, CR3 context)
+    uint8_t* MapVirtual(void* virtual_addr, CR3 context)
     {
         auto guest_pte = GetPte(virtual_addr, context.AddressOfPageDirectory << PAGE_SHIFT);
 
-        return MapPhysicalMem((void*)(guest_pte->PageFrameNumber << PAGE_SHIFT));
-    }
-
-    void ReadVirtualMemory(void* out_buffer, size_t length, void* virtual_addr, CR3 context)
-    {
-        memcpy(out_buffer, MapVirtualMem(virtual_addr, context), length);
-    }
-
-    void WriteVirtualMemory(void* in_buffer, size_t length, void* virtual_addr, CR3 context)
-    {
-        memcpy(MapVirtualMem(virtual_addr, context), in_buffer, length);
+        return MapPhysical((void*)(guest_pte->PageFrameNumber << PAGE_SHIFT)) + ((uintptr_t)virtual_addr & (PAGE_SIZE - 1));
     }
 
     PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, int (*page_table_callback)(PT_ENTRY_64*))
@@ -120,5 +117,6 @@ namespace MemoryUtils
 
         return  (PT_ENTRY_64*)pte;
     }
+
 };
 
