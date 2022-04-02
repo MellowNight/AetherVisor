@@ -5,7 +5,6 @@
 #include "prepare_vm.h"
 #include "vmexit.h"
 #include "memory_reader.h"
-#include "mem_prot_key.h"
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
@@ -27,7 +26,7 @@ bool VirtualizeAllProcessors()
 	hypervisor = (Hypervisor*)ExAllocatePoolZero(NonPagedPool, sizeof(Hypervisor), 'HvDa');
 
 	BuildNestedPagingTables(&hypervisor->normal_ncr3, true);
-	BuildNestedPagingTables(&hypervisor->noexecute_ncr3, true);
+	BuildNestedPagingTables(&hypervisor->noexecute_ncr3, false);
 
 	DbgPrint("[SETUP] hypervisor->noexecute_ncr3 %p \n", hypervisor->noexecute_ncr3); 
 	DbgPrint("[SETUP] hypervisor->normal_ncr3 %p \n", hypervisor->normal_ncr3);
@@ -80,7 +79,6 @@ bool VirtualizeAllProcessors()
 		}
 	}       
 
-
 	/*	experiment with TLB spliting	*/
 	//LARGE_INTEGER delay = { 30000000 };	// 3 seconds
 	//KeDelayExecutionThread(KernelMode, FALSE, &delay);
@@ -114,8 +112,6 @@ void Initialize()
 	//	*guest_pte, guest_pte->PageFrameNumber << PAGE_SHIFT, MmGetPhysicalAddress(PAGE_ALIGN(0x0007FFBAA335A40)));
 	TlbHooks::Init();
 	NptHooks::Init();
-	MpkHooks::Init();
-
 }
 
 NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)

@@ -1,6 +1,4 @@
 #include "vmexit.h"
-#include "mem_prot_key.h"
-
 
 void InjectException(CoreVmcbData* core_data, int vector, int error_code)
 {
@@ -53,17 +51,6 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
 
     switch (id)
     {
-        case VMMCALL_ID::set_mpk_hook:
-        {
-            MpkHooks::SetMpkHook(
-                VpData,
-                (void*)GuestRegisters->rdx, 
-                (uint8_t*)GuestRegisters->r8,
-                GuestRegisters->r9
-            );
-            
-            break;
-        }
         case VMMCALL_ID::set_tlb_hook:
         {
             TlbHooks::SetTlbHook(
@@ -106,7 +93,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
     /*	load host extra state	*/
     __svm_vmload(core_data->host_vmcb_physicaladdr);
 
-    bool EndVm = false;		
+    bool end_hypervisor = false;		
 
     switch (core_data->guest_vmcb.control_area.ExitCode) 
     {
@@ -122,7 +109,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         }
         case VMEXIT::VMMCALL: 
         {
-            HandleVmmcall(core_data, GuestRegisters, &EndVm);
+            HandleVmmcall(core_data, GuestRegisters, &end_hypervisor);
             break;
         }
         case VMEXIT::NPF:
@@ -168,7 +155,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         }
     }
 
-    if (EndVm) 
+    if (end_hypervisor) 
     {
         /*
             When we end the VM operation, we just disable virtualization
@@ -185,6 +172,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         */
 
         __svm_vmload(core_data->guest_vmcb_physicaladdr);
+        __writecr3(core_data->guest_vmcb.save_state_area.Cr3);
 
         __svm_stgi();
         _disable();
@@ -199,7 +187,9 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
 
         GuestRegisters->rcx = core_data->guest_vmcb.save_state_area.Rsp;
         GuestRegisters->rbx = core_data->guest_vmcb.control_area.NRip;
+
+        Logger::Log("ending hypervisor... \n");
     }
 
-    return EndVm;
+    return end_hypervisor;
 }

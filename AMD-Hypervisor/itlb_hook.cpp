@@ -26,9 +26,9 @@ namespace TlbHooks
 
 		auto hookless_pfn = hook_entry->hookless_pte->PageFrameNumber;
 
-		auto copy_page = Utils::VirtualAddrFromPfn(hookless_pfn);
+		auto guest_page = Utils::VirtualAddrFromPfn(hookless_pfn);
 
-		memcpy(copy_page, (uint8_t*)PAGE_ALIGN(address), PAGE_SIZE);
+		memcpy(guest_page, (uint8_t*)PAGE_ALIGN(address), PAGE_SIZE);
 
 		auto irql = Utils::DisableWP();
 		auto retptr = Utils::FindPattern((uintptr_t)PAGE_ALIGN(address), PAGE_SIZE, "\xCC", 1, 0x00);
