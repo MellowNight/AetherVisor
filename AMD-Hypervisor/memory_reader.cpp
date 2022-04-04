@@ -17,8 +17,6 @@ namespace MemoryUtils
         page_map_view.reserved_page_pte->Present = 0;
 
         Logger::Log("page_map_view.reserved_page_pte %p  page_map_view.reserved_page %p \n", page_map_view.reserved_page_pte, page_map_view.reserved_page);
-
-        __debugbreak();
     }
 
     uint8_t* MapPhysical(void* phys_addr)

@@ -87,9 +87,6 @@
     <ClInclude Include="memory_reader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="mem_prot_key.h">
-      <Filter>Source Files\hooking</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -118,9 +115,6 @@
     </ClCompile>
     <ClCompile Include="prepare_vm.cpp">
       <Filter>Source Files\preparation</Filter>
-    </ClCompile>
-    <ClCompile Include="mem_prot_key.cpp">
-      <Filter>Source Files\hooking</Filter>
     </ClCompile>
     <ClCompile Include="memory_reader.cpp">
       <Filter>Source Files</Filter>

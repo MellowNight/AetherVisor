@@ -187,7 +187,6 @@
     <ClInclude Include="logging.h" />
     <ClInclude Include="itlb_hook.h" />
     <ClInclude Include="memory_reader.h" />
-    <ClInclude Include="mem_prot_key.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt.h" />
     <ClInclude Include="utils.h" />
@@ -200,7 +199,6 @@
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="itlb_hook.cpp" />
     <ClCompile Include="memory_reader.cpp" />
-    <ClCompile Include="mem_prot_key.cpp" />
     <ClCompile Include="npt_hook.cpp" />
     <ClCompile Include="npt.cpp" />
     <ClCompile Include="utils.cpp" />
