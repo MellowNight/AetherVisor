@@ -76,7 +76,6 @@ bool VirtualizeAllProcessors()
 		else
 		{
 			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
-			svm_vmmcall(VMMCALL_ID::disable_hv);
 		}
 	}    
 

@@ -1,1 +1,8 @@
-﻿
+﻿  ForteVisorTool.cpp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 8 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+ForteVisorApi.lib(forte_api.obj) : warning LNK4204: '' is missing debugging information for referencing module; linking object as if no debug info
+ForteVisorApi.lib(pch.obj) : warning LNK4204: 'C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\ForteVisorApi.pdb' is missing debugging information for referencing module; linking object as if no debug info
+  ForteVisorTool.vcxproj -> C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\ForteVisorTool.exe

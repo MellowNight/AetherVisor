@@ -170,9 +170,9 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
             7. set RCX to RSP
             8. return and jump back
         */
-
-        __svm_vmload(core_data->guest_vmcb_physicaladdr);
+        
         __writecr3(core_data->guest_vmcb.save_state_area.Cr3);
+        Logger::Log("[VMEXIT] NRip is %p \n", core_data->guest_vmcb.control_area.NRip);
 
         __svm_stgi();
         _disable();
@@ -187,6 +187,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
 
         GuestRegisters->rcx = core_data->guest_vmcb.save_state_area.Rsp;
         GuestRegisters->rbx = core_data->guest_vmcb.control_area.NRip;
+        __svm_vmload(core_data->guest_vmcb_physicaladdr);
 
         Logger::Log("ending hypervisor... \n");
     }
