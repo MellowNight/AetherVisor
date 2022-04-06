@@ -1,6 +1,6 @@
 ﻿  Building 'AMD-Hypervisor' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Release\AMD-Hypervisor.inf
-  Stamping [Version] section with DriverVer=04/05/2022,16.27.2.110
+  Stamping [Version] section with DriverVer=04/06/2022,15.46.57.499
   Assembling instructions.asm...
   Assembling vm_launch.asm...
   hypervisor.cpp
@@ -2989,7 +2989,7 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(66,48): war
   Generating Code...
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\utils.cpp(227): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(43): warning C4715: '<lambda_cd060a5eed42f925721bb23b6733bd30>::operator()': not all control paths return a value
-C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(64): warning C4715: '<lambda_69c11c563ef06b547a7ca1f8b12a4301>::operator()': not all control paths return a value
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(67): warning C4715: '<lambda_65627caaaab82b126fa1625c63190a40>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(113): warning C4715: '<lambda_441064ca4ee701f5a3467f8282a58ea5>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(126): warning C4715: '<lambda_0847edb684c318b36c933325e60ded8f>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(157): warning C4715: '<lambda_4573477ffc6a0b743765e70519af9d62>::operator()': not all control paths return a value

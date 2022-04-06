@@ -56,6 +56,9 @@ namespace NptHooks
 
 				if ((int32_t)data == hook_entry->tag)
 				{
+					/*	TO DO: restore guest PFN, free and unlink hook from list	*/
+
+					hook_entry->tag = 0;
 					hook_entry->hookless_npte->ExecuteDisable = 0;
 
 					return true;
