@@ -49,17 +49,31 @@ namespace NptHooks
 		return 0;
 	}
 
-#define LARGE_PAGE_SIZE 0x200000
-#define LARGE_PAGE_ALIGN(Va) ((uint8_t*)((ULONG_PTR)(Va) & ~(LARGE_PAGE_SIZE - 1)))
+	void RemoveHook(int32_t tag)
+	{
+		ForEachHook(
+			[](NptHook* hook_entry, void* data)-> bool {
 
+				if ((int32_t)data == hook_entry->tag)
+				{
+					hook_entry->hookless_npte->ExecuteDisable = 0;
 
-	NptHook* SetNptHook(CoreVmcbData* VpData, void* address, uint8_t* patch, size_t patch_len)
+					return true;
+				}
+
+			}, (void*)tag
+		);
+	}
+
+	NptHook* SetNptHook(CoreVmcbData* VpData, void* address, uint8_t* patch, size_t patch_len, int32_t tag)
 	{
 		auto hook_entry = &first_npt_hook;
 
 		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
 		{
 		}
+
+		hook_entry->tag = tag;
 
 		auto vmroot_cr3 = __readcr3();
 
@@ -83,7 +97,6 @@ namespace NptHooks
 		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
 		hook_entry->guest_phys_addr = (uint8_t*)physical_page;
-		
 
 		/*	get the nested pte of the guest physical address	*/
 

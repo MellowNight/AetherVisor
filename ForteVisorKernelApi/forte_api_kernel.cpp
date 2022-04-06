@@ -10,14 +10,13 @@ namespace ForteVisor
         return svm_vmmcall(VMMCALL_ID::set_tlb_hook, address, patch, patch_len);
     }
 
-    int SetMpkHook(uintptr_t address, uint8_t* patch, size_t patch_len)
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t tag)
     {
-        return svm_vmmcall(VMMCALL_ID::set_mpk_hook, address, patch, patch_len);
-    }
+        LARGE_INTEGER length_tag;
+        length_tag.LowPart = tag;
+        length_tag.HighPart = patch_len;
 
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len)
-    {
-        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len);
+        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, length_tag.QuadPart);
 
         return 0;
     }
@@ -35,9 +34,6 @@ namespace ForteVisor
 
     int ForEachCore(void(*callback)(void* params), void* params)
     {
-        KIRQL	tempirql = KeRaiseIrqlToDpcLevel();
-        _disable();
-
 	    auto core_count = KeQueryActiveProcessorCount(0);
 
         for (int idx = 0; idx < core_count; ++idx)
@@ -48,8 +44,6 @@ namespace ForteVisor
             
             callback(params);
         }
-        _enable();
-        KeLowerIrql(tempirql);
 
         return 0;
     }

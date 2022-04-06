@@ -5,6 +5,38 @@
 
 namespace MemoryUtils
 {
+    MappingWindow page_map_view;
+
+    void Init()
+    {
+        CR3 cr3;
+        cr3.Flags = __readcr3();
+
+        page_map_view.reserved_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+        page_map_view.reserved_page_pte = GetPte(page_map_view.reserved_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+        page_map_view.reserved_page_pte->Present = 0;
+
+        Logger::Log("page_map_view.reserved_page_pte %p  page_map_view.reserved_page %p \n", page_map_view.reserved_page_pte, page_map_view.reserved_page);
+    }
+
+    uint8_t* MapPhysical(void* phys_addr)
+    {
+        __invlpg(page_map_view.reserved_page);
+
+        page_map_view.reserved_page_pte->Present = 0;
+        page_map_view.reserved_page_pte->Write = 1;
+        page_map_view.reserved_page_pte->PageFrameNumber = 0;
+
+        return (uint8_t*)page_map_view.reserved_page + ((uintptr_t)phys_addr & (PAGE_SIZE - 1));
+    }
+
+    uint8_t* MapVirtual(void* virtual_addr, CR3 context)
+    {
+        auto guest_pte = GetPte(virtual_addr, context.AddressOfPageDirectory << PAGE_SHIFT);
+
+        return MapPhysical((void*)(guest_pte->PageFrameNumber << PAGE_SHIFT)) + ((uintptr_t)virtual_addr & (PAGE_SIZE - 1));
+    }
+
     PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, int (*page_table_callback)(PT_ENTRY_64*))
     {
         ADDRESS_TRANSLATION_HELPER helper;

@@ -9,38 +9,20 @@ namespace ForteVisor
         return svm_vmmcall(VMMCALL_ID::set_tlb_hook, address, patch, patch_len);
     }
 
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len)
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t tag)
     {
-        svm_vmmcall(
-            VMMCALL_ID::set_npt_hook,
-            address,
-            patch,
-            patch_len
-        );
+        LARGE_INTEGER length_tag;
+        length_tag.LowPart = tag;
+        length_tag.HighPart = patch_len;
+
+        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, length_tag.QuadPart);
+        
         return 0;
     }
 
-    int SetMpkHook(uintptr_t address, uint8_t* patch, size_t patch_len)
+    int RemoveNptHook(int32_t tag)
     {
-        struct HookInfo
-        {
-            uintptr_t address;
-            uint8_t* patch;
-            size_t patch_len;
-        } hook_info;
-
-        hook_info = { address, patch, patch_len };
-
-        ForEachCore(
-            [](void* params) -> void
-            {
-                auto hook_info = (HookInfo*)params;
-
-                svm_vmmcall(VMMCALL_ID::set_mpk_hook, hook_info->address, hook_info->patch, hook_info->patch_len);
-            },
-            (void*)&hook_info
-        );
-
+        svm_vmmcall(VMMCALL_ID::remove_npt_hook, tag);
         return 0;
     }
 

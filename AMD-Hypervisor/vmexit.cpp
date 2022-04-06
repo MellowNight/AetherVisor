@@ -61,13 +61,23 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
             
             break;
         }
+        case VMMCALL_ID::remove_npt_hook:
+        {
+            NptHooks::RemoveHook(GuestRegisters->rdx);
+
+            break;
+        }
         case VMMCALL_ID::set_npt_hook:
         {
+            LARGE_INTEGER length_tag;
+            length_tag.QuadPart = GuestRegisters->r9;
+
             NptHooks::SetNptHook(
                 VpData,
                 (void*)GuestRegisters->rdx,
                 (uint8_t*)GuestRegisters->r8,
-                GuestRegisters->r9
+                length_tag.HighPart,
+                length_tag.LowPart
             );
 
             break;
@@ -120,8 +130,6 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         case VMEXIT::PF:
         {
             TlbHooks::HandlePageFaultTlb(core_data, GuestRegisters);
-            //MpkHooks::HandlePageFaultMpk(core_data, GuestRegisters);
-
             break;
         }
         case VMEXIT::GP: 
@@ -172,7 +180,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         */
         
         __writecr3(core_data->guest_vmcb.save_state_area.Cr3);
-        Logger::Log("[VMEXIT] NRip is %p \n", core_data->guest_vmcb.control_area.NRip);
+        __svm_vmload(core_data->guest_vmcb_physicaladdr);
 
         __svm_stgi();
         _disable();
@@ -187,7 +195,6 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
 
         GuestRegisters->rcx = core_data->guest_vmcb.save_state_area.Rsp;
         GuestRegisters->rbx = core_data->guest_vmcb.control_area.NRip;
-        __svm_vmload(core_data->guest_vmcb_physicaladdr);
 
         Logger::Log("ending hypervisor... \n");
     }

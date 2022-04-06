@@ -1,6 +1,6 @@
 ﻿  Building 'AMD-Hypervisor' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Release\AMD-Hypervisor.inf
-  Stamping [Version] section with DriverVer=04/04/2022,22.59.55.491
+  Stamping [Version] section with DriverVer=04/05/2022,16.27.2.110
   Assembling instructions.asm...
   Assembling vm_launch.asm...
   hypervisor.cpp
@@ -1779,6 +1779,8 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(281,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(12,8): warning C4189: 'first_hookless_page': local variable is initialized but not referenced
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(57,1): warning C4311: 'type cast': pointer truncation from 'void *' to 'int32_t'
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(57,1): warning C4302: 'type cast': truncation from 'void *' to 'int32_t'
   npt.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2983,9 +2985,11 @@ C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\amd_definitions.h(342,
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(9,29): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(11,39): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(23,36): warning C4244: 'argument': conversion from 'UINT64' to 'unsigned long', possible loss of data
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\vmexit.cpp(66,48): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
   Generating Code...
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\utils.cpp(227): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt.cpp(43): warning C4715: '<lambda_cd060a5eed42f925721bb23b6733bd30>::operator()': not all control paths return a value
+C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\npt_hook.cpp(64): warning C4715: '<lambda_69c11c563ef06b547a7ca1f8b12a4301>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(113): warning C4715: '<lambda_441064ca4ee701f5a3467f8282a58ea5>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(126): warning C4715: '<lambda_0847edb684c318b36c933325e60ded8f>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\AMD-Hypervisor\AMD-Hypervisor\itlb_hook.cpp(157): warning C4715: '<lambda_4573477ffc6a0b743765e70519af9d62>::operator()': not all control paths return a value
