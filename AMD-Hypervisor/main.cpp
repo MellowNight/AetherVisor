@@ -101,15 +101,7 @@ bool VirtualizeAllProcessors()
 void Initialize()
 {
 	Logger::Start();
-	MemoryUtils::Init();
 	Disasm::Init();
-	//CR3 guest_cr3;
-	//guest_cr3.Flags = 0x8be2c000;
-
-	//auto guest_pte = MemoryUtils::GetPte(PAGE_ALIGN(0x0007FFBAA335A40), guest_cr3.AddressOfPageDirectory << PAGE_SHIFT);
-
-	//Logger::Log("\n ccc guest_pte %p, Physical address %p, MmGetPhysicalAddress %p \n",
-	//	*guest_pte, guest_pte->PageFrameNumber << PAGE_SHIFT, MmGetPhysicalAddress(PAGE_ALIGN(0x0007FFBAA335A40)));
 	TlbHooks::Init();
 	NptHooks::Init();
 }
