@@ -20,7 +20,7 @@ namespace TlbHooks
 		CR3 cr3;
 		cr3.Flags = __readcr3();
 
-		hook_entry->hooked_pte = MemoryUtils::GetPte(address, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+		hook_entry->hooked_pte = PageUtils::GetPte(address, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 		hook_entry->hooked_pte->ExecuteDisable = 0;
 		hook_entry->hooked_page_va = PAGE_ALIGN(address);
 
@@ -69,7 +69,7 @@ namespace TlbHooks
 		CR3 cr3;
 		cr3.Flags = __readcr3();
 
-		first_tlb_hook.hookless_pte = MemoryUtils::GetPte(first_hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+		first_tlb_hook.hookless_pte = PageUtils::GetPte(first_hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 		first_tlb_hook.next_hook = (SplitTlbHook*)ExAllocatePool(NonPagedPool, sizeof(SplitTlbHook));
 
 		auto hook_entry = &first_tlb_hook;
@@ -85,7 +85,7 @@ namespace TlbHooks
 			hook_entry->read_gadget = (uint8_t*)ExAllocatePool(NonPagedPool, 12);
 
 			hook_entry->next_hook = (SplitTlbHook*)ExAllocatePool(NonPagedPool, sizeof(SplitTlbHook));
-			hook_entry->next_hook->hookless_pte = MemoryUtils::GetPte(hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+			hook_entry->next_hook->hookless_pte = PageUtils::GetPte(hookless_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 
 			memcpy(hook_entry->read_gadget, "\x48\xA1\x00\x00\x00\x00\x00\x00\x00\x00\xCC", 11);
 		}
@@ -93,14 +93,14 @@ namespace TlbHooks
 		hook_count = 0;
 	}
 
-	void HandleTlbHookBreakpoint(CoreVmcbData* vcpu)
+	void HandleTlbHookBreakpoint(CoreData* vcpu)
 	{
 		auto rip = vcpu->guest_vmcb.save_state_area.Rip;
 
 		PHYSICAL_ADDRESS ncr3;
 		ncr3.QuadPart = vcpu->guest_vmcb.control_area.NCr3;
 
-		auto pte = MemoryUtils::GetPte((void*)rip, ncr3.QuadPart);
+		auto pte = PageUtils::GetPte((void*)rip, ncr3.QuadPart);
 
 		SplitTlbHook* hook_entry = TlbHooks::ForEachHook(
 			[](SplitTlbHook* hook_entry, void* data) -> bool {
@@ -132,14 +132,14 @@ namespace TlbHooks
 			/*	Return to the saved page fault RIP	*/
 			vcpu->guest_vmcb.save_state_area.Rip = hook_entry->page_fault_rip;
 
-			Logger::Log("[AMD-Hypervisor] - r/x gadget caught, added TLB entry! \n");
+			Logger::Get()->Log("[AMD-Hypervisor] - r/x gadget caught, added TLB entry! \n");
 
 			/*	Make sure we can intercept memory access after TLB miss	*/
 			pte->Present = 0;
 		}
 	}
 
-	bool HandlePageFaultTlb(CoreVmcbData* vcpu, GPRegs* guest_regs)
+	bool HandlePageFaultTlb(CoreData* vcpu, GPRegs* guest_regs)
 	{
 		auto fault_address = (void*)vcpu->guest_vmcb.control_area.ExitInfo2;
 
@@ -170,7 +170,7 @@ namespace TlbHooks
 		/*	get back to this RIP once TLB entries have been added	*/
 		hook_entry->page_fault_rip = vcpu->guest_vmcb.save_state_area.Rip;
 
-		Logger::Log("[AMD-Hypervisor] -This page fault is from our hooked page at %p \n", fault_address);
+		Logger::Get()->Log("[AMD-Hypervisor] -This page fault is from our hooked page at %p \n", fault_address);
 		
 		/*	make room for our own TLB entries	*/
 		vcpu->guest_vmcb.control_area.TlbControl = 3;
@@ -179,7 +179,7 @@ namespace TlbHooks
 		{
 			/*	mark page as present	*/
 
-			auto pte = MemoryUtils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3,
+			auto pte = PageUtils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3,
 				[](PT_ENTRY_64* pte) -> int {
 					pte->Present = 1;
 					return 0;
@@ -190,9 +190,9 @@ namespace TlbHooks
 		}
 		else
 		{
-			auto pte = MemoryUtils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
+			auto pte = PageUtils::GetPte(fault_address, vcpu->guest_vmcb.save_state_area.Cr3);
 
-			Logger::Log(
+			Logger::Get()->Log(
 				"[AMD-Hypervisor] - Read access on hooked page, rip = 0x%p \n", 
 				vcpu->guest_vmcb.save_state_area.Rip
 			);

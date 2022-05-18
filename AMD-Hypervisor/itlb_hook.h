@@ -22,13 +22,13 @@ namespace TlbHooks
 	void Init();
 
 	bool HandlePageFaultTlb(
-		CoreVmcbData* vcpu,
+		CoreData* vcpu,
 		GPRegs* guest_regs
 	);
 
 
 	void HandleTlbHookBreakpoint(
-		CoreVmcbData* vcpu
+		CoreData* vcpu
 	);
 
 	SplitTlbHook* SetTlbHook(

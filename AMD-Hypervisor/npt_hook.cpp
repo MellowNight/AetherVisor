@@ -16,7 +16,7 @@ namespace NptHooks
 
 		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
 
-		int max_hooks = 20;
+		int max_hooks = 500;
 		
 		NptHook* hook_entry = &first_npt_hook;
 
@@ -24,11 +24,11 @@ namespace NptHooks
 		{
 			auto hooked_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
-			hook_entry->hooked_pte = MemoryUtils::GetPte(hooked_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+			hook_entry->hooked_pte = PageUtils::GetPte(hooked_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 
 			auto copy_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
-			hook_entry->copy_pte = MemoryUtils::GetPte(copy_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+			hook_entry->copy_pte = PageUtils::GetPte(copy_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 			
 			hook_entry->next_hook = (NptHook*)ExAllocatePool(NonPagedPool, sizeof(NptHook));
 		}
@@ -60,6 +60,7 @@ namespace NptHooks
 
 					hook_entry->tag = 0;
 					hook_entry->hookless_npte->ExecuteDisable = 0;
+					hook_entry->original_pte->PageFrameNumber = hook_entry->original_pfn;
 
 					return true;
 				}
@@ -68,7 +69,7 @@ namespace NptHooks
 		);
 	}
 
-	NptHook* SetNptHook(CoreVmcbData* VpData, void* address, uint8_t* patch, size_t patch_len, int32_t tag)
+	NptHook* SetNptHook(CoreData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t tag)
 	{
 		auto hook_entry = &first_npt_hook;
 
@@ -80,15 +81,16 @@ namespace NptHooks
 
 		auto vmroot_cr3 = __readcr3();
 
-		auto guest_cr3 = VpData->guest_vmcb.save_state_area.Cr3;
-
-		__writecr3(guest_cr3);
+		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
 		/*	Sometimes we want to place a hook in a globally mapped DLL like user32.dll, ntdll.dll, etc. but we only want our hook to exist in one context.
 			set the guest pte to point to a new copy page, to prevent the hook from being globally mapped.	*/
-		if (vmroot_cr3 != guest_cr3)
+		if (vmroot_cr3 != vmcb_data->guest_vmcb.save_state_area.Cr3)
 		{
-			auto guest_pte = MemoryUtils::GetPte((void*)address, guest_cr3);
+			auto guest_pte = PageUtils::GetPte((void*)address, vmcb_data->guest_vmcb.save_state_area.Cr3);
+
+			hook_entry->original_pte = guest_pte;
+			hook_entry->original_pfn = guest_pte->PageFrameNumber;
 
 			guest_pte->PageFrameNumber = hook_entry->copy_pte->PageFrameNumber;
 
@@ -103,13 +105,13 @@ namespace NptHooks
 
 		/*	get the nested pte of the guest physical address	*/
 
-		hook_entry->hookless_npte = MemoryUtils::GetPte((void*)physical_page, hypervisor->normal_ncr3);
+		hook_entry->hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->normal_ncr3);
 		hook_entry->hookless_npte->ExecuteDisable = 1;
 
 
 		/*	get the nested pte of the guest physical address in the 2nd NCR3, and map it to our hook page	*/
 
-		auto hooked_npte = MemoryUtils::GetPte((void*)physical_page, hypervisor->noexecute_ncr3);
+		auto hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->noexecute_ncr3);
 
 		hooked_npte->PageFrameNumber = hook_entry->hooked_pte->PageFrameNumber;
 		hooked_npte->ExecuteDisable = 0;
@@ -124,10 +126,9 @@ namespace NptHooks
 		memcpy(hooked_copy, PAGE_ALIGN(address), PAGE_SIZE);
 		memcpy((uint8_t*)hooked_copy + page_offset, patch, patch_len);
 
-
 		/*	SetNptHook epilogue	*/
 
-		VpData->guest_vmcb.control_area.TlbControl = 3;
+		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
 
 		__writecr3(vmroot_cr3);
 

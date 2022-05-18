@@ -1,15 +1,28 @@
 #pragma once
 #include "includes.h"
 
-namespace Logger 
+#define LOG_MAX_LEN 256
+
+/*  Singleton for the Logger    */
+
+class Logger
 {
-	#define LOG_MAX_LEN 256
+private:
+    static Logger* logger;
 
-	//TRACELOGGING_DECLARE_PROVIDER(log_provider);
+    void Init()
+    {
+    }
+public:
 
-	NTSTATUS Start();
+    /* Static access method. */
+    static Logger* Get();
 
-	void Log(const char* format, ...);
+public:
 
-	void End();
+    NTSTATUS Start();
+
+    void Log(const char* format, ...);
+
+    void End();
 };

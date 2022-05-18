@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\Users\lolxd\source\repos\AMD-Hypervisor\x64\Release\AMD-Hypervisor.sys</FullPath>
+      <FullPath>C:\Users\lolxd\source\repos\ForteVisor-main\x64\Release\AMD-Hypervisor.sys</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

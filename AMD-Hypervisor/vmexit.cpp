@@ -1,6 +1,6 @@
 #include "vmexit.h"
 
-void InjectException(CoreVmcbData* core_data, int vector, int error_code)
+void InjectException(CoreData* core_data, int vector, int error_code)
 {
     EventInjection event_injection;
 
@@ -14,7 +14,7 @@ void InjectException(CoreVmcbData* core_data, int vector, int error_code)
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
 
-void HandleMsrExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
+void HandleMsrExit(CoreData* VpData, GPRegs* GuestRegisters)
 {
     auto msr_id = GuestRegisters->rcx;
 
@@ -27,7 +27,7 @@ void HandleMsrExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
     case MSR::EFER:
     {
         auto efer = (MsrEfer*)&msr_value.QuadPart;
-        Logger::Log(" MSR::EFER caught, msr_value.QuadPart = %p \n", msr_value.QuadPart);
+        Logger::Get()->Log(" MSR::EFER caught, msr_value.QuadPart = %p \n", msr_value.QuadPart);
 
         efer->svme = 0;
         break;
@@ -45,7 +45,7 @@ void HandleMsrExit(CoreVmcbData* VpData, GPRegs* GuestRegisters)
 /*  HandleVmmcall only handles the vmmcall for 1 core. 
     It is the guest's responsibility to set thread affinity.
 */
-void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
+void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 {
     auto id = GuestRegisters->rcx;
 
@@ -63,7 +63,12 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
         }
         case VMMCALL_ID::remove_npt_hook:
         {
+            auto vmroot_cr3 = __readcr3();
+            __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
+            
             NptHooks::RemoveHook(GuestRegisters->rdx);
+
+            __writecr3(vmroot_cr3);
 
             break;
         }
@@ -73,7 +78,7 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
             length_tag.QuadPart = GuestRegisters->r9;
 
             NptHooks::SetNptHook(
-                VpData,
+                vmcb_data,
                 (void*)GuestRegisters->rdx,
                 (uint8_t*)GuestRegisters->r8,
                 length_tag.HighPart,
@@ -84,7 +89,7 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
         }
         case VMMCALL_ID::disable_hv:
         {    
-            Logger::Log("[AMD-Hypervisor] - disable_hv vmmcall id %p \n", id);
+            Logger::Get()->Log("[AMD-Hypervisor] - disable_hv vmmcall id %p \n", id);
 
             *EndVM = true;
             break;
@@ -95,10 +100,10 @@ void HandleVmmcall(CoreVmcbData* VpData, GPRegs* GuestRegisters, bool* EndVM)
         }
     }
 
-    VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
+    vmcb_data->guest_vmcb.save_state_area.Rip = vmcb_data->guest_vmcb.control_area.NRip;
 }
 
-extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
+extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
 {
     /*	load host extra state	*/
     __svm_vmload(core_data->host_vmcb_physicaladdr);
@@ -153,10 +158,10 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         }
         default:
         {
-            Logger::Log("[VMEXIT] vmexit with unknown reason %p ! guest vmcb at %p \n",
+            Logger::Get()->Log("[VMEXIT] vmexit with unknown reason %p ! guest vmcb at %p \n",
                 core_data->guest_vmcb.control_area.ExitCode, &core_data->guest_vmcb);
 
-            Logger::Log("[VMEXIT] RIP is %p \n", core_data->guest_vmcb.save_state_area.Rip);
+            Logger::Get()->Log("[VMEXIT] RIP is %p \n", core_data->guest_vmcb.save_state_area.Rip);
 
             __debugbreak();
             break;
@@ -196,7 +201,7 @@ extern "C" bool HandleVmexit(CoreVmcbData* core_data, GPRegs* GuestRegisters)
         GuestRegisters->rcx = core_data->guest_vmcb.save_state_area.Rsp;
         GuestRegisters->rbx = core_data->guest_vmcb.control_area.NRip;
 
-        Logger::Log("ending hypervisor... \n");
+        Logger::Get()->Log("ending hypervisor... \n");
     }
 
     return end_hypervisor;

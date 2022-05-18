@@ -13,47 +13,43 @@ bool VirtualizeAllProcessors()
 {
 	if (!IsSvmSupported())
 	{
-		Logger::Log("[SETUP] SVM isn't supported on this processor! \n");
+		Logger::Get()->Log("[SETUP] SVM isn't supported on this processor! \n");
 		return false;
 	}
 
 	if (!IsSvmUnlocked())
 	{
-		Logger::Log("[SETUP] SVM operation is locked off in BIOS! \n");
+		Logger::Get()->Log("[SETUP] SVM operation is locked off in BIOS! \n");
 		return false;
 	}
 
-	hypervisor = (Hypervisor*)ExAllocatePoolZero(NonPagedPool, sizeof(Hypervisor), 'HvDa');
+	BuildNestedPagingTables(&Hypervisor::Get()->normal_ncr3, true);
+	BuildNestedPagingTables(&Hypervisor::Get()->noexecute_ncr3, false);
 
-	BuildNestedPagingTables(&hypervisor->normal_ncr3, true);
-	BuildNestedPagingTables(&hypervisor->noexecute_ncr3, false);
+	DbgPrint("[SETUP] hypervisor->noexecute_ncr3 %p \n", Hypervisor::Get()->noexecute_ncr3);
+	DbgPrint("[SETUP] hypervisor->normal_ncr3 %p \n", Hypervisor::Get()->normal_ncr3);
 
-	DbgPrint("[SETUP] hypervisor->noexecute_ncr3 %p \n", hypervisor->noexecute_ncr3); 
-	DbgPrint("[SETUP] hypervisor->normal_ncr3 %p \n", hypervisor->normal_ncr3);
-
-	hypervisor->core_count = KeQueryActiveProcessorCount(0);
-
-	for (int idx = 0; idx < hypervisor->core_count; ++idx)
+	for (int idx = 0; idx < Hypervisor::Get()->core_count; ++idx)
 	{
 		KAFFINITY affinity = Utils::Exponent(2, idx);
 
 		KeSetSystemAffinityThread(affinity);
 
 		DbgPrint("=============================================================== \n");
-		DbgPrint("[SETUP] amount of active processors %i \n", hypervisor->core_count);
+		DbgPrint("[SETUP] amount of active processors %i \n", Hypervisor::Get()->core_count);
 		DbgPrint("[SETUP] Currently running on core %i \n", idx);
 
 		auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
 
 		RtlCaptureContext(reg_context);
 
-		if (hypervisor->IsHypervisorPresent(idx) == false)
+		if (Hypervisor::Get()->IsHypervisorPresent(idx) == false)
 		{
 			EnableSvme();
 
-			auto vcpu_data = hypervisor->vcpu_data;
+			auto vcpu_data = Hypervisor::Get()->vcpu_data;
 
-			vcpu_data[idx] = (CoreVmcbData*)ExAllocatePoolZero(NonPagedPool, sizeof(CoreVmcbData), 'Vmcb');
+			vcpu_data[idx] = (CoreData*)ExAllocatePoolZero(NonPagedPool, sizeof(CoreData), 'Vmcb');
 
 			ConfigureProcessor(vcpu_data[idx], reg_context);
 
@@ -69,7 +65,7 @@ bool VirtualizeAllProcessors()
 			}
 			else
 			{
-				Logger::Log("[SETUP] A problem occured!! invalid guest state \n");
+				Logger::Get()->Log("[SETUP] A problem occured!! invalid guest state \n");
 				__debugbreak();
 			}
 		}
@@ -100,23 +96,15 @@ bool VirtualizeAllProcessors()
 
 void Initialize()
 {
-	Logger::Start();
-	MemoryUtils::Init();
+	PageUtils::Init();
 	Disasm::Init();
-	//CR3 guest_cr3;
-	//guest_cr3.Flags = 0x8be2c000;
-
-	//auto guest_pte = MemoryUtils::GetPte(PAGE_ALIGN(0x0007FFBAA335A40), guest_cr3.AddressOfPageDirectory << PAGE_SHIFT);
-
-	//Logger::Log("\n ccc guest_pte %p, Physical address %p, MmGetPhysicalAddress %p \n",
-	//	*guest_pte, guest_pte->PageFrameNumber << PAGE_SHIFT, MmGetPhysicalAddress(PAGE_ALIGN(0x0007FFBAA335A40)));
-	TlbHooks::Init();
+	//TlbHooks::Init();
 	NptHooks::Init();
 }
 
 NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
 {
-	Logger::Log("[AMD-Hypervisor] - Devirtualizing system, Driver unloading!\n");
+	Logger::Get()->Log("[AMD-Hypervisor] - Devirtualizing system, Driver unloading!\n");
 
 	return STATUS_SUCCESS;
 }
@@ -131,8 +119,6 @@ NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 		(PKSTART_ROUTINE)Initialize,
 		NULL
 	);
-
-	Logger::Log("EntryPoint \n");
 
 	HANDLE thread_handle;
 

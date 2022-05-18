@@ -4,7 +4,7 @@
 #include "hypervisor.h"
 #include "memory_reader.h"
 
-void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
+void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 {
 	PHYSICAL_ADDRESS faulting_physical;
 	faulting_physical.QuadPart = vcpu_data->guest_vmcb.control_area.ExitInfo2;
@@ -12,8 +12,8 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 	NestedPageFaultInfo1 exit_info1;
 	exit_info1.as_uint64 = vcpu_data->guest_vmcb.control_area.ExitInfo1;
 
-	PHYSICAL_ADDRESS NCr3;
-	NCr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3;
+	PHYSICAL_ADDRESS ncr3;
+	ncr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3;
 
 	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
@@ -23,7 +23,7 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 
 		auto insn_bytes = vcpu_data->guest_vmcb.control_area.GuestInstructionBytes;
 
-		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(NCr3);
+		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
 
 		auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, true);
 
@@ -43,7 +43,7 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 			}, (void*)faulting_physical.QuadPart
 		);
 
-		Logger::Log("guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
+		Logger::Get()->Log("guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
 
 		bool switch_ncr3 = true;
 
@@ -55,16 +55,16 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 		{
 			if (npt_hook)
 			{
-				Logger::Log("instruction is split, entering hook page! \n");
+				Logger::Get()->Log("instruction is split, entering hook page! \n");
 
 				/*	if CPU is entering the page:	*/
 
 				switch_ncr3 = true;
-				NCr3.QuadPart = hypervisor->noexecute_ncr3;
+				ncr3.QuadPart = Hypervisor::Get()->noexecute_ncr3;
 			}
 			else
 			{
-				Logger::Log("instruction is split, leaving hook page! \n");
+				Logger::Get()->Log("instruction is split, leaving hook page! \n");
 
 				/*	if CPU is leaving the page:	*/
 
@@ -72,16 +72,16 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 			}
 
 			auto page1 = faulting_physical.QuadPart;
-			auto page2 = MemoryUtils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3);
+			auto page2 = PageUtils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3);
 
-			auto npte1 = MemoryUtils::GetPte((void*)page1, NCr3.QuadPart);
-			auto npte2 = MemoryUtils::GetPte((void*)page2, NCr3.QuadPart);
+			auto npte1 = PageUtils::GetPte((void*)page1, ncr3.QuadPart);
+			auto npte2 = PageUtils::GetPte((void*)page2, ncr3.QuadPart);
 
 			npte1->ExecuteDisable = 0;
 			npte2->ExecuteDisable = 0;
 		}
 
-		Logger::Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
+		Logger::Get()->Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
 
 		/*	clean ncr3 cache	*/
 
@@ -93,11 +93,11 @@ void HandleNestedPageFault(CoreVmcbData* vcpu_data, GPRegs* GuestContext)
 		{
 			if (npt_hook)
 			{
-				vcpu_data->guest_vmcb.control_area.NCr3 = hypervisor->noexecute_ncr3;
+				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->noexecute_ncr3;
 			}
 			else
 			{
-				vcpu_data->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
+				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->normal_ncr3;
 			}
 		}
 	}
@@ -129,7 +129,7 @@ int GetPhysicalMemoryRanges()
 		(MmPhysicalMemoryRange[number_of_runs].BaseAddress.QuadPart) || (MmPhysicalMemoryRange[number_of_runs].NumberOfBytes.QuadPart);
 		number_of_runs++)
 	{
-		hypervisor->phys_mem_range[number_of_runs] = MmPhysicalMemoryRange[number_of_runs];
+		Hypervisor::Get()->phys_mem_range[number_of_runs] = MmPhysicalMemoryRange[number_of_runs];
 	}
 
 	return number_of_runs;
@@ -195,22 +195,22 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 
 uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 {
-	auto numberOfRuns = GetPhysicalMemoryRanges();
+	auto run_count = GetPhysicalMemoryRanges();
 
-	PML4E_64* n_Pml4Virtual = (PML4E_64*)ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+	PML4E_64* npml4_virtual = (PML4E_64*)ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
-	*NCr3 = MmGetPhysicalAddress(n_Pml4Virtual).QuadPart;
+	*NCr3 = MmGetPhysicalAddress(npml4_virtual).QuadPart;
 
-	Logger::Log("[SETUP] pml4 at %p \n", n_Pml4Virtual);
+	Logger::Get()->Log("[SETUP] pml4 at %p \n", npml4_virtual);
 
-	for (int run = 0; run < numberOfRuns; ++run)
+	for (int run = 0; run < run_count; ++run)
 	{
-		uintptr_t PageCount = hypervisor->phys_mem_range[run].NumberOfBytes.QuadPart / PAGE_SIZE;
-		uintptr_t PagesBase = hypervisor->phys_mem_range[run].BaseAddress.QuadPart / PAGE_SIZE;
+		uintptr_t PageCount = Hypervisor::Get()->phys_mem_range[run].NumberOfBytes.QuadPart / PAGE_SIZE;
+		uintptr_t PagesBase = Hypervisor::Get()->phys_mem_range[run].BaseAddress.QuadPart / PAGE_SIZE;
 
 		for (PFN_NUMBER PFN = PagesBase; PFN < PagesBase + PageCount; ++PFN)
 		{
-			AssignNPTEntry(n_Pml4Virtual, PFN << PAGE_SHIFT, execute);
+			AssignNPTEntry(npml4_virtual, PFN << PAGE_SHIFT, execute);
 		}
 	}
 
@@ -218,7 +218,7 @@ uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 
 	apic_bar.Flags = __readmsr(MSR::APIC_BAR);
 
-	AssignNPTEntry(n_Pml4Virtual, apic_bar.ApicBase << PAGE_SHIFT, true);
+	AssignNPTEntry(npml4_virtual, apic_bar.ApicBase << PAGE_SHIFT, true);
 
 	return *NCr3;
 }

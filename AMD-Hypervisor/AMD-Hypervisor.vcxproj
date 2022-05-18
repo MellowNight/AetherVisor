@@ -186,7 +186,7 @@
     <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="itlb_hook.h" />
-    <ClInclude Include="memory_reader.h" />
+    <ClInclude Include="paging_utils.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt.h" />
     <ClInclude Include="utils.h" />
@@ -198,7 +198,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="itlb_hook.cpp" />
-    <ClCompile Include="memory_reader.cpp" />
+    <ClCompile Include="paging_utils.cpp" />
     <ClCompile Include="npt_hook.cpp" />
     <ClCompile Include="npt.cpp" />
     <ClCompile Include="utils.cpp" />

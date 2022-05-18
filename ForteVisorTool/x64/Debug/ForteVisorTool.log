@@ -1,0 +1,2 @@
+﻿  ForteVisorTool.cpp
+C:\Users\lolxd\source\repos\ForteVisor-main\ForteVisorTool\ForteVisorTool.cpp(2,10): fatal error C1083: Cannot open include file: 'forte_api.h': No such file or directory

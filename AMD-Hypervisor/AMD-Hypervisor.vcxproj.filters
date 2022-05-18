@@ -23,17 +23,17 @@
     <Filter Include="Source Files\logger">
       <UniqueIdentifier>{bc0b8d0d-a7b4-4527-ad75-8076014ef1de}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\preparation">
-      <UniqueIdentifier>{27e87246-2b31-485d-9fb0-02a425e70619}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\utils">
       <UniqueIdentifier>{021d6046-de4d-4845-ab9e-369764e33c82}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\nt kernel">
       <UniqueIdentifier>{baec2ef4-2551-4ec2-987e-584bf913a91c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\amd structs">
+    <Filter Include="Source Files\amd-v structs">
       <UniqueIdentifier>{7f3c90e1-2152-4e57-94cf-f79e18650663}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\setup">
+      <UniqueIdentifier>{27e87246-2b31-485d-9fb0-02a425e70619}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -76,15 +76,15 @@
       <Filter>Source Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="prepare_vm.h">
-      <Filter>Source Files\preparation</Filter>
+      <Filter>Source Files\setup</Filter>
     </ClInclude>
     <ClInclude Include="ia32.h">
-      <Filter>Source Files\amd structs</Filter>
+      <Filter>Source Files\amd-v structs</Filter>
     </ClInclude>
     <ClInclude Include="amd_definitions.h">
-      <Filter>Source Files\amd structs</Filter>
+      <Filter>Source Files\amd-v structs</Filter>
     </ClInclude>
-    <ClInclude Include="memory_reader.h">
+    <ClInclude Include="paging_utils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -114,9 +114,9 @@
       <Filter>Source Files\hooking</Filter>
     </ClCompile>
     <ClCompile Include="prepare_vm.cpp">
-      <Filter>Source Files\preparation</Filter>
+      <Filter>Source Files\setup</Filter>
     </ClCompile>
-    <ClCompile Include="memory_reader.cpp">
+    <ClCompile Include="paging_utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -125,7 +125,7 @@
       <Filter>Source Files</Filter>
     </MASM>
     <MASM Include="vm_launch.asm">
-      <Filter>Source Files\preparation</Filter>
+      <Filter>Source Files\setup</Filter>
     </MASM>
   </ItemGroup>
 </Project>

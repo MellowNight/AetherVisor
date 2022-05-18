@@ -1,6 +1,17 @@
 #include "hypervisor.h"
 
-Hypervisor* hypervisor = NULL;
+Hypervisor* Hypervisor::hypervisor = NULL;
+
+Hypervisor* Hypervisor::Get()
+{
+    if (hypervisor == 0)
+    {
+        hypervisor = (Hypervisor*)ExAllocatePool(NonPagedPool, sizeof(Hypervisor));
+        hypervisor->Init();
+    }
+
+    return hypervisor;
+}
 
 bool Hypervisor::IsHypervisorPresent(int32_t core_number)
 {

@@ -27,4 +27,4 @@ enum VMEXIT
     DB = 0x41,
 };
 
-void InjectException(CoreVmcbData* core_data, int vector, int error_code = 0);
+void InjectException(CoreData* core_data, int vector, int error_code = 0);

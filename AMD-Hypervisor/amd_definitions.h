@@ -415,7 +415,7 @@ union ADDRESS_TRANSLATION_HELPER
 };
 
 /*  must be 4KB aligned     */
-struct Vmcb
+struct VMCB
 {
     VmcbControlArea control_area;
     VmcbSaveStateArea save_state_area;

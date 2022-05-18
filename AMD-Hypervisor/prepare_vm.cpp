@@ -7,7 +7,7 @@ extern "C" void _sgdt(
 
 extern "C" int16_t __readtr();
 
-bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
+bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 {
 	if (cs_attribute.fields.long_mode == 1)
 	{
@@ -24,13 +24,13 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if (efer_msr.svme == (uint32_t)0)
 	{
-		Logger::Log("SVME is %p, invalid state! \n", efer_msr.svme);
+		Logger::Get()->Log("SVME is %p, invalid state! \n", efer_msr.svme);
 		return false;
 	}
 
 	if ((efer_msr.reserved2 != 0) || (efer_msr.reserved3 != 0) || (efer_msr.reserved4 != 0))
 	{
-		Logger::Log("MBZ bit of EFER is set, Invalid state! \n");
+		Logger::Get()->Log("MBZ bit of EFER is set, Invalid state! \n");
 		return false;
 	}
 
@@ -39,13 +39,13 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if ((cr0.CacheDisable == 0) && (cr0.NotWriteThrough == 1))
 	{
-		Logger::Log("CR0.CD is zero and CR0.NW is set. \n");
+		Logger::Get()->Log("CR0.CD is zero and CR0.NW is set. \n");
 		return false;
 	}
 
 	if (cr0.Reserved4 != 0)
 	{
-		Logger::Log("CR0[63:32] are not zero. \n");
+		Logger::Get()->Log("CR0[63:32] are not zero. \n");
 		return false;
 	}
 	
@@ -60,13 +60,13 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if (rflags.Virtual8086ModeFlag == 1 && (cr4.Flags << 23 & 1))
 	{
-		Logger::Log("CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
+		Logger::Get()->Log("CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
 	}
 
 	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
 		|| (cr4.Reserved2 != 0) || (cr4.Reserved3 != 0) || (cr4.Reserved4 != 0))
 	{
-		Logger::Log("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
+		Logger::Get()->Get()->Log("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
 		return false;
 	}
 
@@ -78,13 +78,13 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if ((dr6.Flags & (0xFFFFFFFF00000000)) || (dr7.Reserved4 != 0))
 	{
-		Logger::Log("DR6[63:32] are not zero, or DR7[63:32] are not zero.Invalid State!\n");
+		Logger::Get()->Log("DR6[63:32] are not zero, or DR7[63:32] are not zero.Invalid State!\n");
 		return false;
 	}
 
 	if (cr0.PagingEnable == 0)
 	{
-		Logger::Log("Paging disabled, Invalid state! \n");
+		Logger::Get()->Get()->Log("Paging disabled, Invalid state! \n");
 		return false;
 	}
 
@@ -92,30 +92,30 @@ bool IsProcessorReadyForVmrun(Vmcb* guest_vmcb, SegmentAttribute cs_attribute)
 	{
 		if (cr4.PhysicalAddressExtension == 0)
 		{
-			Logger::Log("EFER.LME and CR0.PG are both set and CR4.PAE is zero, Invalid state! \n");
+			Logger::Get()->Get()->Log("EFER.LME and CR0.PG are both set and CR4.PAE is zero, Invalid state! \n");
 			return false;
 		}
 
 		if (cr0.ProtectionEnable == 0)
 		{
-			Logger::Log("EFER.LME and CR0.PG are both non-zero and CR0.PE is zero, Invalid state! \n");
+			Logger::Get()->Get()->Log("EFER.LME and CR0.PG are both non-zero and CR0.PE is zero, Invalid state! \n");
 			return false;
 		}
 	}
 
 	if (guest_vmcb->control_area.GuestAsid == 0)
 	{
-		Logger::Log("ASID is equal to zero. Invalid guest state \n");
+		Logger::Get()->Log("ASID is equal to zero. Invalid guest state \n");
 		return false;
 	}
 
 	if (!(guest_vmcb->control_area.InterceptVec4 & 1))
 	{
-		Logger::Log("The VMRUN intercept bit is clear. Invalid state! \n");
+		Logger::Get()->Log("The VMRUN intercept bit is clear. Invalid state! \n");
 		return false;
 	}
 
-	Logger::Log("consistency checks passed \n");
+	Logger::Get()->Log("consistency checks passed \n");
 	return true;
 
 	/*	to do: msr and IOIO map address checks, and some more. */
@@ -201,7 +201,7 @@ void SetupTssIst()
 	__debugbreak();
 }
 
-void SetupMSRPM(CoreVmcbData* core_data)
+void SetupMSRPM(CoreData* core_data)
 {
 	size_t bits_per_msr = 16000 / 8000;
 	size_t bits_per_byte = sizeof(uint8_t) * 8;
@@ -223,13 +223,13 @@ void SetupMSRPM(CoreVmcbData* core_data)
 	RtlSetBits(&bitmap, efer_offset, 2);
 }
 
-void ConfigureProcessor(CoreVmcbData* core_data, CONTEXT* context_record)
+void ConfigureProcessor(CoreData* core_data, CONTEXT* context_record)
 {
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
 	core_data->self = core_data;
 
-	core_data->guest_vmcb.control_area.NCr3 = hypervisor->normal_ncr3;
+	core_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->normal_ncr3;
 	core_data->guest_vmcb.control_area.NpEnable = (1UL << 0);
 
 	DescriptorTableRegister	gdtr, idtr;
@@ -321,7 +321,7 @@ bool IsSvmSupported()
 
 	vendor_name[12] = '\0';
 
-	Logger::Log("[SETUP] Vendor Name %s \n", vendor_name);
+	Logger::Get()->Log("[SETUP] Vendor Name %s \n", vendor_name);
 
 	if (strcmp(vendor_name, "AuthenticAMD") && strcmp(vendor_name, "VmwareVmware"))
 	{
