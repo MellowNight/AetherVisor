@@ -14,14 +14,6 @@ namespace Utils
 		uintptr_t range_size
 	);
 
-	void* VirtualAddrFromPfn(
-		uintptr_t pfn
-	);
-
-	PFN_NUMBER PfnFromVirtualAddr(
-		uintptr_t va
-	);
-
 	PMDL LockPages(
 		void* virtual_address, 
 		LOCK_OPERATION  operation

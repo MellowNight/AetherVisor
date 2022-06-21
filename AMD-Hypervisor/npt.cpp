@@ -2,7 +2,7 @@
 #include "itlb_hook.h"
 #include "logging.h"
 #include "hypervisor.h"
-#include "memory_reader.h"
+#include "paging_utils.h"
 
 void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 {
@@ -74,11 +74,8 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 			auto page1 = faulting_physical.QuadPart;
 			auto page2 = PageUtils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3);
 
-			auto npte1 = PageUtils::GetPte((void*)page1, ncr3.QuadPart);
-			auto npte2 = PageUtils::GetPte((void*)page2, ncr3.QuadPart);
-
-			npte1->ExecuteDisable = 0;
-			npte2->ExecuteDisable = 0;
+			PageUtils::GetPte((void*)page1, ncr3.QuadPart)->ExecuteDisable = 0;
+			PageUtils::GetPte((void*)page2, ncr3.QuadPart)->ExecuteDisable = 0;
 		}
 
 		Logger::Get()->Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
@@ -151,7 +148,7 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 	}
 	else
 	{
-		Pdpt = (PDPTE_64*)Utils::VirtualAddrFromPfn(Pml4e->PageFrameNumber);
+		Pdpt = (PDPTE_64*)PageUtils::VirtualAddrFromPfn(Pml4e->PageFrameNumber);
 	}
 
 
@@ -164,7 +161,7 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 	}
 	else
 	{
-		Pd = (PDE_64*)Utils::VirtualAddrFromPfn(Pdpte->PageFrameNumber);
+		Pd = (PDE_64*)PageUtils::VirtualAddrFromPfn(Pdpte->PageFrameNumber);
 	}
 
 
@@ -179,7 +176,7 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 	}
 	else
 	{
-		Pt = (PTE_64*)Utils::VirtualAddrFromPfn(Pde->PageFrameNumber);
+		Pt = (PTE_64*)PageUtils::VirtualAddrFromPfn(Pde->PageFrameNumber);
 	}
 
 	PTE_64* Pte = &Pt[Helper.AsIndex.Pt];

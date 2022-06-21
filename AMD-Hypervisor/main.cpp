@@ -4,7 +4,8 @@
 #include "disassembly.h"
 #include "prepare_vm.h"
 #include "vmexit.h"
-#include "memory_reader.h"
+#include "paging_utils.h"
+
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
@@ -96,7 +97,6 @@ bool VirtualizeAllProcessors()
 
 void Initialize()
 {
-	PageUtils::Init();
 	Disasm::Init();
 	//TlbHooks::Init();
 	NptHooks::Init();

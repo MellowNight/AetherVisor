@@ -87,6 +87,10 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 
             break;
         }
+        case VMMCALL_ID::is_hv_present:
+        {
+            break;
+        }
         case VMMCALL_ID::disable_hv:
         {    
             Logger::Get()->Log("[AMD-Hypervisor] - disable_hv vmmcall id %p \n", id);

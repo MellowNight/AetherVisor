@@ -66,7 +66,7 @@ namespace PageUtils
         PDPTE_64* pdpt;
         PDPTE_64* pdpte;
 
-        pdpt = (PDPTE_64*)Utils::VirtualAddrFromPfn(pml4e->PageFrameNumber);
+        pdpt = (PDPTE_64*)PageUtils::VirtualAddrFromPfn(pml4e->PageFrameNumber);
 
         pdpte = &pdpt[helper.AsIndex.Pdpt];
 
@@ -83,7 +83,7 @@ namespace PageUtils
         PDE_64* pd;
         PDE_64* pde;
 
-        pd = (PDE_64*)Utils::VirtualAddrFromPfn(pdpte->PageFrameNumber);
+        pd = (PDE_64*)PageUtils::VirtualAddrFromPfn(pdpte->PageFrameNumber);
 
         pde = &pd[helper.AsIndex.Pd];
 
@@ -102,7 +102,7 @@ namespace PageUtils
         PTE_64* pte;
 
 
-        pt = (PTE_64*)Utils::VirtualAddrFromPfn(pde->PageFrameNumber);
+        pt = (PTE_64*)PageUtils::VirtualAddrFromPfn(pde->PageFrameNumber);
 
         pte = &pt[helper.AsIndex.Pt];
 

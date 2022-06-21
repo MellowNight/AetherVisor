@@ -1,6 +1,6 @@
 ﻿  Building 'AMD-Hypervisor' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
   Stamping x64\Release\AMD-Hypervisor.inf
-  Stamping [Version] section with DriverVer=05/17/2022,18.50.22.930
+  Stamping [Version] section with DriverVer=05/30/2022,22.17.8.138
   Assembling instructions.asm...
   Assembling vm_launch.asm...
   hypervisor.cpp
@@ -1182,10 +1182,10 @@ C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(254
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(147,55): warning C4244: '=': conversion from 'UINT64' to 'uint32_t', possible loss of data
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(142,50): warning C4100: 'guest_regs': unreferenced formal parameter
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(182,9): warning C4189: 'pte': local variable is initialized but not referenced
-  memory_reader.cpp
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(148,55): warning C4244: '=': conversion from 'UINT64' to 'uint32_t', possible loss of data
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(143,50): warning C4100: 'guest_regs': unreferenced formal parameter
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(183,9): warning C4189: 'pte': local variable is initialized but not referenced
+  paging_utils.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
 C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\km\crt\crtdefs.h(85): message : see previous definition of '_CRT_STRINGIZE'
@@ -1481,7 +1481,7 @@ C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(254
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(281,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(293,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(342,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\memory_reader.cpp(44,22): warning C4101: 'final_entry': unreferenced local variable
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\paging_utils.cpp(42,22): warning C4101: 'final_entry': unreferenced local variable
   npt_hook.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2081,7 +2081,7 @@ C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\npt.cpp(7,57): warnin
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\npt.cpp(22,7): warning C4189: 'num_bytes': local variable is initialized but not referenced
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\npt.cpp(24,8): warning C4189: 'insn_bytes': local variable is initialized but not referenced
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\npt.cpp(28,8): warning C4189: 'pte': local variable is initialized but not referenced
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\npt.cpp(178,11): warning C4189: 'Pte': local variable is initialized but not referenced
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\npt.cpp(175,11): warning C4189: 'Pte': local variable is initialized but not referenced
   utils.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2381,8 +2381,7 @@ C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(342
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\kernel_structures.h(49,10): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(13,22): warning C4244: '=': conversion from 'uintptr_t' to 'int', possible loss of data
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(17,22): warning C4244: '=': conversion from 'uintptr_t' to 'int', possible loss of data
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(108,22): warning C4101: 'final_entry': unreferenced local variable
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(187,25): warning C4101: 'DrvName': unreferenced local variable
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(95,25): warning C4101: 'DrvName': unreferenced local variable
   prepare_vm.cpp
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2987,13 +2986,13 @@ C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\vmexit.cpp(11,39): wa
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\vmexit.cpp(23,36): warning C4244: 'argument': conversion from 'UINT64' to 'unsigned long', possible loss of data
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\vmexit.cpp(69,48): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
   Generating Code...
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(227): warning C4715: 'Utils::GetProcessId': not all control paths return a value
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(135): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\npt.cpp(43): warning C4715: '<lambda_06b6528edd86d4ae9fbbe0d07fab7506>::operator()': not all control paths return a value
 C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(68): warning C4715: '<lambda_09f81254319e95f2ca2dcdc3ed86ebf7>::operator()': not all control paths return a value
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(113): warning C4715: '<lambda_af924537ee2a24a08b34e7bd13c8ecb1>::operator()': not all control paths return a value
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(126): warning C4715: '<lambda_f9cf68149f99e1b5d8007833875e3c85>::operator()': not all control paths return a value
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(157): warning C4715: '<lambda_1dfe0159c94c2de3d2a67d3216c3beb4>::operator()': not all control paths return a value
-C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\main.cpp(94): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(114): warning C4715: '<lambda_af924537ee2a24a08b34e7bd13c8ecb1>::operator()': not all control paths return a value
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(127): warning C4715: '<lambda_f9cf68149f99e1b5d8007833875e3c85>::operator()': not all control paths return a value
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(158): warning C4715: '<lambda_1dfe0159c94c2de3d2a67d3216c3beb4>::operator()': not all control paths return a value
+C:\Users\lolxd\source\repos\ForteVisor-main\AMD-Hypervisor\main.cpp(95): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
   AMD-Hypervisor.vcxproj -> C:\Users\lolxd\source\repos\ForteVisor-main\x64\Release\AMD-Hypervisor.sys
   Done Adding Additional Store
   Successfully signed: C:\Users\lolxd\source\repos\ForteVisor-main\x64\Release\AMD-Hypervisor.sys

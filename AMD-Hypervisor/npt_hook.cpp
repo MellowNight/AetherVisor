@@ -1,6 +1,6 @@
 #include "npt_hook.h"
 #include "logging.h"
-#include "memory_reader.h"
+#include "paging_utils.h"
 
 namespace NptHooks
 {
@@ -94,7 +94,7 @@ namespace NptHooks
 
 			guest_pte->PageFrameNumber = hook_entry->copy_pte->PageFrameNumber;
 
-			memcpy(Utils::VirtualAddrFromPfn(hook_entry->copy_pte->PageFrameNumber), PAGE_ALIGN(address), PAGE_SIZE);
+			memcpy(PageUtils::VirtualAddrFromPfn(hook_entry->copy_pte->PageFrameNumber), PAGE_ALIGN(address), PAGE_SIZE);
 		}
 
 		/*	get the guest pte and physical address of the hooked page	*/
@@ -116,7 +116,7 @@ namespace NptHooks
 		hooked_npte->PageFrameNumber = hook_entry->hooked_pte->PageFrameNumber;
 		hooked_npte->ExecuteDisable = 0;
 		
-		auto hooked_copy = Utils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
+		auto hooked_copy = PageUtils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
 
 		auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
 

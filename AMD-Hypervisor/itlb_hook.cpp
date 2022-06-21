@@ -1,6 +1,7 @@
 #include "itlb_hook.h"
 #include "vmexit.h"
-#include "memory_reader.h"
+#include "paging_utils.h"
+
 
 namespace TlbHooks
 {
@@ -26,7 +27,7 @@ namespace TlbHooks
 
 		auto hookless_pfn = hook_entry->hookless_pte->PageFrameNumber;
 
-		auto guest_page = Utils::VirtualAddrFromPfn(hookless_pfn);
+		auto guest_page = PageUtils::VirtualAddrFromPfn(hookless_pfn);
 
 		memcpy(guest_page, (uint8_t*)PAGE_ALIGN(address), PAGE_SIZE);
 
