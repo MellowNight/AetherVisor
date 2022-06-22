@@ -14,12 +14,6 @@ namespace Utils
 		uintptr_t range_size
 	);
 
-	PMDL LockPages(
-		void* virtual_address, 
-		LOCK_OPERATION  operation
-	);
-
-	NTSTATUS UnlockPages(PMDL mdl);
 
 	void* GetDriverBaseAddress(
 		size_t* out_driver_size,

@@ -37,11 +37,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Inf Include="AMD-Hypervisor.inf">
-      <Filter>Driver Files</Filter>
-    </Inf>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="npt.h">
       <Filter>Source Files</Filter>
     </ClInclude>

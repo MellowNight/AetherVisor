@@ -35,6 +35,11 @@ private:
     void Init()
     {
         core_count = KeQueryActiveProcessorCount(0);
+
+        for (int i = 0; i < 32; ++i)
+        {
+            vcpu_data[i] = NULL;
+        }
     }
 public:
 

@@ -12,6 +12,10 @@ extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
 bool VirtualizeAllProcessors()
 {
+	Logger::Get()->Log("[SETUP] test etw log \n");
+	DbgPrint("[SETUP] test dbgprint");
+
+
 	if (!IsSvmSupported())
 	{
 		Logger::Get()->Log("[SETUP] SVM isn't supported on this processor! \n");
