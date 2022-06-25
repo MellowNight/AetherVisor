@@ -8,7 +8,6 @@
 
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
-extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
 bool VirtualizeAllProcessors()
 {
@@ -78,7 +77,7 @@ bool VirtualizeAllProcessors()
 		{
 			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 		}
-	}    
+	}
 
 	/*	experiment with TLB spliting	*/
 	//LARGE_INTEGER delay = { 30000000 };	// 3 seconds
@@ -96,6 +95,7 @@ bool VirtualizeAllProcessors()
 	//unsigned char firstbyte = *(unsigned char*)code_page & 0xFF;
 	//Logger::Log("first byte of code page is %02x \n", firstbyte);
 	//__debugbreak();
+	NptHooks::PageSynchronizationPatch();
 }
 
 

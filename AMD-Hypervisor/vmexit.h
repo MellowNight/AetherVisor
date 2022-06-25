@@ -28,3 +28,4 @@ enum VMEXIT
 };
 
 void InjectException(CoreData* core_data, int vector, int error_code = 0);
+extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);

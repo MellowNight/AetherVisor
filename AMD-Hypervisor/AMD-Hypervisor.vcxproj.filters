@@ -82,6 +82,9 @@
     <ClInclude Include="paging_utils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="portable_executable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -112,6 +115,9 @@
       <Filter>Source Files\setup</Filter>
     </ClCompile>
     <ClCompile Include="paging_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="disassembly.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

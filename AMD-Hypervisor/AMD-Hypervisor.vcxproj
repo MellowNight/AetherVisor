@@ -189,11 +189,13 @@
     <ClInclude Include="paging_utils.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt.h" />
+    <ClInclude Include="portable_executable.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="prepare_vm.h" />
     <ClInclude Include="vmexit.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="disassembly.cpp" />
     <ClCompile Include="hypervisor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="logging.cpp" />

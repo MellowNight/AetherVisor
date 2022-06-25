@@ -1,11 +1,74 @@
 #include "npt_hook.h"
 #include "logging.h"
 #include "paging_utils.h"
+#include "disassembly.h"
+#include "portable_executable.h"
+#include "vmexit.h"
 
 namespace NptHooks
 {
 	int hook_count;
 	NptHook first_npt_hook;
+
+	void PageSynchronizationPatch()
+	{
+		size_t nt_size = NULL;
+		auto ntoskrnl = Utils::GetDriverBaseAddress(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
+		
+		auto pe_hdr = PeHeader(ntoskrnl);
+
+		auto section = (IMAGE_SECTION_HEADER*)(pe_hdr + 1);
+
+		for (int i = 0; i < pe_hdr->FileHeader.NumberOfSections; ++i)
+		{
+			if (!strcmp((char*)section[i].Name, ".text"))
+			{
+				uint8_t* start = section[i].VirtualAddress + (uint8_t*)ntoskrnl;
+				uint8_t* end = section[i].Misc.VirtualSize + start;
+
+				DbgPrint("start %p \n", start);
+				DbgPrint("end %p \n", end);
+
+
+				Disasm::ForEachInstruction(start, end, [](uint8_t* insn_addr, ZydisDecodedInstruction insn) -> void {
+
+					ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
+
+					if (insn.mnemonic == ZYDIS_MNEMONIC_JNZ)
+					{
+						Disasm::Disassemble((uint8_t*)insn_addr, operands);
+
+						auto jmp_target = Disasm::GetJmpTarget(insn, operands, (ZyanU64)insn_addr);
+
+						size_t instruction_size = NULL;
+
+						for (auto instruction = jmp_target; instruction < jmp_target + 0x40; instruction = instruction + instruction_size)
+						{
+							//DbgPrint("instruction path %p \n", instruction);
+
+							ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
+
+							auto insn2 = Disasm::Disassemble((uint8_t*)instruction, operands);
+
+							if (insn2.mnemonic == ZYDIS_MNEMONIC_MOV)
+							{
+								// mov edx, 403h MEMORY_MANAGEMENT page sync
+
+								if (operands[1].imm.value.u == 0x403)
+								{
+									DbgPrint("found MEMORY_MANAGEMENT jnz at %p \n", insn_addr);
+
+									svm_vmmcall(VMMCALL_ID::set_npt_hook, insn_addr, "\x90\x90\x90\x90\x90", 6);
+								}
+							}
+
+							instruction_size = insn2.length;
+						}
+					}
+				});
+			}
+		}
+	}
 
 	void Init()
 	{
@@ -136,4 +199,5 @@ namespace NptHooks
 
 		return hook_entry;
 	}
+
 };

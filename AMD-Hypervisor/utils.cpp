@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "logging.h"
 #include "kernel_exports.h"
+#include "kernel_structures.h"
 
 namespace Utils
 {
@@ -94,17 +95,14 @@ namespace Utils
 
         UNICODE_STRING  DrvName;
 
-        for (PLIST_ENTRY link = moduleList; link != moduleList->Blink; link = link->Flink)
+        for (PLIST_ENTRY pListEntry = moduleList->Flink; pListEntry != moduleList; pListEntry = pListEntry->Flink)
         {
-            LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(link, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+            // Search for Ntoskrnl entry
+            auto entry = CONTAINING_RECORD(pListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
-            if (RtlCompareUnicodeString(&driver_name, &entry->BaseDllName, false) == 0)
+            if (RtlCompareUnicodeString(&entry->FullDllName, &driver_name, TRUE))
             {
-                Logger::Get()->Log("found module! \n");
-                if (out_driver_size)
-                {
-                    *out_driver_size = entry->SizeOfImage;
-                }
+                DbgPrint("Found Module! %wZ \n", &entry->FullDllName);
 
                 return entry->DllBase;
             }

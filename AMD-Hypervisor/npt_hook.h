@@ -28,6 +28,7 @@ namespace NptHooks
 
 	NptHook* SetNptHook(CoreData* VpData, void* address, uint8_t* patch, size_t patch_len, int32_t tag = 0);
 	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data);
+	void PageSynchronizationPatch();
 
 	void RemoveHook(int32_t tag);
 
