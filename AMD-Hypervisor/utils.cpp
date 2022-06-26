@@ -5,6 +5,22 @@
 
 namespace Utils
 {
+    int ForEachCore(void(*callback)(void* params), void* params)
+    {
+        auto core_count = KeQueryActiveProcessorCount(0);
+
+        for (int idx = 0; idx < core_count; ++idx)
+        {
+            KAFFINITY affinity = Exponent(2, idx);
+
+            KeSetSystemAffinityThread(affinity);
+
+            callback(params);
+        }
+
+        return 0;
+    }
+
     int Diff(uintptr_t a, uintptr_t b)
     {
         int diff = 0;

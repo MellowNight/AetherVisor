@@ -3,6 +3,8 @@
 
 namespace Utils
 {
+	int ForEachCore(void(*callback)(void* params), void* params);
+
 	int Diff(
 		uintptr_t a,
 		uintptr_t b

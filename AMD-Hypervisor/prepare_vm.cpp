@@ -58,6 +58,9 @@ bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 	cr3.Flags = __readcr3();
 	cr4.Flags = __readcr4();
 
+	cr4.Flags &= ~(1UL << 23);
+	__writecr4(cr4.Flags);
+
 	if (rflags.Virtual8086ModeFlag == 1 && (cr4.Flags << 23 & 1))
 	{
 		Logger::Get()->Log("CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
@@ -66,7 +69,22 @@ bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
 		|| (cr4.Reserved2 != 0) || (cr4.Reserved3 != 0) || (cr4.Reserved4 != 0))
 	{
-		Logger::Get()->Get()->Log("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
+		cr3.Reserved1 = 0;
+		cr3.Reserved2 = 0;
+		cr4.Reserved1 = 0;
+		cr4.Reserved2 = 0;
+		cr4.Reserved3 = 0;
+		cr4.Reserved4 = 0;
+
+
+		__writecr3(cr3.Flags);
+		__writecr4(cr4.Flags);
+	}
+
+	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
+		|| (cr4.Reserved2 != 0) || (cr4.Reserved3 != 0) || (cr4.Reserved4 != 0))
+	{
+		Logger::Get()->Log("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
 		return false;
 	}
 
@@ -78,13 +96,22 @@ bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if ((dr6.Flags & (0xFFFFFFFF00000000)) || (dr7.Reserved4 != 0))
 	{
+		dr6.Reserved2 = NULL;
+		dr7.Reserved4 = NULL;
+	}
+
+	__writedr(6, dr6.Flags);
+	__writedr(7, dr7.Flags);
+
+	if ((dr6.Flags & (0xFFFFFFFF00000000)) || (dr7.Reserved4 != 0))
+	{
 		Logger::Get()->Log("DR6[63:32] are not zero, or DR7[63:32] are not zero.Invalid State!\n");
 		return false;
 	}
 
 	if (cr0.PagingEnable == 0)
 	{
-		Logger::Get()->Get()->Log("Paging disabled, Invalid state! \n");
+		Logger::Get()->Log("Paging disabled, Invalid state! \n");
 		return false;
 	}
 

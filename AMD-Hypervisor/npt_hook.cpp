@@ -56,9 +56,22 @@ namespace NptHooks
 
 								if (operands[1].imm.value.u == 0x403)
 								{
-									DbgPrint("found MEMORY_MANAGEMENT jnz at %p \n", insn_addr);
+									size_t nt_size = NULL;
+									auto ntoskrnl = Utils::GetDriverBaseAddress(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
 
-									svm_vmmcall(VMMCALL_ID::set_npt_hook, insn_addr, "\x90\x90\x90\x90\x90", 6);
+									DbgPrint("found MEMORY_MANAGEMENT jnz at +0x%p \n", insn_addr - (uint8_t*)ntoskrnl);
+
+									PageUtils::LockPages(PAGE_ALIGN(insn_addr), IoReadAccess);
+
+									Utils::ForEachCore([](void* instruction_addr) -> void {
+
+										LARGE_INTEGER length_tag;
+										length_tag.LowPart =  NULL;
+										length_tag.HighPart = 6;
+
+										svm_vmmcall(VMMCALL_ID::set_npt_hook, instruction_addr, "\x90\x90\x90\x90\x90\x90", length_tag.QuadPart);
+
+									}, insn_addr);
 								}
 							}
 

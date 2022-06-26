@@ -160,14 +160,27 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
             TlbHooks::HandleTlbHookBreakpoint(core_data);
             break;
         }
+        case VMEXIT::VMEXIT_MWAIT_CONDITIONAL:
+        {
+            core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
+            break;
+        }
+        case 0x55:
+        {
+            core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
+            break;
+        }
         default:
         {
+           /* KeBugCheckEx(MANUALLY_INITIATED_CRASH, core_data->guest_vmcb.control_area.ExitCode, core_data->guest_vmcb.control_area.ExitInfo1, core_data->guest_vmcb.control_area.ExitInfo2, core_data->guest_vmcb.save_state_area.Rip);
+
             Logger::Get()->Log("[VMEXIT] vmexit with unknown reason %p ! guest vmcb at %p \n",
                 core_data->guest_vmcb.control_area.ExitCode, &core_data->guest_vmcb);
 
             Logger::Get()->Log("[VMEXIT] RIP is %p \n", core_data->guest_vmcb.save_state_area.Rip);
 
-            __debugbreak();
+            __debugbreak();*/
+
             break;
         }
     }

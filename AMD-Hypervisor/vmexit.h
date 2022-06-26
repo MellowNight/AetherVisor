@@ -25,6 +25,7 @@ enum VMEXIT
     INVALID = -1,
     GP = 0x4D,
     DB = 0x41,
+    VMEXIT_MWAIT_CONDITIONAL = 0x8C,
 };
 
 void InjectException(CoreData* core_data, int vector, int error_code = 0);
