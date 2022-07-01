@@ -4,6 +4,12 @@
 
 namespace ForteVisor
 {
+    int RemoveNptHook(int32_t tag)
+    {
+        svm_vmmcall(VMMCALL_ID::remove_npt_hook, tag);
+        return 0;
+    }
+
     /*  Not on each core, because it's only relevant in 1 process context */
     int SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len)
     {

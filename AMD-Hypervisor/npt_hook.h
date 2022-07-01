@@ -20,6 +20,8 @@ namespace NptHooks
 
 		uint64_t original_pfn;
 
+		uintptr_t process_cr3;
+
 		int32_t tag;
 	};
 	

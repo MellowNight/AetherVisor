@@ -2072,12 +2072,16 @@ C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(282
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(294,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\kernel_structures.h(49,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(49,1): warning C4456: declaration of 'operands' hides previous local declaration
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(35,26): message : see declaration of 'operands'
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(109,38): warning C4996: 'ExAllocatePool': ExAllocatePool is deprecated, use ExAllocatePool2.
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(88,8): warning C4189: 'first_hookless_page': local variable is initialized but not referenced
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(133,1): warning C4311: 'type cast': pointer truncation from 'void *' to 'int32_t'
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(133,1): warning C4302: 'type cast': truncation from 'void *' to 'int32_t'
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\shellcode.h(27,40): warning C4996: 'ExAllocatePool': ExAllocatePool is deprecated, use ExAllocatePool2.
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\shellcode.h(33,35): warning C4996: 'ExAllocatePool': ExAllocatePool is deprecated, use ExAllocatePool2.
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(20,23): warning C4244: 'argument': conversion from 'unsigned __int64' to 'int32_t', possible loss of data
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(62,1): warning C4456: declaration of 'operands' hides previous local declaration
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(48,26): message : see declaration of 'operands'
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(111,1): warning C4267: '=': conversion from 'size_t' to 'LONG', possible loss of data
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(146,38): warning C4996: 'ExAllocatePool': ExAllocatePool is deprecated, use ExAllocatePool2.
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(125,8): warning C4189: 'first_hookless_page': local variable is initialized but not referenced
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(170,1): warning C4311: 'type cast': pointer truncation from 'void *' to 'int32_t'
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(170,1): warning C4302: 'type cast': truncation from 'void *' to 'int32_t'
   npt.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2679,8 +2683,7 @@ C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\kernel_structures.h(4
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(12,31): warning C4018: '<': signed/unsigned mismatch
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(30,22): warning C4244: '=': conversion from 'uintptr_t' to 'int', possible loss of data
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(34,22): warning C4244: '=': conversion from 'uintptr_t' to 'int', possible loss of data
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(108,40): warning C4100: 'out_driver_size': unreferenced formal parameter
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(112,25): warning C4101: 'DrvName': unreferenced local variable
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(109,25): warning C4101: 'DrvName': unreferenced local variable
   prepare_vm.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2982,8 +2985,7 @@ C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\prepare_vm.cpp(243,63
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\prepare_vm.cpp(250,36): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\prepare_vm.cpp(269,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\prepare_vm.cpp(270,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\prepare_vm.cpp(276,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\prepare_vm.cpp(370,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\prepare_vm.cpp(377,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
   vmexit.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -3285,9 +3287,10 @@ C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\vmexit.cpp(11,39): wa
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\vmexit.cpp(23,36): warning C4244: 'argument': conversion from 'UINT64' to 'unsigned long', possible loss of data
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\vmexit.cpp(69,48): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
   Generating Code...
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(149): warning C4715: 'Utils::GetProcessId': not all control paths return a value
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\utils.cpp(151): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt.cpp(43): warning C4715: '<lambda_06b6528edd86d4ae9fbbe0d07fab7506>::operator()': not all control paths return a value
-C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(144): warning C4715: '<lambda_09f81254319e95f2ca2dcdc3ed86ebf7>::operator()': not all control paths return a value
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(181): warning C4715: '<lambda_09f81254319e95f2ca2dcdc3ed86ebf7>::operator()': not all control paths return a value
+C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\npt_hook.cpp(207): warning C4715: '<lambda_a562fcfc701263ab2401a638b1c7b0fb>::operator()': not all control paths return a value
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(114): warning C4715: '<lambda_af924537ee2a24a08b34e7bd13c8ecb1>::operator()': not all control paths return a value
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(127): warning C4715: '<lambda_f9cf68149f99e1b5d8007833875e3c85>::operator()': not all control paths return a value
 C:\Users\cppco\source\repos\ForteVisor-main\AMD-Hypervisor\itlb_hook.cpp(158): warning C4715: '<lambda_1dfe0159c94c2de3d2a67d3216c3beb4>::operator()': not all control paths return a value
@@ -3297,5 +3300,6 @@ Zydis.lib(Utils.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydi
 Zydis.lib(Register.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Register.obj)' or at 'C:\Users\cppco\source\repos\ForteVisor-main\x64\Debug\Zydis.pdb'; linking object as if no debug info
 Zydis.lib(DecoderData.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(DecoderData.obj)' or at 'C:\Users\cppco\source\repos\ForteVisor-main\x64\Debug\Zydis.pdb'; linking object as if no debug info
 Zydis.lib(SharedData.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(SharedData.obj)' or at 'C:\Users\cppco\source\repos\ForteVisor-main\x64\Debug\Zydis.pdb'; linking object as if no debug info
+npt_hook.obj : warning LNK4210: .CRT section exists; there may be unhandled static initializers or terminators
   AMD-Hypervisor.vcxproj -> C:\Users\cppco\source\repos\ForteVisor-main\x64\Debug\AMD-Hypervisor.sys
   Driver is 'Universal'.

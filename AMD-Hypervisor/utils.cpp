@@ -38,16 +38,13 @@ namespace Utils
     }
 
     uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const char* pattern, size_t pattern_size, char wildcard)
-	{
-        for (auto byte = (char*)region_base;
-            byte < (char*)region_base + region_size;
+    {
+        for (auto byte = (char*)region_base; byte < (char*)region_base + region_size;
             ++byte)
         {
             bool found = true;
 
-            for (char* pattern_byte = (char*)pattern, *begin = byte;
-                pattern_byte < pattern + pattern_size;
-                ++pattern_byte, ++begin)
+            for (char* pattern_byte = (char*)pattern, *begin = byte; pattern_byte < pattern + pattern_size; ++pattern_byte, ++begin)
             {
                 if (*pattern_byte != *begin && *pattern_byte != wildcard)
                 {
@@ -61,8 +58,8 @@ namespace Utils
             }
         }
 
-		return 0;
-	}
+        return 0;
+    }
 
     bool IsInsideRange(uintptr_t address, uintptr_t range_base, uintptr_t range_size)
     {
@@ -119,6 +116,11 @@ namespace Utils
             if (RtlCompareUnicodeString(&entry->FullDllName, &driver_name, TRUE))
             {
                 DbgPrint("Found Module! %wZ \n", &entry->FullDllName);
+
+                if (out_driver_size)
+                {
+                    *out_driver_size = entry->SizeOfImage;
+                }
 
                 return entry->DllBase;
             }

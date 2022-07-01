@@ -87,10 +87,6 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 
             break;
         }
-        case VMMCALL_ID::is_hv_present:
-        {
-            break;
-        }
         case VMMCALL_ID::disable_hv:
         {    
             Logger::Get()->Log("[AMD-Hypervisor] - disable_hv vmmcall id %p \n", id);
@@ -165,9 +161,9 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
             core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
             break;
         }
-        case 0x55:
+        case 0x55: // CET shadow stack exception
         {
-            core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
+            InjectException(core_data, 0x55, TRUE);
             break;
         }
         default:

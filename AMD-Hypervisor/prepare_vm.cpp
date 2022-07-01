@@ -58,10 +58,10 @@ bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 	cr3.Flags = __readcr3();
 	cr4.Flags = __readcr4();
 
-	cr4.Flags &= ~(1UL << 23);
+	//cr4.Flags &= ~(1UL << 23);
 	__writecr4(cr4.Flags);
 
-	if (rflags.Virtual8086ModeFlag == 1 && (cr4.Flags << 23 & 1))
+	if (rflags.Virtual8086ModeFlag == 1 && ((cr4.Flags << 23) & 1))
 	{
 		Logger::Get()->Log("CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
 	}
@@ -271,9 +271,9 @@ void ConfigureProcessor(CoreData* core_data, CONTEXT* context_record)
 
 	core_data->guest_vmcb.control_area.InterceptVec4 = intercept_vector4.as_int32;
 
-	InterceptVector2 intercept_vector2;
+	InterceptVector2 intercept_vector2 = {0};
 
-	intercept_vector2.intercept_pf = 1;
+	// intercept_vector2.intercept_pf = 1;
 	// intercept_vector2.intercept_bp = 1;
 
 	/*	intercept MSR access	*/
@@ -282,6 +282,13 @@ void ConfigureProcessor(CoreData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
 	
 	core_data->guest_vmcb.control_area.GuestAsid = 1;
+
+
+	/*	disable the fucking CET	*/
+	CR4 cr4;
+	cr4.Flags = __readcr4();
+///	cr4.Flags &= ~(1UL << 23);
+	__writecr4(cr4.Flags);
 
 	core_data->guest_vmcb.save_state_area.Cr0 = __readcr0();
 	core_data->guest_vmcb.save_state_area.Cr2 = __readcr2();

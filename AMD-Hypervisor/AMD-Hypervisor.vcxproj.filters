@@ -85,6 +85,9 @@
     <ClInclude Include="portable_executable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="shellcode.h">
+      <Filter>Source Files\hooking</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

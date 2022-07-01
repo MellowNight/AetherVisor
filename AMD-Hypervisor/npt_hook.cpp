@@ -4,17 +4,30 @@
 #include "disassembly.h"
 #include "portable_executable.h"
 #include "vmexit.h"
+#include "utils.h"
+#include "shellcode.h"
+
+Hooks::JmpRipCode hk_MmCleanProcessAddressSpace;
 
 namespace NptHooks
 {
 	int hook_count;
 	NptHook first_npt_hook;
 
+	__int64 __fastcall MmCleanProcessAddressSpace_hook(__int64 a1, __int64 a2) 
+	{
+		/*	unset all NPT hooks for this process	*/
+		RemoveHook(__readcr3());
+
+		return static_cast<decltype(&MmCleanProcessAddressSpace_hook)>(hk_MmCleanProcessAddressSpace.original_bytes)(a1, a2);
+	}
+
+
 	void PageSynchronizationPatch()
 	{
 		size_t nt_size = NULL;
 		auto ntoskrnl = Utils::GetDriverBaseAddress(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
-		
+
 		auto pe_hdr = PeHeader(ntoskrnl);
 
 		auto section = (IMAGE_SECTION_HEADER*)(pe_hdr + 1);
@@ -54,7 +67,7 @@ namespace NptHooks
 							{
 								// mov edx, 403h MEMORY_MANAGEMENT page sync
 
-								if (operands[1].imm.value.u == 0x403)
+								if ((operands[1].imm.value.u == 0x403) || (operands[1].imm.value.u == 0x411))
 								{
 									size_t nt_size = NULL;
 									auto ntoskrnl = Utils::GetDriverBaseAddress(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
@@ -66,7 +79,7 @@ namespace NptHooks
 									Utils::ForEachCore([](void* instruction_addr) -> void {
 
 										LARGE_INTEGER length_tag;
-										length_tag.LowPart =  NULL;
+										length_tag.LowPart = NULL;
 										length_tag.HighPart = 6;
 
 										svm_vmmcall(VMMCALL_ID::set_npt_hook, instruction_addr, "\x90\x90\x90\x90\x90\x90", length_tag.QuadPart);
@@ -81,7 +94,31 @@ namespace NptHooks
 				});
 			}
 		}
+
+		/*	place a callback on MmCleanProcessAddressSpace to remove npt hooks inside terminating processes, to prevent PFN check bsods	*/
+
+		auto MmCleanProcessAddressSpace_ref = Utils::FindPattern((uintptr_t)ntoskrnl, nt_size, "\xE8\x00\x00\x00\x00\x33\xD2\x48\x8D\x4C\x24\x00\xE8\x00\x00\x00\x00\x4C\x39\xBE\x00\x00\x00\x00", 24, 0x00);
+		auto MmCleanProcessAddressSpace = RELATIVE_ADDR(MmCleanProcessAddressSpace_ref, 1, 5);
+
+		hk_MmCleanProcessAddressSpace = Hooks::JmpRipCode{ (uintptr_t)MmCleanProcessAddressSpace, (uintptr_t)MmCleanProcessAddressSpace_hook };
+
+		Utils::ForEachCore([](void* params) -> void {
+
+			auto jmp_rip_code = (Hooks::JmpRipCode*)params;
+
+			LARGE_INTEGER length_tag;
+			length_tag.LowPart = NULL;
+			length_tag.HighPart = jmp_rip_code->hook_size;
+
+		//	svm_vmmcall(VMMCALL_ID::set_npt_hook, jmp_rip_code->hook_addr, jmp_rip_code->hook_code, length_tag.QuadPart);
+
+			//auto irql = Utils::DisableWP();
+			//memcpy((void*)jmp_rip_code->hook_addr, jmp_rip_code->hook_code, length_tag.HighPart);
+			//Utils::EnableWP(irql);
+
+		}, &hk_MmCleanProcessAddressSpace);
 	}
+
 
 	void Init()
 	{
@@ -142,6 +179,32 @@ namespace NptHooks
 				}
 
 			}, (void*)tag
+				);
+	}
+
+	void RemoveHook(uintptr_t current_cr3)
+	{
+		__debugbreak();
+		ForEachHook(
+			[](NptHook* hook_entry, void* data)-> bool {
+
+				DbgPrint("hook entry cr3 %p \n", hook_entry->process_cr3);
+				DbgPrint("current cr3 %p \n", __readcr3());
+
+				if ((uintptr_t)data == hook_entry->process_cr3)
+				{
+					DbgPrint("hook_entry found %p \n", hook_entry);
+
+					/*	TO DO: restore guest PFN, free and unlink hook from list	*/
+
+					hook_entry->tag = 0;
+					hook_entry->hookless_npte->ExecuteDisable = 0;
+					hook_entry->original_pte->PageFrameNumber = hook_entry->original_pfn;
+
+					return true;
+				}
+
+			}, (void*)current_cr3
 		);
 	}
 
@@ -154,6 +217,7 @@ namespace NptHooks
 		}
 
 		hook_entry->tag = tag;
+		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
 
 		auto vmroot_cr3 = __readcr3();
 
