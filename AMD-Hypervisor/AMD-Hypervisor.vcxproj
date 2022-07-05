@@ -154,6 +154,7 @@
     <Link>
       <EntryPointSymbol>EntryPoint</EntryPointSymbol>
       <AdditionalLibraryDirectories>$(SolutionDir)dependencies\Zydis\lib\DebugKernel;$(SolutionDir)dependencies\ForteVisor\lib\Kernel\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Zycore.lib;Zydis.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
     </Link>
   </ItemDefinitionGroup>
