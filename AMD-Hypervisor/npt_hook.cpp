@@ -7,24 +7,31 @@
 #include "utils.h"
 #include "shellcode.h"
 
-Hooks::JmpRipCode hk_MmCleanProcessAddressSpace;
-
 namespace NptHooks
 {
 	int hook_count;
 	NptHook first_npt_hook;
 
-	__int64 __fastcall MmCleanProcessAddressSpace_hook(__int64 a1, __int64 a2) 
+
+	Hooks::JmpRipCode hk_NtTerminateProcess;
+
+	__int64 __fastcall NtTerminateProcess_hook(__int64 a1, __int64 a2)
 	{
 		/*	unset all NPT hooks for this process	*/
 		RemoveHook(__readcr3());
 
-		return static_cast<decltype(&MmCleanProcessAddressSpace_hook)>(hk_MmCleanProcessAddressSpace.original_bytes)(a1, a2);
+		return static_cast<decltype(&NtTerminateProcess_hook)>(hk_NtTerminateProcess.original_bytes)(a1, a2);
 	}
 
 
 	void PageSynchronizationPatch()
 	{
+		/*	place a callback on NtTerminateProcess to remove npt hooks inside terminating processes, to prevent PFN check bsods	*/
+
+		//UNICODE_STRING terminate_process_name = RTL_CONSTANT_STRING(L"NtTerminateProcess");
+
+		uintptr_t terminate_process;
+
 		size_t nt_size = NULL;
 		auto ntoskrnl = Utils::GetDriverBaseAddress(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
 
@@ -34,73 +41,17 @@ namespace NptHooks
 
 		for (int i = 0; i < pe_hdr->FileHeader.NumberOfSections; ++i)
 		{
-			if (!strcmp((char*)section[i].Name, ".text"))
+			if (!strcmp((char*)section[i].Name, "PAGE"))
 			{
 				uint8_t* start = section[i].VirtualAddress + (uint8_t*)ntoskrnl;
-				uint8_t* end = section[i].Misc.VirtualSize + start;
 
-				DbgPrint("start %p \n", start);
-				DbgPrint("end %p \n", end);
-
-
-				Disasm::ForEachInstruction(start, end, [](uint8_t* insn_addr, ZydisDecodedInstruction insn) -> void {
-
-					ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
-
-					if (insn.mnemonic == ZYDIS_MNEMONIC_JNZ)
-					{
-						Disasm::Disassemble((uint8_t*)insn_addr, operands);
-
-						auto jmp_target = Disasm::GetJmpTarget(insn, operands, (ZyanU64)insn_addr);
-
-						size_t instruction_size = NULL;
-
-						for (auto instruction = jmp_target; instruction < jmp_target + 0x40; instruction = instruction + instruction_size)
-						{
-							//DbgPrint("instruction path %p \n", instruction);
-
-							ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
-
-							auto insn2 = Disasm::Disassemble((uint8_t*)instruction, operands);
-
-							if (insn2.mnemonic == ZYDIS_MNEMONIC_MOV)
-							{
-								// mov edx, 403h MEMORY_MANAGEMENT page sync
-
-								if ((operands[1].imm.value.u == 0x403) || (operands[1].imm.value.u == 0x411))
-								{
-									size_t nt_size = NULL;
-									auto ntoskrnl = Utils::GetDriverBaseAddress(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
-
-									DbgPrint("found MEMORY_MANAGEMENT jnz at +0x%p \n", insn_addr - (uint8_t*)ntoskrnl);
-
-									PageUtils::LockPages(PAGE_ALIGN(insn_addr), IoReadAccess);
-
-									Utils::ForEachCore([](void* instruction_addr) -> void {
-
-										LARGE_INTEGER length_tag;
-										length_tag.LowPart = NULL;
-										length_tag.HighPart = 6;
-
-										svm_vmmcall(VMMCALL_ID::set_npt_hook, instruction_addr, "\x90\x90\x90\x90\x90\x90", length_tag.QuadPart);
-
-									}, insn_addr);
-								}
-							}
-
-							instruction_size = insn2.length;
-						}
-					}
-				});
+				terminate_process = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\x4C\x8B\xDC\x49\x89\x5B\x10\x49\x89\x6B\x18\x57", 0x00); // MmGetSystemRoutineAddress(&terminate_process_name);
 			}
 		}
 
-		/*	place a callback on MmCleanProcessAddressSpace to remove npt hooks inside terminating processes, to prevent PFN check bsods	*/
+		DbgPrint("terminate_process %p \n", terminate_process);
 
-		auto MmCleanProcessAddressSpace_ref = Utils::FindPattern((uintptr_t)ntoskrnl, nt_size, "\xE8\x00\x00\x00\x00\x33\xD2\x48\x8D\x4C\x24\x00\xE8\x00\x00\x00\x00\x4C\x39\xBE\x00\x00\x00\x00", 24, 0x00);
-		auto MmCleanProcessAddressSpace = RELATIVE_ADDR(MmCleanProcessAddressSpace_ref, 1, 5);
-
-		hk_MmCleanProcessAddressSpace = Hooks::JmpRipCode{ (uintptr_t)MmCleanProcessAddressSpace, (uintptr_t)MmCleanProcessAddressSpace_hook };
+		hk_NtTerminateProcess = Hooks::JmpRipCode{ (uintptr_t)terminate_process, (uintptr_t)NtTerminateProcess_hook };
 
 		Utils::ForEachCore([](void* params) -> void {
 
@@ -110,13 +61,9 @@ namespace NptHooks
 			length_tag.LowPart = NULL;
 			length_tag.HighPart = jmp_rip_code->hook_size;
 
-		//	svm_vmmcall(VMMCALL_ID::set_npt_hook, jmp_rip_code->hook_addr, jmp_rip_code->hook_code, length_tag.QuadPart);
+			svm_vmmcall(VMMCALL_ID::set_npt_hook, jmp_rip_code->hook_addr, jmp_rip_code->hook_code, length_tag.QuadPart);
 
-			//auto irql = Utils::DisableWP();
-			//memcpy((void*)jmp_rip_code->hook_addr, jmp_rip_code->hook_code, length_tag.HighPart);
-			//Utils::EnableWP(irql);
-
-		}, &hk_MmCleanProcessAddressSpace);
+		}, &hk_NtTerminateProcess);
 	}
 
 

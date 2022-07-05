@@ -1,4 +1,4 @@
 ﻿  ForteVisorTool.cpp
-ForteVisorApi.lib(forte_api.obj) : warning LNK4204: 'C:\Users\cppco\source\repos\ForteVisor-main\x64\Debug\ForteVisorApi.pdb' is missing debugging information for referencing module; linking object as if no debug info
-ForteVisorApi.lib(pch.obj) : warning LNK4204: 'C:\Users\cppco\source\repos\ForteVisor-main\x64\Debug\ForteVisorApi.pdb' is missing debugging information for referencing module; linking object as if no debug info
-  ForteVisorTool.vcxproj -> C:\Users\cppco\source\repos\ForteVisor-main\x64\Debug\ForteVisorTool.exe
+ForteVisorApi.lib(forte_api.obj) : warning LNK4204: 'C:\Users\cppco\source\repos\ForteVisor\x64\Debug\ForteVisorApi.pdb' is missing debugging information for referencing module; linking object as if no debug info
+ForteVisorApi.lib(pch.obj) : warning LNK4204: 'C:\Users\cppco\source\repos\ForteVisor\x64\Debug\ForteVisorApi.pdb' is missing debugging information for referencing module; linking object as if no debug info
+  ForteVisorTool.vcxproj -> C:\Users\cppco\source\repos\ForteVisor\x64\Debug\ForteVisorTool.exe
