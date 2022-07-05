@@ -28,8 +28,6 @@ namespace NptHooks
 	{
 		/*	place a callback on NtTerminateProcess to remove npt hooks inside terminating processes, to prevent PFN check bsods	*/
 
-		//UNICODE_STRING terminate_process_name = RTL_CONSTANT_STRING(L"NtTerminateProcess");
-
 		uintptr_t terminate_process;
 
 		size_t nt_size = NULL;
@@ -45,7 +43,7 @@ namespace NptHooks
 			{
 				uint8_t* start = section[i].VirtualAddress + (uint8_t*)ntoskrnl;
 
-				terminate_process = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\x4C\x8B\xDC\x49\x89\x5B\x10\x49\x89\x6B\x18\x57", 0x00); // MmGetSystemRoutineAddress(&terminate_process_name);
+				terminate_process = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\x4C\x8B\xDC\x49\x89\x5B\x10\x49\x89\x6B\x18\x57", 12, 0x00); // MmGetSystemRoutineAddress(&terminate_process_name);
 			}
 		}
 
@@ -66,6 +64,19 @@ namespace NptHooks
 		}, &hk_NtTerminateProcess);
 	}
 
+	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data)
+	{
+		auto hook_entry = &first_npt_hook;
+
+		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
+		{
+			if (HookCallback(hook_entry, callback_data))
+			{
+				return hook_entry;
+			}
+		}
+		return 0;
+	}
 
 	void Init()
 	{
@@ -95,20 +106,6 @@ namespace NptHooks
 		hook_count = 0;
 	}
 
-	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data)
-	{
-		auto hook_entry = &first_npt_hook;
-
-		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
-		{
-			if (HookCallback(hook_entry, callback_data))
-			{
-				return hook_entry;
-			}
-		}
-		return 0;
-	}
-
 	void RemoveHook(int32_t tag)
 	{
 		ForEachHook(
@@ -126,12 +123,12 @@ namespace NptHooks
 				}
 
 			}, (void*)tag
-				);
+		);
 	}
 
+#pragma optimize( "", off )
 	void RemoveHook(uintptr_t current_cr3)
 	{
-		__debugbreak();
 		ForEachHook(
 			[](NptHook* hook_entry, void* data)-> bool {
 
@@ -154,6 +151,7 @@ namespace NptHooks
 			}, (void*)current_cr3
 		);
 	}
+#pragma optimize( "", on )
 
 	NptHook* SetNptHook(CoreData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t tag)
 	{
