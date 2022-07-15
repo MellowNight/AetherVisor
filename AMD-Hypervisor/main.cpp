@@ -95,7 +95,7 @@ bool VirtualizeAllProcessors()
 	//unsigned char firstbyte = *(unsigned char*)code_page & 0xFF;
 	//Logger::Log("first byte of code page is %02x \n", firstbyte);
 	//__debugbreak();
-	// NptHooks::PageSynchronizationPatch();
+	NptHooks::PageSynchronizationPatch();
 }
 
 

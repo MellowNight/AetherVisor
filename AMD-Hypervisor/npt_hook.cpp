@@ -12,7 +12,6 @@ namespace NptHooks
 	int hook_count;
 	NptHook first_npt_hook;
 
-
 	Hooks::JmpRipCode hk_NtTerminateProcess;
 
 	__int64 __fastcall NtTerminateProcess_hook(__int64 a1, __int64 a2)
@@ -22,7 +21,6 @@ namespace NptHooks
 
 		return static_cast<decltype(&NtTerminateProcess_hook)>(hk_NtTerminateProcess.original_bytes)(a1, a2);
 	}
-
 
 	void PageSynchronizationPatch()
 	{
@@ -39,44 +37,66 @@ namespace NptHooks
 
 		for (int i = 0; i < pe_hdr->FileHeader.NumberOfSections; ++i)
 		{
+			/*	NtTerminateProcess hook	*/
+
 			if (!strcmp((char*)section[i].Name, "PAGE"))
 			{
 				uint8_t* start = section[i].VirtualAddress + (uint8_t*)ntoskrnl;
 
 				terminate_process = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\x4C\x8B\xDC\x49\x89\x5B\x10\x49\x89\x6B\x18\x57", 12, 0x00); // MmGetSystemRoutineAddress(&terminate_process_name);
 			}
-		}
+			
+			/*	patch out MEMORY_MANAGEMENT bugcheck	*/
 
-		DbgPrint("terminate_process %p \n", terminate_process);
-
-		hk_NtTerminateProcess = Hooks::JmpRipCode{ (uintptr_t)terminate_process, (uintptr_t)NtTerminateProcess_hook };
-
-		Utils::ForEachCore([](void* params) -> void {
-
-			auto jmp_rip_code = (Hooks::JmpRipCode*)params;
-
-			LARGE_INTEGER length_tag;
-			length_tag.LowPart = NULL;
-			length_tag.HighPart = jmp_rip_code->hook_size;
-
-			svm_vmmcall(VMMCALL_ID::set_npt_hook, jmp_rip_code->hook_addr, jmp_rip_code->hook_code, length_tag.QuadPart);
-
-		}, &hk_NtTerminateProcess);
-	}
-
-	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data)
-	{
-		auto hook_entry = &first_npt_hook;
-
-		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
-		{
-			if (HookCallback(hook_entry, callback_data))
+			if (!strcmp((char*)section[i].Name, ".text"))
 			{
-				return hook_entry;
+				uint8_t* start = section[i].VirtualAddress + (uint8_t*)ntoskrnl;
+				uint8_t* end = section[i].Misc.VirtualSize + start;
+
+				DbgPrint("start %p \n", start);
+				DbgPrint("end %p \n", end);
+
+
+				Disasm::ForEachInstruction(start, end, [](uint8_t* insn_addr, ZydisDecodedInstruction insn) -> void {
+
+					ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
+
+					if (insn.mnemonic == ZYDIS_MNEMONIC_JNZ)
+					{
+						Disasm::Disassemble((uint8_t*)insn_addr, operands);
+
+						auto jmp_target = Disasm::GetJmpTarget(insn, operands, (ZyanU64)insn_addr);
+
+						size_t instruction_size = NULL;
+
+						for (auto instruction = jmp_target; instruction < jmp_target + 0x40; instruction = instruction + instruction_size)
+						{
+							//DbgPrint("instruction path %p \n", instruction);
+
+							ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
+
+							auto insn2 = Disasm::Disassemble((uint8_t*)instruction, operands);
+
+							if (insn2.mnemonic == ZYDIS_MNEMONIC_MOV)
+							{
+								// mov edx, 403h MEMORY_MANAGEMENT page sync
+
+								if (operands[1].imm.value.u == 0x403 || operands[1].imm.value.u == 0x411)
+								{
+									DbgPrint("found MEMORY_MANAGEMENT jnz at %p \n", insn_addr);
+
+									svm_vmmcall(VMMCALL_ID::set_npt_hook, insn_addr, "\x90\x90\x90\x90\x90\x90", 6);
+								}
+							}
+
+							instruction_size = insn2.length;
+						}
+					}
+				});
 			}
 		}
-		return 0;
 	}
+
 
 	void Init()
 	{
@@ -106,6 +126,20 @@ namespace NptHooks
 		hook_count = 0;
 	}
 
+	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data)
+	{
+		auto hook_entry = &first_npt_hook;
+
+		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
+		{
+			if (HookCallback(hook_entry, callback_data))
+			{
+				return hook_entry;
+			}
+		}
+		return 0;
+	}
+
 	void RemoveHook(int32_t tag)
 	{
 		ForEachHook(
@@ -123,27 +157,22 @@ namespace NptHooks
 				}
 
 			}, (void*)tag
-		);
+				);
 	}
 
-#pragma optimize( "", off )
 	void RemoveHook(uintptr_t current_cr3)
 	{
 		ForEachHook(
 			[](NptHook* hook_entry, void* data)-> bool {
 
-				DbgPrint("hook entry cr3 %p \n", hook_entry->process_cr3);
-				DbgPrint("current cr3 %p \n", __readcr3());
-
 				if ((uintptr_t)data == hook_entry->process_cr3)
 				{
-					DbgPrint("hook_entry found %p \n", hook_entry);
-
 					/*	TO DO: restore guest PFN, free and unlink hook from list	*/
 
 					hook_entry->tag = 0;
 					hook_entry->hookless_npte->ExecuteDisable = 0;
 					hook_entry->original_pte->PageFrameNumber = hook_entry->original_pfn;
+					hook_entry->process_cr3 = 0;
 
 					return true;
 				}
@@ -151,7 +180,6 @@ namespace NptHooks
 			}, (void*)current_cr3
 		);
 	}
-#pragma optimize( "", on )
 
 	NptHook* SetNptHook(CoreData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t tag)
 	{

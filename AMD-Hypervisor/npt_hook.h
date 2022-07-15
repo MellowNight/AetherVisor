@@ -29,11 +29,10 @@ namespace NptHooks
 	extern	NptHook first_npt_hook;
 
 	NptHook* SetNptHook(CoreData* VpData, void* address, uint8_t* patch, size_t patch_len, int32_t tag = 0);
-	void PageSynchronizationPatch();
 	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data);
+	void PageSynchronizationPatch();
 
 	void RemoveHook(int32_t tag);
-	void RemoveHook(uintptr_t current_cr3);
 
 	void Init();
 };

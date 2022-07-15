@@ -1,7 +1,7 @@
 ﻿  Assembling vmmcall.asm...
   pch.cpp
   forte_api.cpp
-C:\Users\lolxd\source\repos\ForteVisor-main\ForteVisorApi\forte_api.cpp(16,40): warning C4267: '=': conversion from 'size_t' to 'LONG', possible loss of data
-C:\Users\lolxd\source\repos\ForteVisor-main\ForteVisorApi\forte_api.cpp(35,32): warning C4018: '<': signed/unsigned mismatch
-C:\Users\lolxd\source\repos\ForteVisor-main\ForteVisorApi\forte_api.cpp(39,55): warning C4244: 'argument': conversion from 'double' to 'DWORD_PTR', possible loss of data
-  MatrixVisorLib.vcxproj -> C:\Users\lolxd\source\repos\ForteVisor-main\x64\Debug\ForteVisorApi.lib
+C:\Users\cppco\source\repos\ForteVisor\ForteVisorApi\forte_api.cpp(16,40): warning C4267: '=': conversion from 'size_t' to 'LONG', possible loss of data
+C:\Users\cppco\source\repos\ForteVisor\ForteVisorApi\forte_api.cpp(35,32): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cppco\source\repos\ForteVisor\ForteVisorApi\forte_api.cpp(39,55): warning C4244: 'argument': conversion from 'double' to 'DWORD_PTR', possible loss of data
+  MatrixVisorLib.vcxproj -> C:\Users\cppco\source\repos\ForteVisor\x64\Debug\ForteVisorApi.lib
