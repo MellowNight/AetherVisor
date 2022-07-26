@@ -7,8 +7,12 @@ void InjectException(CoreData* core_data, int vector, int error_code)
     event_injection.vector = vector;
     event_injection.type = 3;
     event_injection.valid = 1;
+    
+    if (error_code)
+    {
+        event_injection.push_error_code = 1;
+    }
 
-    event_injection.push_error_code = 1;
     event_injection.error_code = error_code;
 
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
