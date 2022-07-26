@@ -102,24 +102,24 @@ namespace Utils
         KeLowerIrql(tempirql);
     }
 
-    void* GetDriverBaseAddress(size_t* out_driver_size, UNICODE_STRING driver_name)
+    PVOID GetKernelModule(OUT PULONG pSize, UNICODE_STRING DriverName)
     {
-        auto moduleList = (PLIST_ENTRY)PsLoadedModuleList;
+        PLIST_ENTRY moduleList = (PLIST_ENTRY)PsLoadedModuleList;
 
         UNICODE_STRING  DrvName;
 
-        for (PLIST_ENTRY pListEntry = moduleList->Flink; pListEntry != moduleList; pListEntry = pListEntry->Flink)
+        for (PLIST_ENTRY link = moduleList;
+            link != moduleList->Blink;
+            link = link->Flink)
         {
-            // Search for Ntoskrnl entry
-            auto entry = CONTAINING_RECORD(pListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+            LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(link, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
-            if (RtlCompareUnicodeString(&entry->FullDllName, &driver_name, TRUE))
+            if (RtlCompareUnicodeString(&DriverName, &entry->BaseDllName, false) == 0)
             {
-                DbgPrint("Found Module! %wZ \n", &entry->FullDllName);
-
-                if (out_driver_size)
+                DbgPrint("found module! %wZ at %p \n", &entry->BaseDllName, entry->DllBase);
+                if (pSize && MmIsAddressValid(pSize))
                 {
-                    *out_driver_size = entry->SizeOfImage;
+                    *pSize = entry->SizeOfImage;
                 }
 
                 return entry->DllBase;

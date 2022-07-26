@@ -16,7 +16,7 @@ void InjectException(CoreData* core_data, int vector, int error_code)
 
 void HandleMsrExit(CoreData* VpData, GPRegs* GuestRegisters)
 {
-    auto msr_id = GuestRegisters->rcx;
+    uint32_t msr_id = GuestRegisters->rcx & (uint32_t)0xFFFFFFFF;
 
     LARGE_INTEGER msr_value;
 
@@ -88,14 +88,19 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
             break;
         }
         case VMMCALL_ID::disable_hv:
-        {    
+        {
             Logger::Get()->Log("[AMD-Hypervisor] - disable_hv vmmcall id %p \n", id);
 
             *EndVM = true;
             break;
         }
+        case VMMCALL_ID::is_hv_present:
+        {
+            break;
+        }
         default: 
         {
+            InjectException(vmcb_data, EXCEPTION_INVALID_OPCODE);
             break;
         }
     }
@@ -119,7 +124,7 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
         }
         case VMEXIT::VMRUN: 
         {
-            InjectException(core_data, 13);
+            InjectException(core_data, EXCEPTION_GP_FAULT);
             break;
         }
         case VMEXIT::VMMCALL: 
@@ -139,7 +144,7 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
         }
         case VMEXIT::GP: 
         {
-            InjectException(core_data, 13, 0xC0000005);
+            InjectException(core_data, EXCEPTION_GP_FAULT, STATUS_ACCESS_VIOLATION);
             break;
         }
         case VMEXIT::INVALID: 

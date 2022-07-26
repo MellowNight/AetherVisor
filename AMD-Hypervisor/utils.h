@@ -19,10 +19,7 @@ namespace Utils
 	);
 
 
-	void* GetDriverBaseAddress(
-		size_t* out_driver_size,
-		UNICODE_STRING driver_name
-	);
+	PVOID GetKernelModule(OUT PULONG pSize, UNICODE_STRING DriverName);
 
 	int Exponent(
 		int base, 
