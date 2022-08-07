@@ -1,6 +1,5 @@
 #pragma once
 #include "npt.h"
-#include "itlb_hook.h"
 #include "hypervisor.h"
 
 bool IsSvmSupported();

@@ -52,9 +52,6 @@
     <ClInclude Include="vmexit.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="itlb_hook.h">
-      <Filter>Source Files\hooking</Filter>
-    </ClInclude>
     <ClInclude Include="kernel_exports.h">
       <Filter>Source Files\nt kernel</Filter>
     </ClInclude>
@@ -88,6 +85,9 @@
     <ClInclude Include="shellcode.h">
       <Filter>Source Files\hooking</Filter>
     </ClInclude>
+    <ClInclude Include="npthook_safety.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -101,9 +101,6 @@
     </ClCompile>
     <ClCompile Include="hypervisor.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="itlb_hook.cpp">
-      <Filter>Source Files\hooking</Filter>
     </ClCompile>
     <ClCompile Include="logging.cpp">
       <Filter>Source Files\logger</Filter>
@@ -121,6 +118,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="disassembly.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npthook_safety.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

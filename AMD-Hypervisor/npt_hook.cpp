@@ -5,151 +5,36 @@
 #include "portable_executable.h"
 #include "vmexit.h"
 #include "utils.h"
-#include "shellcode.h"
 
 namespace NptHooks
 {
-	int hook_count;
-	NptHook first_npt_hook;
-
-	Hooks::JmpRipCode hk_NtTerminateProcess;
-	Hooks::JmpRipCode hk_MmCleanProcessAddressSpace;
-
-	__int64 __fastcall NtTerminateProcess_hook(__int64 a1, __int64 a2)
-	{
-		/*	unset all NPT hooks for this process	*/
-		RemoveHook(__readcr3());
-
-		return static_cast<decltype(&NtTerminateProcess_hook)>(hk_NtTerminateProcess.original_bytes)(a1, a2);
-	}
-
-	char __fastcall MmCleanProcessAddressSpace_hook(__int64 a1, __int64 a2)
-	{
-		/*	unset all NPT hooks for this process	*/
-		RemoveHook(__readcr3());
-
-		return static_cast<decltype(&MmCleanProcessAddressSpace_hook)>(hk_MmCleanProcessAddressSpace.original_bytes)(a1, a2);
-	}
-
-	void PageSynchronizationPatch()
-	{
-		/*	place a callback on NtTerminateProcess to remove npt hooks inside terminating processes, to prevent PFN check bsods	*/
-
-		ULONG nt_size = NULL;
-		auto ntoskrnl = (uintptr_t)Utils::GetKernelModule(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
-
-		auto pe_hdr = PeHeader(ntoskrnl);
-
-		auto section = (IMAGE_SECTION_HEADER*)(pe_hdr + 1);
-
-		for (int i = 0; i < pe_hdr->FileHeader.NumberOfSections; ++i)
-		{
-			/*	NtTerminateProcess & MmCleanProcessAddressSpace hook to clean up NPT hooks after process exit	*/
-
-			if (!strcmp((char*)section[i].Name, "PAGE"))
-			{
-				uint8_t* start = section[i].VirtualAddress + (uint8_t*)ntoskrnl;
-
-				uintptr_t terminate_process = NULL;
-				uintptr_t clean_process_address_space = NULL;
-
-				terminate_process = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\x4C\x8B\xDC\x49\x89\x5B\x10\x49\x89\x6B\x18\x57", 12, 0x00);				
-				clean_process_address_space = RELATIVE_ADDR(Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\xE8\xCC\xCC\xCC\xCC\x8B\x5D\x00", 8, 0xCC), 1, 5);
-
-				hk_NtTerminateProcess = Hooks::JmpRipCode{ terminate_process, (uintptr_t)NtTerminateProcess_hook };
-				hk_MmCleanProcessAddressSpace = Hooks::JmpRipCode{ clean_process_address_space, (uintptr_t)MmCleanProcessAddressSpace_hook };
-				svm_vmmcall(VMMCALL_ID::set_npt_hook, terminate_process, hk_NtTerminateProcess.hook_code, hk_NtTerminateProcess.hook_size);
-				svm_vmmcall(VMMCALL_ID::set_npt_hook, clean_process_address_space, hk_MmCleanProcessAddressSpace.hook_code, hk_MmCleanProcessAddressSpace.hook_size);
-			}
-			
-			/*	patch out MEMORY_MANAGEMENT bugcheck	*/
-
-			if (!strcmp((char*)section[i].Name, ".text"))
-			{
-				uint8_t* start = section[i].VirtualAddress + (uint8_t*)ntoskrnl;
-				uint8_t* end = section[i].Misc.VirtualSize + start;
-
-				DbgPrint("start %p \n", start);
-				DbgPrint("ntoskrnl_base %p \n", ntoskrnl);
-
-
-				Disasm::ForEachInstruction(start, end, [](uint8_t* insn_addr, ZydisDecodedInstruction insn) -> void {
-
-					ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
-
-					if (insn.mnemonic == ZYDIS_MNEMONIC_JNZ)
-					{
-						Disasm::Disassemble((uint8_t*)insn_addr, operands);
-
-						auto jmp_target = Disasm::GetJmpTarget(insn, operands, (ZyanU64)insn_addr);
-
-						size_t instruction_size = NULL;
-
-						for (auto instruction = jmp_target; instruction < jmp_target + 0x40; instruction = instruction + instruction_size)
-						{
-							ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
-
-							auto insn2 = Disasm::Disassemble((uint8_t*)instruction, operands);
-
-							if (insn2.mnemonic == ZYDIS_MNEMONIC_MOV)
-							{
-								// mov edx, 403h MEMORY_MANAGEMENT page sync
-
-								if (operands[1].imm.value.u == 0x403 || operands[1].imm.value.u == 0x411)
-								{
-									DbgPrint("found MEMORY_MANAGEMENT jnz at %p \n", insn_addr);
-
-									svm_vmmcall(VMMCALL_ID::set_npt_hook, insn_addr, "\x90\x90\x90\x90\x90\x90", 6);
-								}
-							}
-
-							instruction_size = insn2.length;
-						}
-					}
-				});
-
-				/*	There is a patch location that Disasm::ForEachInstruction fails to find, and I can't be bothered to fix that shit!	;)	*/
-
-				auto patch_loc = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\x48\x85\x56\x28\x0F\x84", 6, 0x00) + 4;
-				svm_vmmcall(VMMCALL_ID::set_npt_hook, patch_loc, "\x90\x90\x90\x90\x90\x90", 6);
-			}
-		}
-	}
-
-
 	void Init()
 	{
-		auto first_hookless_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
-
-		CR3 cr3;
-		cr3.Flags = __readcr3();
-
 		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
 
 		int max_hooks = 500;
 		
-		NptHook* hook_entry = &first_npt_hook;
+		InitializeListHead((PLIST_ENTRY)&first_npt_hook);
 
-		for (int i = 0; i < max_hooks; hook_entry = hook_entry->next_hook, ++i)
+		first_npt_hook.Init();
+
+		for (int i = 0; i < max_hooks; ++i)
 		{
-			auto hooked_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+			auto hook_entry = (NptHook*)ExAllocatePool(NonPagedPool, sizeof(NptHook));
 
-			hook_entry->hooked_pte = PageUtils::GetPte(hooked_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+			hook_entry->Init();
 
-			auto copy_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
-
-			hook_entry->copy_pte = PageUtils::GetPte(copy_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
-			
-			hook_entry->next_hook = (NptHook*)ExAllocatePool(NonPagedPool, sizeof(NptHook));
+			InsertTailList((PLIST_ENTRY)&first_npt_hook, (PLIST_ENTRY)hook_entry);
 		}
-		hook_count = 0;
+
+		hook_count = 1;
 	}
 
 	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data)
 	{
 		auto hook_entry = &first_npt_hook;
 
-		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
+		for (int i = 0; i < hook_count; hook_entry = (NptHook*)hook_entry->list_entry.Flink, ++i)
 		{
 			if (HookCallback(hook_entry, callback_data))
 			{
@@ -159,55 +44,32 @@ namespace NptHooks
 		return 0;
 	}
 
-	void RemoveHook(int32_t tag)
+	void UnsetHook(NptHook* hook_entry)
 	{
-		ForEachHook(
-			[](NptHook* hook_entry, void* data)-> bool {
+		hook_entry->hookless_npte->ExecuteDisable = 0;
 
-				if ((int32_t)data == hook_entry->tag)
-				{
-					/*	TO DO: restore guest PFN, free and unlink hook from list	*/
+		if (hook_entry->original_pte)
+		{
+			hook_entry->original_pte->PageFrameNumber = hook_entry->original_pfn;
+		}
 
-					hook_entry->tag = 0;
-					hook_entry->hookless_npte->ExecuteDisable = 0;
-					hook_entry->original_pte->PageFrameNumber = hook_entry->original_pfn;
+		hook_entry->process_cr3 = 0;
+		hook_entry->active = false;
 
-					return true;
-				}
-
-			}, (void*)tag
-				);
-	}
-
-	void RemoveHook(uintptr_t current_cr3)
-	{
-		ForEachHook(
-			[](NptHook* hook_entry, void* data)-> bool {
-
-				if ((uintptr_t)data == hook_entry->process_cr3)
-				{
-					/*	TO DO: restore guest PFN, free and unlink hook from list	*/
-
-					hook_entry->tag = 0;
-					hook_entry->hookless_npte->ExecuteDisable = 0;
-					hook_entry->original_pte->PageFrameNumber = hook_entry->original_pfn;
-					hook_entry->process_cr3 = 0;
-
-					return true;
-				}
-
-			}, (void*)current_cr3
-		);
+		hook_count -= 1;
 	}
 
 	NptHook* SetNptHook(CoreData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t tag)
 	{
 		auto hook_entry = &first_npt_hook;
 
-		for (int i = 0; i < hook_count; hook_entry = hook_entry->next_hook, ++i)
+		for (int i = 0; i < hook_count, hook_entry->active; hook_entry = (NptHook*)hook_entry->list_entry.Flink, ++i)
 		{
-		}
+		}		
 
+		hook_count += 1;
+
+		hook_entry->active = true;
 		hook_entry->tag = tag;
 		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
 
@@ -215,25 +77,31 @@ namespace NptHooks
 
 		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
+
 		/*	Sometimes we want to place a hook in a globally mapped DLL like user32.dll, ntdll.dll, etc. but we only want our hook to exist in one context.
 			set the guest pte to point to a new copy page, to prevent the hook from being globally mapped.	*/
+
 		if (vmroot_cr3 != vmcb_data->guest_vmcb.save_state_area.Cr3)
 		{
 			auto guest_pte = PageUtils::GetPte((void*)address, vmcb_data->guest_vmcb.save_state_area.Cr3);
 
 			hook_entry->original_pte = guest_pte;
 			hook_entry->original_pfn = guest_pte->PageFrameNumber;
+			hook_entry->original_nx = guest_pte->ExecuteDisable;
+			
+			memcpy(PageUtils::VirtualAddrFromPfn(hook_entry->copy_pte->PageFrameNumber), PAGE_ALIGN(address), PAGE_SIZE);
 
 			guest_pte->PageFrameNumber = hook_entry->copy_pte->PageFrameNumber;
-
-			memcpy(PageUtils::VirtualAddrFromPfn(hook_entry->copy_pte->PageFrameNumber), PAGE_ALIGN(address), PAGE_SIZE);
+			guest_pte->ExecuteDisable = 0;
 		}
+
 
 		/*	get the guest pte and physical address of the hooked page	*/
 
 		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
 		hook_entry->guest_phys_addr = (uint8_t*)physical_page;
+
 
 		/*	get the nested pte of the guest physical address	*/
 
@@ -263,8 +131,6 @@ namespace NptHooks
 		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
 
 		__writecr3(vmroot_cr3);
-
-		hook_count += 1;
 
 		return hook_entry;
 	}

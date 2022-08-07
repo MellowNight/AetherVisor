@@ -1,5 +1,5 @@
-#include "itlb_hook.h"
 #include "npt_hook.h"
+#include "npthook_safety.h"
 #include "logging.h"
 #include "disassembly.h"
 #include "prepare_vm.h"

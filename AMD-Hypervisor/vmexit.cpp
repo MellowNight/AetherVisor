@@ -55,22 +55,22 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 
     switch (id)
     {
-        case VMMCALL_ID::set_tlb_hook:
-        {
-            TlbHooks::SetTlbHook(
-                (void*)GuestRegisters->rdx,
-                (uint8_t*)GuestRegisters->r8,
-                GuestRegisters->r9
-            );
-            
-            break;
-        }
         case VMMCALL_ID::remove_npt_hook:
         {
             auto vmroot_cr3 = __readcr3();
             __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
-            
-            NptHooks::RemoveHook(GuestRegisters->rdx);
+           
+            NptHooks::ForEachHook(
+                [](NptHooks::NptHook* hook_entry, void* data)->bool {
+
+                    if (hook_entry->tag == (uintptr_t)data)
+                    {
+                        NptHooks::UnsetHook(hook_entry);
+                    }
+                    return true;
+                },
+               (void*)GuestRegisters->rdx
+            );
 
             __writecr3(vmroot_cr3);
 
@@ -105,7 +105,7 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
         default: 
         {
             InjectException(vmcb_data, EXCEPTION_INVALID_OPCODE);
-            break;
+            return;
         }
     }
 
@@ -115,6 +115,7 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
 {
     /*	load host extra state	*/
+
     __svm_vmload(core_data->host_vmcb_physicaladdr);
 
     bool end_hypervisor = false;		
@@ -141,11 +142,6 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
             HandleNestedPageFault(core_data, GuestRegisters);
             break;
         }
-        case VMEXIT::PF:
-        {
-            TlbHooks::HandlePageFaultTlb(core_data, GuestRegisters);
-            break;
-        }
         case VMEXIT::GP: 
         {
             InjectException(core_data, EXCEPTION_GP_FAULT, STATUS_ACCESS_VIOLATION);
@@ -158,11 +154,6 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
 
             IsProcessorReadyForVmrun(&core_data->guest_vmcb, CsAttrib);
 
-            break;
-        }
-        case VMEXIT::BP:
-        {
-            TlbHooks::HandleTlbHookBreakpoint(core_data);
             break;
         }
         case VMEXIT::VMEXIT_MWAIT_CONDITIONAL:
