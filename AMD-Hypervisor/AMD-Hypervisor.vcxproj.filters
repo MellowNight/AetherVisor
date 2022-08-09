@@ -86,7 +86,7 @@
       <Filter>Source Files\hooking</Filter>
     </ClInclude>
     <ClInclude Include="npthook_safety.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\hooking</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -50,6 +50,7 @@ namespace NptHooks
 
 		if (hook_entry->original_pte)
 		{
+			*hook_entry->original_pte = hook_entry->original_pte_value;
 			hook_entry->original_pte->PageFrameNumber = hook_entry->original_pfn;
 		}
 
@@ -81,19 +82,20 @@ namespace NptHooks
 		/*	Sometimes we want to place a hook in a globally mapped DLL like user32.dll, ntdll.dll, etc. but we only want our hook to exist in one context.
 			set the guest pte to point to a new copy page, to prevent the hook from being globally mapped.	*/
 
-		if (vmroot_cr3 != vmcb_data->guest_vmcb.save_state_area.Cr3)
-		{
-			auto guest_pte = PageUtils::GetPte((void*)address, vmcb_data->guest_vmcb.save_state_area.Cr3);
+		//if (vmroot_cr3 != vmcb_data->guest_vmcb.save_state_area.Cr3)
+		//{
+		//	auto guest_pte = PageUtils::GetPte((void*)address, vmcb_data->guest_vmcb.save_state_area.Cr3);
 
-			hook_entry->original_pte = guest_pte;
-			hook_entry->original_pfn = guest_pte->PageFrameNumber;
-			hook_entry->original_nx = guest_pte->ExecuteDisable;
-			
-			memcpy(PageUtils::VirtualAddrFromPfn(hook_entry->copy_pte->PageFrameNumber), PAGE_ALIGN(address), PAGE_SIZE);
+		//	hook_entry->original_pte = guest_pte;
+		//	hook_entry->original_pfn = guest_pte->PageFrameNumber;
+		//	hook_entry->original_pte_value = *guest_pte;
 
-			guest_pte->PageFrameNumber = hook_entry->copy_pte->PageFrameNumber;
-			guest_pte->ExecuteDisable = 0;
-		}
+		//	memcpy(PageUtils::VirtualAddrFromPfn(hook_entry->copy_pte->PageFrameNumber), PAGE_ALIGN(address), PAGE_SIZE);
+
+		//	guest_pte->PageFrameNumber = hook_entry->copy_pte->PageFrameNumber;
+		//	guest_pte->ExecuteDisable = 0;
+		//	guest_pte->Write = 1;
+		//}
 
 
 		/*	get the guest pte and physical address of the hooked page	*/

@@ -18,10 +18,6 @@ namespace NptHooks
 		PT_ENTRY_64* copy_pte;			/*	guest PTE of the copy page	(for globally mapped DLL hooks)	*/
 		void* copy_page;
 
-		PT_ENTRY_64* original_pte;		/*	original PTE of the page			*/
-		BOOL original_nx;				/*	some original guest PTE info		*/
-		uint64_t original_pfn;
-
 		uintptr_t process_cr3;			/*	process where this hook resides in	*/
 
 		int32_t tag;		/*	identify this hook		*/
