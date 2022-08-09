@@ -79,22 +79,6 @@ bool VirtualizeAllProcessors()
 		}
 	}
 
-	/*	experiment with TLB spliting	*/
-	//LARGE_INTEGER delay = { 30000000 };	// 3 seconds
-	//KeDelayExecutionThread(KernelMode, FALSE, &delay);
-
-	//auto code_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
-	//memset(code_page, 0xCC, PAGE_SIZE);
-	//*(char*)code_page = 0xC3;
-
-	//TlbHooks::SetTlbHook(code_page, (uint8_t*)"\xCC\xC3", 2);
-
-	//__debugbreak();
-	//static_cast<void(*)()>(code_page)();
-
-	//unsigned char firstbyte = *(unsigned char*)code_page & 0xFF;
-	//Logger::Log("first byte of code page is %02x \n", firstbyte);
-	//__debugbreak();
 	NptHooks::PageSynchronizationPatch();
 }
 

@@ -58,9 +58,13 @@ namespace NptHooks
 
 	NptHook* SetNptHook(CoreData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t tag)
 	{
-		auto hook_entry = &first_npt_hook;
+		auto vmroot_cr3 = __readcr3();
+
+		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
 		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+
+		auto hook_entry = &first_npt_hook;
 
 		bool reused_hook = false;
 
@@ -78,10 +82,6 @@ namespace NptHooks
 		hook_entry->active = true;
 		hook_entry->tag = tag;
 		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
-
-		auto vmroot_cr3 = __readcr3();
-
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
 		/*	get the guest pte and physical address of the hooked page	*/
 

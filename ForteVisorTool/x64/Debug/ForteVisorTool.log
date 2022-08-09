@@ -1,1 +1,4 @@
-﻿  ForteVisorTool.vcxproj -> C:\Users\cppco\OneDrive\Documents\GitHub\ForteVisor\x64\Debug\ForteVisorTool.exe
+﻿  ForteVisorTool.cpp
+ForteVisorApi.lib(forte_api.obj) : warning LNK4099: PDB 'ForteVisorApi.pdb' was not found with 'ForteVisorApi.lib(forte_api.obj)' or at 'C:\Users\cppco\OneDrive\Documents\GitHub\ForteVisor\x64\Debug\ForteVisorApi.pdb'; linking object as if no debug info
+ForteVisorApi.lib(pch.obj) : warning LNK4099: PDB 'ForteVisorApi.pdb' was not found with 'ForteVisorApi.lib(pch.obj)' or at 'C:\Users\cppco\OneDrive\Documents\GitHub\ForteVisor\x64\Debug\ForteVisorApi.pdb'; linking object as if no debug info
+  ForteVisorTool.vcxproj -> C:\Users\cppco\OneDrive\Documents\GitHub\ForteVisor\x64\Debug\ForteVisorTool.exe
