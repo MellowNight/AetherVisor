@@ -47,25 +47,30 @@ namespace NptHooks
 	void UnsetHook(NptHook* hook_entry)
 	{
 		hook_entry->hookless_npte->ExecuteDisable = 0;
-
-		if (hook_entry->original_pte)
-		{
-			*hook_entry->original_pte = hook_entry->original_pte_value;
-			hook_entry->original_pte->PageFrameNumber = hook_entry->original_pfn;
-		}
-
 		hook_entry->process_cr3 = 0;
 		hook_entry->active = false;
 
 		hook_count -= 1;
 	}
 
+
+	/*	IMPORTANT: if you want to set a hook in a globally mapped DLL such as ntdll.dll, you must trigger copy on write first!	*/
+
 	NptHook* SetNptHook(CoreData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t tag)
 	{
 		auto hook_entry = &first_npt_hook;
 
+		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+
+		bool reused_hook = false;
+
 		for (int i = 0; i < hook_count, hook_entry->active; hook_entry = (NptHook*)hook_entry->list_entry.Flink, ++i)
 		{
+			if (physical_page == hook_entry->guest_physical_page)
+			{
+				reused_hook = true;
+				break;
+			}
 		}		
 
 		hook_count += 1;
@@ -78,31 +83,9 @@ namespace NptHooks
 
 		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
-
-		/*	Sometimes we want to place a hook in a globally mapped DLL like user32.dll, ntdll.dll, etc. but we only want our hook to exist in one context.
-			set the guest pte to point to a new copy page, to prevent the hook from being globally mapped.	*/
-
-		//if (vmroot_cr3 != vmcb_data->guest_vmcb.save_state_area.Cr3)
-		//{
-		//	auto guest_pte = PageUtils::GetPte((void*)address, vmcb_data->guest_vmcb.save_state_area.Cr3);
-
-		//	hook_entry->original_pte = guest_pte;
-		//	hook_entry->original_pfn = guest_pte->PageFrameNumber;
-		//	hook_entry->original_pte_value = *guest_pte;
-
-		//	memcpy(PageUtils::VirtualAddrFromPfn(hook_entry->copy_pte->PageFrameNumber), PAGE_ALIGN(address), PAGE_SIZE);
-
-		//	guest_pte->PageFrameNumber = hook_entry->copy_pte->PageFrameNumber;
-		//	guest_pte->ExecuteDisable = 0;
-		//	guest_pte->Write = 1;
-		//}
-
-
 		/*	get the guest pte and physical address of the hooked page	*/
 
-		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
-
-		hook_entry->guest_phys_addr = (uint8_t*)physical_page;
+		hook_entry->guest_physical_page = (uint8_t*)physical_page;
 
 
 		/*	get the nested pte of the guest physical address	*/
@@ -123,9 +106,13 @@ namespace NptHooks
 		auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
 
 
-		/*	place our hook in the copied page for the 2nd NCR3	*/
+		/*	place our hook in the copied page for the 2nd NCR3, and don't overwrite already existing hooks on the page	*/
 
-		memcpy(hooked_copy, PAGE_ALIGN(address), PAGE_SIZE);
+		if (!reused_hook)
+		{
+			memcpy(hooked_copy, PAGE_ALIGN(address), PAGE_SIZE);
+		}
+
 		memcpy((uint8_t*)hooked_copy + page_offset, patch, patch_len);
 
 		/*	SetNptHook epilogue	*/

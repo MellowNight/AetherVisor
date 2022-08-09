@@ -9,7 +9,7 @@ namespace NptHooks
 	{
 		LIST_ENTRY	list_entry;	
 
-		uint8_t* guest_phys_addr;		/*	guest physical address of the hooked page	*/
+		uint8_t* guest_physical_page;		/*	guest physical address of the hooked page	*/
 		void* hooked_page;				/*	guest virtual address of the hooked page	*/
 
 		PT_ENTRY_64* hookless_npte;		/*	nested PTE of page without hooks	*/
