@@ -121,7 +121,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="npthook_safety.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\hooking</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

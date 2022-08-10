@@ -87,6 +87,9 @@ namespace NptHooks
 
 		hook_entry->guest_physical_page = (uint8_t*)physical_page;
 
+		auto guest_pte = PageUtils::GetPte((void*)address, hook_entry->process_cr3);
+
+		guest_pte->ExecuteDisable = 0;
 
 		/*	get the nested pte of the guest physical address	*/
 
