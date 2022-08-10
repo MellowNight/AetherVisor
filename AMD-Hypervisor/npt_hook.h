@@ -9,19 +9,18 @@ namespace NptHooks
 	{
 		LIST_ENTRY	list_entry;	
 
-		uint8_t* guest_physical_page;		/*	guest physical address of the hooked page	*/
+		uint8_t* guest_physical_page;	/*	guest physical address of the hooked page	*/
 		void* hooked_page;				/*	guest virtual address of the hooked page	*/
 
-		PT_ENTRY_64* hookless_npte;		/*	nested PTE of page without hooks	*/
-		PT_ENTRY_64* hooked_pte;		/*	guest PTE of page with hooks		*/
+		PT_ENTRY_64* hookless_npte;		/*	nested PTE of page without hooks			*/
+		PT_ENTRY_64* hooked_pte;		/*	guest PTE of the copy page with hooks		*/
+		PT_ENTRY_64* guest_pte;			/*	guest PTE of the original page				*/
+		int original_nx;				/*	original NX value of the guest PTE			*/
+	
+		uintptr_t process_cr3;		/*	process where this hook resides in			*/
 
-		PT_ENTRY_64* copy_pte;			/*	guest PTE of the copy page	(for globally mapped DLL hooks)	*/
-		void* copy_page;
-
-		uintptr_t process_cr3;			/*	process where this hook resides in	*/
-
-		int32_t tag;		/*	identify this hook		*/
-		bool active;		/*	is this hook active?	*/
+		int32_t tag;	/*	identify this hook		*/
+		bool active;	/*	is this hook active?	*/
 
 		void Init()
 		{
@@ -30,9 +29,6 @@ namespace NptHooks
 
 			hooked_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'HOOK');
 			hooked_pte = PageUtils::GetPte(hooked_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
-
-			copy_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'HOOK');
-			copy_pte = PageUtils::GetPte(copy_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 		}
 	};
 	

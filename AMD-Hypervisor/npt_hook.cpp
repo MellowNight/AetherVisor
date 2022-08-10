@@ -49,6 +49,7 @@ namespace NptHooks
 		hook_entry->hookless_npte->ExecuteDisable = 0;
 		hook_entry->process_cr3 = 0;
 		hook_entry->active = false;
+		hook_entry->guest_pte->ExecuteDisable = hook_entry->original_nx;
 
 		hook_count -= 1;
 	}
@@ -83,13 +84,17 @@ namespace NptHooks
 		hook_entry->tag = tag;
 		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
 
+
 		/*	get the guest pte and physical address of the hooked page	*/
 
 		hook_entry->guest_physical_page = (uint8_t*)physical_page;
 
-		auto guest_pte = PageUtils::GetPte((void*)address, hook_entry->process_cr3);
+		hook_entry->guest_pte = PageUtils::GetPte((void*)address, hook_entry->process_cr3);
 
-		guest_pte->ExecuteDisable = 0;
+		hook_entry->original_nx = hook_entry->guest_pte->ExecuteDisable;
+
+		hook_entry->guest_pte->ExecuteDisable = 0;
+
 
 		/*	get the nested pte of the guest physical address	*/
 
