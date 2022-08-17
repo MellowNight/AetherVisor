@@ -42,11 +42,11 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 			}, (void*)faulting_physical.QuadPart
 		);
 
-		Logger::Get()->Log("guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
+		//Logger::Get()->Log("guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
 
 		bool switch_ncr3 = true;
 
-		int insn_len = 10;
+		int insn_len = 16;
 
 		/*	handle cases where an instruction is split across 2 pages	*/
 
@@ -77,7 +77,7 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 			PageUtils::GetPte((void*)page2, ncr3.QuadPart)->ExecuteDisable = 0;
 		}
 
-		Logger::Get()->Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
+		// Logger::Get()->Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
 
 		/*	clean ncr3 cache	*/
 
