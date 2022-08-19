@@ -4,9 +4,6 @@
 
 namespace NptHooks
 {
-	int hook_count;
-	NptHook first_npt_hook;
-
 	Hooks::JmpRipCode hk_MmCleanProcessAddressSpace;
 
 	char __fastcall MmCleanProcessAddressSpace_hook(__int64 a1, __int64 a2)

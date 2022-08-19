@@ -3,6 +3,8 @@
 #include "hypervisor.h"
 #include "paging_utils.h"
 
+#pragma optimize( "", off )
+
 void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 {
 	PHYSICAL_ADDRESS faulting_physical;
@@ -15,6 +17,8 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 	ncr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3;
 
 	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
+
+	Logger::Get()->Log("[#NPF HANDLER]     guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
 
 	if (exit_info1.fields.valid == 0)
 	{
@@ -41,8 +45,6 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 
 			}, (void*)faulting_physical.QuadPart
 		);
-
-		//Logger::Get()->Log("guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
 
 		bool switch_ncr3 = true;
 
@@ -77,7 +79,7 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 			PageUtils::GetPte((void*)page2, ncr3.QuadPart)->ExecuteDisable = 0;
 		}
 
-		// Logger::Get()->Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
+		/// Logger::Get()->Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
 
 		/*	clean ncr3 cache	*/
 
@@ -98,6 +100,8 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 		}
 	}
 }
+
+#pragma optimize( "", on )
 
 /*	gPTE pfn would be equal to nPTE pfn,
 	because guest physical addresses are 1:1 mapped to host physical

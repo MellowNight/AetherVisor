@@ -34,13 +34,12 @@ namespace NptHooks
 	
 
 	extern	int hook_count;
-	extern	NptHook first_npt_hook;
+	extern	NptHook* npt_hook_array;
 
 	NptHook* SetNptHook(CoreData* VpData, void* address, uint8_t* patch, size_t patch_len, int32_t tag = 0);
 	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data);
 
 	void UnsetHook(NptHook* hook_entry);
-	void ReserveHookEntry();
 
 	void Init();
 };

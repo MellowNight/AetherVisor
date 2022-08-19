@@ -133,7 +133,7 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
             break;
         }
         case VMEXIT::VMMCALL: 
-        {
+        {            
             HandleVmmcall(core_data, GuestRegisters, &end_hypervisor);
             break;
         }

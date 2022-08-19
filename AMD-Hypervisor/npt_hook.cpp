@@ -8,37 +8,32 @@
 
 namespace NptHooks
 {
+	int hook_count;
+	NptHook* npt_hook_array;
+
 	void Init()
 	{
 		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
 
 		int max_hooks = 500;
 		
-		InitializeListHead((PLIST_ENTRY)&first_npt_hook);
-
-		first_npt_hook.Init();
+		npt_hook_array = (NptHook*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHook) * max_hooks, 'hook');
 
 		for (int i = 0; i < max_hooks; ++i)
 		{
-			auto hook_entry = (NptHook*)ExAllocatePool(NonPagedPool, sizeof(NptHook));
-
-			hook_entry->Init();
-
-			InsertTailList((PLIST_ENTRY)&first_npt_hook, (PLIST_ENTRY)hook_entry);
+			npt_hook_array[i].Init();
 		}
 
-		hook_count = 1;
+		hook_count = 0;
 	}
 
 	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data)
 	{
-		auto hook_entry = &first_npt_hook;
-
-		for (int i = 0; i < hook_count; hook_entry = (NptHook*)hook_entry->list_entry.Flink, ++i)
+		for (int i = 0; i < hook_count; ++i)
 		{
-			if (HookCallback(hook_entry, callback_data))
+			if (HookCallback(&npt_hook_array[i], callback_data))
 			{
-				return hook_entry;
+				return &npt_hook_array[i];
 			}
 		}
 		return 0;
@@ -65,18 +60,9 @@ namespace NptHooks
 
 		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-		auto hook_entry = &first_npt_hook;
-
 		bool reused_hook = false;
 
-		for (int i = 0; i < hook_count, hook_entry->active; hook_entry = (NptHook*)hook_entry->list_entry.Flink, ++i)
-		{
-			if (physical_page == hook_entry->guest_physical_page)
-			{
-				reused_hook = true;
-				break;
-			}
-		}		
+		auto hook_entry = &npt_hook_array[hook_count];
 
 		hook_count += 1;
 
@@ -99,6 +85,14 @@ namespace NptHooks
 		/*	get the nested pte of the guest physical address	*/
 
 		hook_entry->hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->normal_ncr3);
+
+		if (hook_entry->hookless_npte->ExecuteDisable == 1)
+		{
+			/*	this page was already hooked	*/
+
+			reused_hook = true;
+		}
+
 		hook_entry->hookless_npte->ExecuteDisable = 1;
 
 
