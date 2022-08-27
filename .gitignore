@@ -1,8 +1,1 @@
-
-*.vsidx
-*.lock
-*.db
-*.db-wal
-*.opendb
-*.ipch
-*.db-shm
+**/.vs/

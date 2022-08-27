@@ -9,6 +9,7 @@ namespace NptHooks
 	{
 		LIST_ENTRY	list_entry;	
 
+		PMDL mdl;		/*	mdl used for locking hooked pages	*/
 		uint8_t* guest_physical_page;	/*	guest physical address of the hooked page	*/
 		void* hooked_page;				/*	guest virtual address of the hooked page	*/
 

@@ -13,7 +13,7 @@ namespace PageUtils
 
     PFN_NUMBER	PfnFromVirtualAddr(uintptr_t va);
 
-    PMDL LockPages(void* virtual_address, LOCK_OPERATION  operation);
+    PMDL LockPages(void* virtual_address, LOCK_OPERATION  operation, KPROCESSOR_MODE access_mode);
 
     NTSTATUS UnlockPages(PMDL mdl);
 

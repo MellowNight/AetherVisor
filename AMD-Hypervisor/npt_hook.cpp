@@ -46,6 +46,8 @@ namespace NptHooks
 		hook_entry->active = false;
 		hook_entry->guest_pte->ExecuteDisable = hook_entry->original_nx;
 
+		PageUtils::UnlockPages(hook_entry->mdl);
+
 		hook_count -= 1;
 	}
 
@@ -58,11 +60,20 @@ namespace NptHooks
 
 		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
-		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
-
 		bool reused_hook = false;
 
 		auto hook_entry = &npt_hook_array[hook_count];
+
+		if ((uintptr_t)address < 0x7FFFFFFFFFF)
+		{
+			hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, UserMode);
+		}
+		else
+		{
+			hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
+		}
+
+		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
 		hook_count += 1;
 

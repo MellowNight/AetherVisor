@@ -1,1 +1,3 @@
-﻿
+﻿  ForteVisorTool.cpp
+LINK : fatal error C1047: The object or library file 'C:\Users\cppco\OneDrive\Documents\GitHub\ForteVisor\dependencies\ForteVisor\lib\Usermode\Release\ForteVisorApi.lib' was created by a different version of the compiler than other objects like 'x64\Release\ForteVisorTool.obj'; rebuild all objects and libraries with the same compiler
+LINK : fatal error LNK1257: code generation failed
