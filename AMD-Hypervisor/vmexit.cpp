@@ -18,9 +18,18 @@ void InjectException(CoreData* core_data, int vector, int error_code)
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
 
+uint32_t last_msr = 0;
+
 void HandleMsrExit(CoreData* VpData, GPRegs* GuestRegisters)
 {
     uint32_t msr_id = GuestRegisters->rcx & (uint32_t)0xFFFFFFFF;
+
+    last_msr = msr_id;
+
+    if (!(((msr_id > 0) && (msr_id < 0x00001FFF)) || ((msr_id > 0xC0000000) && (msr_id < 0xC0001FFF)) || (msr_id > 0xC0010000) && (msr_id < 0xC0011FFF)))
+    {
+        return;
+    }
 
     LARGE_INTEGER msr_value;
 
