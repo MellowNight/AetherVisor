@@ -74,16 +74,16 @@ namespace NptHooks
 				length_tag.HighPart = 2;
 
 				auto patch_loc = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\x48\x85\x57\x28", 4, 0x00) + 4;
-				svm_vmmcall(VMMCALL_ID::set_npt_hook, patch_loc, "\x90\x90", length_tag.QuadPart);
+				//svm_vmmcall(VMMCALL_ID::set_npt_hook, patch_loc, "\x90\x90", length_tag.QuadPart);
 
 				length_tag.HighPart = 6;
 
 				patch_loc = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\x48\x85\x56\x28\x0F", 5, 0x00) + 4;
-				svm_vmmcall(VMMCALL_ID::set_npt_hook, patch_loc, "\x90\x90\x90\x90\x90\x90", length_tag.QuadPart);
+			//	svm_vmmcall(VMMCALL_ID::set_npt_hook, patch_loc, "\x90\x90\x90\x90\x90\x90", length_tag.QuadPart);
 
 
 				patch_loc = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\x0F\x85\x00\x00\x00\x00\x48\x89\xAC\x24\x00\x00\x00\x00\x48\x8B\xEA", 17, 0x00);
-				svm_vmmcall(VMMCALL_ID::set_npt_hook, patch_loc, "\x90\x90\x90\x90\x90\x90", length_tag.QuadPart);
+				//svm_vmmcall(VMMCALL_ID::set_npt_hook, patch_loc, "\x90\x90\x90\x90\x90\x90", length_tag.QuadPart);
 			}
 		}
 	}
