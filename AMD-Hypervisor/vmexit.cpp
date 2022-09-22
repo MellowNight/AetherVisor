@@ -1,6 +1,6 @@
 #include "vmexit.h"
 
-void InjectException(CoreData* core_data, int vector, int error_code)
+void InjectException(CoreData* core_data, int vector, bool push_error_code, int error_code)
 {
     EventInjection event_injection;
 
@@ -8,7 +8,7 @@ void InjectException(CoreData* core_data, int vector, int error_code)
     event_injection.type = 3;
     event_injection.valid = 1;
     
-    if (error_code)
+    if (push_error_code)
     {
         event_injection.push_error_code = 1;
     }
@@ -18,16 +18,18 @@ void InjectException(CoreData* core_data, int vector, int error_code)
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
 
-uint32_t last_msr = 0;
-
-void HandleMsrExit(CoreData* VpData, GPRegs* GuestRegisters)
+void HandleMsrExit(CoreData* core_data, GPRegs* guest_regs)
 {
-    uint32_t msr_id = GuestRegisters->rcx & (uint32_t)0xFFFFFFFF;
+    uint32_t msr_id = guest_regs->rcx & (uint32_t)0xFFFFFFFF;
 
-    last_msr = msr_id;
+    if (msr_id != 0x000C001029A)
+    {
+        DbgPrint("msr_id 0x%p guest_regs->rcx 0x%p \n", msr_id, guest_regs->rcx);
+    }
 
     if (!(((msr_id > 0) && (msr_id < 0x00001FFF)) || ((msr_id > 0xC0000000) && (msr_id < 0xC0001FFF)) || (msr_id > 0xC0010000) && (msr_id < 0xC0011FFF)))
     {
+        InjectException(core_data, EXCEPTION_GP_FAULT, false, 0);
         return;
     }
 
@@ -49,10 +51,10 @@ void HandleMsrExit(CoreData* VpData, GPRegs* GuestRegisters)
         break;
     }
 
-    VpData->guest_vmcb.save_state_area.Rax = msr_value.LowPart;
-    GuestRegisters->rdx = msr_value.HighPart;
+    core_data->guest_vmcb.save_state_area.Rax = msr_value.LowPart;
+    guest_regs->rdx = msr_value.HighPart;
 
-    VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
+    core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
 }
 
 /*  HandleVmmcall only handles the vmmcall for 1 core. 
@@ -113,7 +115,7 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
         }
         default: 
         {
-            InjectException(vmcb_data, EXCEPTION_INVALID_OPCODE);
+            InjectException(vmcb_data, EXCEPTION_INVALID_OPCODE, false, 0);
             return;
         }
     }
@@ -138,7 +140,7 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
         }
         case VMEXIT::VMRUN: 
         {
-            InjectException(core_data, EXCEPTION_GP_FAULT);
+            InjectException(core_data, EXCEPTION_GP_FAULT, false, 0);
             break;
         }
         case VMEXIT::VMMCALL: 
@@ -149,11 +151,6 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
         case VMEXIT::NPF:
         {
             HandleNestedPageFault(core_data, GuestRegisters);
-            break;
-        }
-        case VMEXIT::GP: 
-        {
-            InjectException(core_data, EXCEPTION_GP_FAULT, STATUS_ACCESS_VIOLATION);
             break;
         }
         case VMEXIT::INVALID: 
@@ -172,7 +169,7 @@ extern "C" bool HandleVmexit(CoreData* core_data, GPRegs* GuestRegisters)
         }
         case 0x55: // CET shadow stack exception
         {
-            InjectException(core_data, 0x55, TRUE);
+            InjectException(core_data, 0x55, TRUE, 0);
             break;
         }
         default:
