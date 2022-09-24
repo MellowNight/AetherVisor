@@ -2,7 +2,7 @@
 
 void InjectException(CoreData* core_data, int vector, bool push_error_code, int error_code)
 {
-    EventInjection event_injection;
+    EventInjection event_injection = { 0 };
 
     event_injection.vector = vector;
     event_injection.type = 3;
@@ -11,9 +11,8 @@ void InjectException(CoreData* core_data, int vector, bool push_error_code, int 
     if (push_error_code)
     {
         event_injection.push_error_code = 1;
+        event_injection.error_code = error_code;
     }
-
-    event_injection.error_code = error_code;
 
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
@@ -24,12 +23,14 @@ void HandleMsrExit(CoreData* core_data, GPRegs* guest_regs)
 
     if (msr_id != 0x000C001029A)
     {
-        DbgPrint("msr_id 0x%p guest_regs->rcx 0x%p \n", msr_id, guest_regs->rcx);
+    //    DbgPrint("msr_id 0x%p guest_regs->rcx 0x%p \n", msr_id, guest_regs->rcx);
     }
 
     if (!(((msr_id > 0) && (msr_id < 0x00001FFF)) || ((msr_id > 0xC0000000) && (msr_id < 0xC0001FFF)) || (msr_id > 0xC0010000) && (msr_id < 0xC0011FFF)))
     {
-        InjectException(core_data, EXCEPTION_GP_FAULT, false, 0);
+        InjectException(core_data, EXCEPTION_GP_FAULT, true, 0);
+        core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
+
         return;
     }
 

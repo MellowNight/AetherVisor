@@ -85,14 +85,12 @@ bool VirtualizeAllProcessors()
 
 int Initialize()
 {
-	auto msrr = __readmsr(0xFFFFFFFF);
-
 	Logger::Get()->Start();
 	Disasm::Init();
 	//TlbHooks::Init();
 	NptHooks::Init();
 
-	return msrr;
+	return 0;
 }
 
 NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
