@@ -72,11 +72,11 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 				switch_ncr3 = false;
 			}
 
-			auto page1 = faulting_physical.QuadPart;
-			auto page2 = PageUtils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3);
+			auto page1_physical = faulting_physical.QuadPart;
+			auto page2_physical = PageUtils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3)->PageFrameNumber << PAGE_SHIFT;
 
-			PageUtils::GetPte((void*)page1, ncr3.QuadPart)->ExecuteDisable = 0;
-			PageUtils::GetPte((void*)page2, ncr3.QuadPart)->ExecuteDisable = 0;
+			PageUtils::GetPte((void*)page1_physical, ncr3.QuadPart)->ExecuteDisable = 0;
+			PageUtils::GetPte((void*)page2_physical, ncr3.QuadPart)->ExecuteDisable = 0;
 		}
 
 		/// Logger::Get()->Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);

@@ -91,6 +91,7 @@ namespace NptHooks
 		hook_entry->original_nx = hook_entry->guest_pte->ExecuteDisable;
 
 		hook_entry->guest_pte->ExecuteDisable = 0;
+		hook_entry->guest_pte->Write = 1;
 
 
 		/*	get the nested pte of the guest physical address	*/
