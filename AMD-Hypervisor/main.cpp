@@ -4,7 +4,7 @@
 #include "disassembly.h"
 #include "prepare_vm.h"
 #include "vmexit.h"
-#include "paging_utils.h"
+#include "paging_utils.h"c
 
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
