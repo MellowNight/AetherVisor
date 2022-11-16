@@ -4,7 +4,7 @@
 #include "disassembly.h"
 #include "prepare_vm.h"
 #include "vmexit.h"
-#include "paging_utils.h"c
+#include "paging_utils.h"
 
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
@@ -12,6 +12,7 @@ extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 bool VirtualizeAllProcessors()
 {
 	Logger::Get()->Log("[SETUP] test etw log \n");
+
 	DbgPrint("[SETUP] test dbgprint");
 
 

@@ -102,11 +102,9 @@ namespace Utils
         KeLowerIrql(tempirql);
     }
 
-    PVOID GetKernelModule(OUT PULONG pSize, UNICODE_STRING DriverName)
+    PVOID GetKernelModule(OUT PULONG pSize, UNICODE_STRING driver_name)
     {
         PLIST_ENTRY moduleList = (PLIST_ENTRY)PsLoadedModuleList;
-
-        UNICODE_STRING  DrvName;
 
         for (PLIST_ENTRY link = moduleList;
             link != moduleList->Blink;
@@ -114,7 +112,7 @@ namespace Utils
         {
             LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(link, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
-            if (RtlCompareUnicodeString(&DriverName, &entry->BaseDllName, false) == 0)
+            if (RtlCompareUnicodeString(&driver_name, &entry->BaseDllName, false) == 0)
             {
                 DbgPrint("found module! %wZ at %p \n", &entry->BaseDllName, entry->DllBase);
                 if (pSize && MmIsAddressValid(pSize))
