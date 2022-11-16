@@ -110,7 +110,7 @@ namespace NptHooks
 
 		/*	get the nested pte of the guest physical address in the 2nd NCR3, and map it to our hook page	*/
 
-		auto hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->noexecute_ncr3);
+		auto hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[core_2]);
 
 		hooked_npte->PageFrameNumber = hook_entry->hooked_pte->PageFrameNumber;
 		hooked_npte->ExecuteDisable = 0;

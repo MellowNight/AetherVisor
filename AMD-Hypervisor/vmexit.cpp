@@ -72,6 +72,7 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
             auto address = (void*)GuestRegisters->rdx;
             auto patch = (uint8_t*)GuestRegisters->r8;
             auto patch_len = GuestRegisters->r9;
+            auto spoofed_page = GuestRegisters->r9;
             int core_id;
 
             auto vmroot_cr3 = __readcr3();
@@ -80,38 +81,31 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 
             auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-            auto process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
-
             /*	get the guest pte and physical address of the hooked page	*/
 
-            auto guest_pte = PageUtils::GetPte((void*)address, process_cr3);
+            auto spoofed_physical_page = PAGE_ALIGN(MmGetPhysicalAddress(spoofed_page)).QuadPart);
 
-            guest_pte->Write = 1;
-
-            for (int i = 0; i < Hypervisor::Get()->ncr3_dirs[tertiary]; ++i)
+            for (int i = 0; i < NCR3_DIRECTORIES::tertiary; ++i)
             {
-                /*	get the nested pte of the guest physical address	*/
-
-                auto hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[i]);
-
                 if (core_id == i)
                 {
-                    /*	get the nested pte of the guest physical address in the 2nd NCR3, and map it to our hook page	*/
-
-                    auto exclusive_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[core_id]);
-
-                    exclusive_npte->PageFrameNumber = guest_pte->PageFrameNumber;
-                    exclusive_npte->ExecuteDisable = 0;
+                    continue;
                 }
+
+                /*	set the nPTE of other nCR3s to the page with spoofed memory	*/
+
+                auto spoofed_npte = PageUtils::GetPte((void*)spoofed_physical_page, Hypervisor::Get()->ncr3_dirs[i]);
+
+                spoofed_npte->PageFrameNumber = spoofed_physical_page >> 12;
             }
 
-            auto spoofed_copy = PageUtils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
+            auto spoofed_copy = PageUtils::VirtualAddrFromPfn(physical_page >> 12);
 
             auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
 
-            memcpy((uint8_t*)spoofed_copy, patch, patch_len);
+            memcpy((uint8_t*)spoofed_copy + page_offset, patch, patch_len);
 
-            /*	SetNptHook epilogue	*/
+            /* epilogue	*/
 
             vmcb_data->guest_vmcb.control_area.TlbControl = 3;
 

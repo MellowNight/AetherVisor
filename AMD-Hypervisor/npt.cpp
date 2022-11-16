@@ -91,7 +91,7 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 		{
 			if (npt_hook)
 			{
-				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->noexecute_ncr3;
+				vcpu_data->guest_vmcb.control_area.NCr3 = npt_hook->secondary_ncr3;
 			}
 			else
 			{
