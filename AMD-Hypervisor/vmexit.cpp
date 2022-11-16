@@ -67,13 +67,66 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 
     switch (id)
     {
+        case VMMCALL_ID::exclusive_ncr3_memcpy:
+        {
+            auto address = (void*)GuestRegisters->rdx;
+            auto patch = (uint8_t*)GuestRegisters->r8;
+            auto patch_len = GuestRegisters->r9;
+            int core_id;
+
+            auto vmroot_cr3 = __readcr3();
+
+            __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
+
+            auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+
+            auto process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
+
+            /*	get the guest pte and physical address of the hooked page	*/
+
+            auto guest_pte = PageUtils::GetPte((void*)address, process_cr3);
+
+            guest_pte->Write = 1;
+
+            for (int i = 0; i < Hypervisor::Get()->ncr3_dirs[tertiary]; ++i)
+            {
+                /*	get the nested pte of the guest physical address	*/
+
+                auto hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[i]);
+
+                if (core_id == i)
+                {
+                    /*	get the nested pte of the guest physical address in the 2nd NCR3, and map it to our hook page	*/
+
+                    auto exclusive_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[core_id]);
+
+                    exclusive_npte->PageFrameNumber = guest_pte->PageFrameNumber;
+                    exclusive_npte->ExecuteDisable = 0;
+                }
+            }
+
+            auto spoofed_copy = PageUtils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
+
+            auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
+
+            memcpy((uint8_t*)spoofed_copy, patch, patch_len);
+
+            /*	SetNptHook epilogue	*/
+
+            vmcb_data->guest_vmcb.control_area.TlbControl = 3;
+
+            __writecr3(vmroot_cr3);
+
+            break;
+        }
         case VMMCALL_ID::remove_npt_hook:
         {
             auto vmroot_cr3 = __readcr3();
+
             __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
            
             NptHooks::ForEachHook(
-                [](NptHooks::NptHook* hook_entry, void* data)->bool {
+                [](NptHooks::NptHook* hook_entry, void* data)-> bool {
 
                     if (hook_entry->tag == (uintptr_t)data)
                     {

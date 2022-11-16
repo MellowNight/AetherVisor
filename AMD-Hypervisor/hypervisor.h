@@ -23,7 +23,14 @@ struct CoreData
     uint8_t     host_save_area[0x1000];
 };
 
-/*  Singleton for the hypervisor    */
+enum NCR3_DIRECTORIES
+{
+    primary,
+    noexecute,
+    tertiary
+};
+
+/* the hypervisor    */
 
 class Hypervisor
 {
@@ -43,8 +50,7 @@ private:
     }
 public:
 
-    uintptr_t normal_ncr3;
-    uintptr_t noexecute_ncr3;
+    uintptr_t ncr3_dirs[3];
 
     PHYSICAL_MEMORY_RANGE phys_mem_range[12];
     CoreData* vcpu_data[32];

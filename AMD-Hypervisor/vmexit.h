@@ -10,6 +10,7 @@ enum VMMCALL_ID : uintptr_t
     set_npt_hook = 0x6611AAFF22,
     remove_npt_hook = 0x1166AAFF22,
     is_hv_present = 0xEEFF,
+    exclusive_ncr3_memcpy = 0x8236FF,
 };
 
 enum VMEXIT
