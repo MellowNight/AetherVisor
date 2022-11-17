@@ -256,7 +256,7 @@ void ConfigureProcessor(CoreData* core_data, CONTEXT* context_record)
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
 	core_data->self = core_data;
 
-	core_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->normal_ncr3;
+	core_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 	core_data->guest_vmcb.control_area.NpEnable = (1UL << 0);
 
 	DescriptorTableRegister	gdtr, idtr;

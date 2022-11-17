@@ -13,6 +13,7 @@ enum VMMCALL_ID : uintptr_t
     exclusive_ncr3_memcpy = 0x8236FF,
 };
 
+
 enum VMEXIT
 {
     CPUID = 0x72,
@@ -29,4 +30,5 @@ enum VMEXIT
 };
 
 void InjectException(CoreData* core_data, int vector, bool push_error_code, int error_code);
+
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);

@@ -26,6 +26,8 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 
 		auto insn_bytes = vcpu_data->guest_vmcb.control_area.GuestInstructionBytes;
 
+		DbgPrint("ncr3 %p \n", ncr3.QuadPart);
+
 		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
 
 		auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, true);
@@ -61,7 +63,7 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 				/*	if CPU is entering the page:	*/
 
 				switch_ncr3 = true;
-				ncr3.QuadPart = Hypervisor::Get()->noexecute_ncr3;
+				ncr3.QuadPart = npt_hook->noexecute_ncr3;
 			}
 			else
 			{
@@ -91,11 +93,11 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 		{
 			if (npt_hook)
 			{
-				vcpu_data->guest_vmcb.control_area.NCr3 = npt_hook->secondary_ncr3;
+				vcpu_data->guest_vmcb.control_area.NCr3 = npt_hook->noexecute_ncr3;
 			}
 			else
 			{
-				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->normal_ncr3;
+				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 			}
 		}
 	}

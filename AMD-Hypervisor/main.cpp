@@ -5,7 +5,56 @@
 #include "prepare_vm.h"
 #include "vmexit.h"
 #include "paging_utils.h"
+#include <ntdddisk.h>
 
+Hooks::JmpRipCode ntqvm_hook;
+
+NTSTATUS NTAPI NtQueryVirtualMemory_hook(_In_ HANDLE ProcessHandle, _In_opt_ PVOID BaseAddress, _In_ MEMORY_INFORMATION_CLASS MemoryInformationClass, _Out_writes_bytes_(MemoryInformationLength) PVOID MemoryInformation, _In_ SIZE_T MemoryInformationLength, _Out_opt_ PSIZE_T ReturnLength)
+{
+	auto status = static_cast<decltype(&NtQueryVirtualMemory)>(ntqvm_hook.original_bytes)(
+		ProcessHandle, BaseAddress, MemoryInformationClass, MemoryInformation, MemoryInformationLength, ReturnLength
+	);
+
+	return status;
+}
+
+Hooks::JmpRipCode ioctl_hk;
+
+
+NTSTATUS NTAPI NtDeviceIoControlFile_handler(
+	_In_ HANDLE FileHandle,
+	_In_opt_ HANDLE Event,
+	_In_opt_ PIO_APC_ROUTINE ApcRoutine,
+	_In_opt_ PVOID ApcContext,
+	_Out_ PIO_STATUS_BLOCK IoStatusBlock,
+	_In_ ULONG IoControlCode,
+	_In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+	_In_ ULONG InputBufferLength,
+	_Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+	_In_ ULONG OutputBufferLength
+)
+{
+	/*  original bytes are fucked   */
+	auto status = static_cast<decltype(&NtDeviceIoControlFile_handler)>((void*)ioctl_hk.original_bytes)(
+		FileHandle,
+		Event,
+		ApcRoutine,
+		ApcContext,
+		IoStatusBlock,
+		IoControlCode,
+		InputBuffer,
+		InputBufferLength,
+		OutputBuffer,
+		OutputBufferLength
+		);
+
+	if (IoControlCode == IOCTL_STORAGE_QUERY_PROPERTY)
+	{
+		DbgPrint("NtDeviceIoControlFile called \n");
+	}
+
+	return status;
+}
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 
@@ -13,8 +62,9 @@ bool VirtualizeAllProcessors()
 {
 	Logger::Get()->Log("[SETUP] test etw log \n");
 
-	DbgPrint("[SETUP] test dbgprint");
+	int iasdsa = 0;
 
+	DbgPrint("[SETUP] test dbgprint %d \n", iasdsa);
 
 	if (!IsSvmSupported())
 	{
@@ -28,45 +78,49 @@ bool VirtualizeAllProcessors()
 		return false;
 	}
 
-	BuildNestedPagingTables(&Hypervisor::Get()->normal_ncr3, true);
-	BuildNestedPagingTables(&Hypervisor::Get()->noexecute_ncr3, false);
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[primary], true);
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[noexecute], false);
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[tertiary], false);
 
-	DbgPrint("[SETUP] hypervisor->noexecute_ncr3 %p \n", Hypervisor::Get()->noexecute_ncr3);
-	DbgPrint("[SETUP] hypervisor->normal_ncr3 %p \n", Hypervisor::Get()->normal_ncr3);
-
-	for (int idx = 0; idx < Hypervisor::Get()->core_count; ++idx)
+	
+	for (int i = 0; i <= NCR3_DIRECTORIES::tertiary; ++i)
 	{
-		KAFFINITY affinity = Utils::Exponent(2, idx);
+		DbgPrint("[SETUP] Hypervisor::Get()->ncr3_dirs[%d] = %p \n", i, Hypervisor::Get()->ncr3_dirs[i]);
+	}
+
+	for (int i = 0; i < Hypervisor::Get()->core_count; ++i)
+	{
+		KAFFINITY affinity = Utils::Exponent(2, i);
 
 		KeSetSystemAffinityThread(affinity);
 
 		DbgPrint("=============================================================== \n");
 		DbgPrint("[SETUP] amount of active processors %i \n", Hypervisor::Get()->core_count);
-		DbgPrint("[SETUP] Currently running on core %i \n", idx);
+		DbgPrint("[SETUP] Currently running on core %i \n", i);
 
 		auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
 
 		RtlCaptureContext(reg_context);
 
-		if (Hypervisor::Get()->IsHypervisorPresent(idx) == false)
+		if (Hypervisor::Get()->IsHypervisorPresent(i) == false)
 		{
 			EnableSvme();
 
 			auto vcpu_data = Hypervisor::Get()->vcpu_data;
 
-			vcpu_data[idx] = (CoreData*)ExAllocatePoolZero(NonPagedPool, sizeof(CoreData), 'Vmcb');
+			vcpu_data[i] = (CoreData*)ExAllocatePoolZero(NonPagedPool, sizeof(CoreData), 'Vmcb');
 
-			ConfigureProcessor(vcpu_data[idx], reg_context);
+			ConfigureProcessor(vcpu_data[i], reg_context);
 
 			SegmentAttribute cs_attrib;
 
-			cs_attrib.as_uint16 = vcpu_data[idx]->guest_vmcb.save_state_area.CsAttrib;
+			cs_attrib.as_uint16 = vcpu_data[i]->guest_vmcb.save_state_area.CsAttrib;
 
-			if (IsProcessorReadyForVmrun(&vcpu_data[idx]->guest_vmcb, cs_attrib))
+			if (IsProcessorReadyForVmrun(&vcpu_data[i]->guest_vmcb, cs_attrib))
 			{
-				DbgPrint("address of guest vmcb save state area = %p \n", &vcpu_data[idx]->guest_vmcb.save_state_area.Rip);
+				DbgPrint("address of guest vmcb save state area = %p \n", &vcpu_data[i]->guest_vmcb.save_state_area.Rip);
 
-				LaunchVm(&vcpu_data[idx]->guest_vmcb_physicaladdr);
+				LaunchVm(&vcpu_data[i]->guest_vmcb_physicaladdr);
 			}
 			else
 			{
@@ -79,6 +133,13 @@ bool VirtualizeAllProcessors()
 			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 		}
 	}
+
+	UNICODE_STRING NtDeviceIoControlFile_name = RTL_CONSTANT_STRING(L"NtDeviceIoControlFile");
+	auto NtDeviceIoControl = MmGetSystemRoutineAddress(&NtDeviceIoControlFile_name);
+
+	ioctl_hk = Hooks::JmpRipCode{ (uintptr_t)NtDeviceIoControl, (uintptr_t)NtDeviceIoControlFile_handler };
+
+	svm_vmmcall(VMMCALL_ID::set_npt_hook, NtDeviceIoControl, ioctl_hk.hook_code, ioctl_hk.hook_size, NCR3_DIRECTORIES::noexecute, NULL);
 
 	NptHooks::PageSynchronizationPatch();
 }

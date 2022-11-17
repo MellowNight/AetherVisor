@@ -1,5 +1,5 @@
-
 .const
+
 	KTRAP_FRAME_SIZE            equ     190h
 	MACHINE_FRAME_SIZE          equ     28h
 

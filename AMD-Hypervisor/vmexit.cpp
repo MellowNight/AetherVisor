@@ -72,18 +72,18 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
             auto address = (void*)GuestRegisters->rdx;
             auto patch = (uint8_t*)GuestRegisters->r8;
             auto patch_len = GuestRegisters->r9;
-            auto spoofed_page = GuestRegisters->r9;
-            int core_id;
+            int core_id = GuestRegisters->r11;
+            auto spoofed_page = (void*)GuestRegisters->r12;  // page that gets mapped to every other core
 
             auto vmroot_cr3 = __readcr3();
 
             __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
-            auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+            auto physical_page = (uintptr_t)PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-            /*	get the guest pte and physical address of the hooked page	*/
+            /*	get the guest pte and physical address of the spoofed page	*/
 
-            auto spoofed_physical_page = PAGE_ALIGN(MmGetPhysicalAddress(spoofed_page)).QuadPart);
+            auto spoofed_physical_page = (uintptr_t)PAGE_ALIGN(MmGetPhysicalAddress(spoofed_page).QuadPart);
 
             for (int i = 0; i < NCR3_DIRECTORIES::tertiary; ++i)
             {
@@ -137,15 +137,19 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
         }
         case VMMCALL_ID::set_npt_hook:
         {
-            LARGE_INTEGER length_tag;
-            length_tag.QuadPart = GuestRegisters->r9;
+            DbgPrint("address %p \n", GuestRegisters->rdx);
+            DbgPrint("patch %p \n", GuestRegisters->r8);
+            DbgPrint("patch_len %p \n", GuestRegisters->r9);
+            DbgPrint("noexecute_cr3_id %d \n", GuestRegisters->r12);
+            DbgPrint("tag %d \n", GuestRegisters->r11);
 
             NptHooks::SetNptHook(
                 vmcb_data,
                 (void*)GuestRegisters->rdx,
                 (uint8_t*)GuestRegisters->r8,
-                length_tag.HighPart,
-                length_tag.LowPart
+                GuestRegisters->r9,
+                GuestRegisters->r12,
+                GuestRegisters->r11
             );
 
             break;

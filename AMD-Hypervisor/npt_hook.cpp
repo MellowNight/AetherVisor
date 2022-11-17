@@ -54,7 +54,7 @@ namespace NptHooks
 
 	/*	IMPORTANT: if you want to set a hook in a globally mapped DLL such as ntdll.dll, you must trigger copy on write first!	*/
 
-	NptHook* SetNptHook(CoreData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t tag)
+	NptHook* SetNptHook(CoreData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, int32_t tag)
 	{
 		auto vmroot_cr3 = __readcr3();
 
@@ -80,7 +80,7 @@ namespace NptHooks
 		hook_entry->active = true;
 		hook_entry->tag = tag;
 		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
-
+		hook_entry->noexecute_ncr3 = Hypervisor::Get()->ncr3_dirs[noexecute_cr3_id];
 
 		/*	get the guest pte and physical address of the hooked page	*/
 
@@ -96,7 +96,7 @@ namespace NptHooks
 
 		/*	get the nested pte of the guest physical address	*/
 
-		hook_entry->hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->normal_ncr3);
+		hook_entry->hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[primary]);
 
 		if (hook_entry->hookless_npte->ExecuteDisable == 1)
 		{
@@ -110,7 +110,7 @@ namespace NptHooks
 
 		/*	get the nested pte of the guest physical address in the 2nd NCR3, and map it to our hook page	*/
 
-		auto hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[core_2]);
+		auto hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[noexecute_cr3_id]);
 
 		hooked_npte->PageFrameNumber = hook_entry->hooked_pte->PageFrameNumber;
 		hooked_npte->ExecuteDisable = 0;

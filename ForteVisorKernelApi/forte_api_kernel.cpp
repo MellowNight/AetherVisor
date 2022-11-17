@@ -10,19 +10,9 @@ namespace ForteVisor
         return 0;
     }
 
-    /*  Not on each core, because it's only relevant in 1 process context */
-    int SetTlbHook(uintptr_t address, uint8_t* patch, size_t patch_len)
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, int32_t tag)
     {
-        return svm_vmmcall(VMMCALL_ID::set_tlb_hook, address, patch, patch_len);
-    }
-
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t tag)
-    {
-        LARGE_INTEGER length_tag;
-        length_tag.LowPart = tag;
-        length_tag.HighPart = patch_len;
-
-        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, length_tag.QuadPart);
+        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, noexecute_cr3_id, tag);
 
         return 0;
     }
