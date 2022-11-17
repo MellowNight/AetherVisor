@@ -67,43 +67,29 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 
     switch (id)
     {
-        case VMMCALL_ID::exclusive_ncr3_memcpy:
+        case VMMCALL_ID::remap_page_ncr3_specific:
         {
             auto address = (void*)GuestRegisters->rdx;
-            auto patch = (uint8_t*)GuestRegisters->r8;
-            auto patch_len = GuestRegisters->r9;
-            int core_id = GuestRegisters->r11;
-            auto spoofed_page = (void*)GuestRegisters->r12;  // page that gets mapped to every other core
+            auto copy_page = (uint8_t*)GuestRegisters->r8;
+            int core_id = GuestRegisters->r9;
+
+            DbgPrint("address %p \n", address);
+            DbgPrint("copy_page %p \n", copy_page);
+            DbgPrint("core_id %p \n", core_id);
 
             auto vmroot_cr3 = __readcr3();
 
             __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
-            auto physical_page = (uintptr_t)PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+            auto target_physical_page = (uintptr_t)PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-            /*	get the guest pte and physical address of the spoofed page	*/
+            auto copy_physical_page = (uintptr_t)PAGE_ALIGN(MmGetPhysicalAddress(copy_page).QuadPart);
 
-            auto spoofed_physical_page = (uintptr_t)PAGE_ALIGN(MmGetPhysicalAddress(spoofed_page).QuadPart);
+            /*	set the nPTE of other nCR3s to the page with spoofed memory	*/
 
-            for (int i = 0; i < NCR3_DIRECTORIES::tertiary; ++i)
-            {
-                if (core_id == i)
-                {
-                    continue;
-                }
+            auto copy_page_npte = PageUtils::GetPte((void*)target_physical_page, Hypervisor::Get()->ncr3_dirs[core_id]);
 
-                /*	set the nPTE of other nCR3s to the page with spoofed memory	*/
-
-                auto spoofed_npte = PageUtils::GetPte((void*)spoofed_physical_page, Hypervisor::Get()->ncr3_dirs[i]);
-
-                spoofed_npte->PageFrameNumber = spoofed_physical_page >> 12;
-            }
-
-            auto spoofed_copy = PageUtils::VirtualAddrFromPfn(physical_page >> 12);
-
-            auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
-
-            memcpy((uint8_t*)spoofed_copy + page_offset, patch, patch_len);
+            copy_page_npte->PageFrameNumber = copy_physical_page >> 12;
 
             /* epilogue	*/
 
@@ -137,12 +123,6 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
         }
         case VMMCALL_ID::set_npt_hook:
         {
-            DbgPrint("address %p \n", GuestRegisters->rdx);
-            DbgPrint("patch %p \n", GuestRegisters->r8);
-            DbgPrint("patch_len %p \n", GuestRegisters->r9);
-            DbgPrint("noexecute_cr3_id %d \n", GuestRegisters->r12);
-            DbgPrint("tag %d \n", GuestRegisters->r11);
-
             NptHooks::SetNptHook(
                 vmcb_data,
                 (void*)GuestRegisters->rdx,

@@ -11,7 +11,7 @@ enum VMMCALL_ID : uintptr_t
     set_npt_hook = 0x6611AAFF22,
     remove_npt_hook = 0x1166AAFF22,
     is_hv_present = 0xEEFF,
-    exclusive_ncr3_memcpy = 0x8236FF,
+    remap_page_ncr3_specific = 0x8236FF,
 };
 
 
@@ -19,7 +19,7 @@ extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
 namespace ForteVisor
 {
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t tag);
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, int32_t tag);
 
     int ForEachCore(void(*callback)(void* params), void* params = NULL);
 

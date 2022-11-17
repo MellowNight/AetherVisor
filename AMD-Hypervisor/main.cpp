@@ -46,7 +46,7 @@ NTSTATUS NTAPI NtDeviceIoControlFile_handler(
 		InputBufferLength,
 		OutputBuffer,
 		OutputBufferLength
-		);
+	);
 
 	if (IoControlCode == IOCTL_STORAGE_QUERY_PROPERTY)
 	{
@@ -134,12 +134,27 @@ bool VirtualizeAllProcessors()
 		}
 	}
 
-	UNICODE_STRING NtDeviceIoControlFile_name = RTL_CONSTANT_STRING(L"NtDeviceIoControlFile");
-	auto NtDeviceIoControl = MmGetSystemRoutineAddress(&NtDeviceIoControlFile_name);
+	//auto irql = Utils::DisableWP();
 
-	ioctl_hk = Hooks::JmpRipCode{ (uintptr_t)NtDeviceIoControl, (uintptr_t)NtDeviceIoControlFile_handler };
+	//UNICODE_STRING NtDeviceIoControlFile_name = RTL_CONSTANT_STRING(L"NtDeviceIoControlFile");
+	//auto NtDeviceIoControl = (uint8_t*)MmGetSystemRoutineAddress(&NtDeviceIoControlFile_name);
 
-	svm_vmmcall(VMMCALL_ID::set_npt_hook, NtDeviceIoControl, ioctl_hk.hook_code, ioctl_hk.hook_size, NCR3_DIRECTORIES::noexecute, NULL);
+	//ioctl_hk = Hooks::JmpRipCode{ (uintptr_t)NtDeviceIoControl, (uintptr_t)NtDeviceIoControlFile_handler };
+
+	//auto spoofed_page = (uint8_t*)ExAllocatePoolZero(NonPagedPool, 0x1000, 'NIGA');
+
+	//memset(spoofed_page, 0xCC, 0x1000);
+
+	//svm_vmmcall(VMMCALL_ID::remap_page_ncr3_specific, NtDeviceIoControl, spoofed_page, tertiary);
+
+	//DbgPrint("first byte of NtDeviceIoControl: 0x%p \n", *(uint8_t*)NtDeviceIoControl);
+
+	//svm_vmmcall(VMMCALL_ID::remap_page_ncr3_specific, NtDeviceIoControl, spoofed_page, primary);
+
+	//DbgPrint("first byte of NtDeviceIoControl (2): 0x%p \n", *(uint8_t*)NtDeviceIoControl);
+
+
+	//Utils::EnableWP(irql);
 
 	NptHooks::PageSynchronizationPatch();
 }

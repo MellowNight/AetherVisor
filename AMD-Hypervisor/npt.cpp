@@ -26,8 +26,6 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 
 		auto insn_bytes = vcpu_data->guest_vmcb.control_area.GuestInstructionBytes;
 
-		DbgPrint("ncr3 %p \n", ncr3.QuadPart);
-
 		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
 
 		auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, true);

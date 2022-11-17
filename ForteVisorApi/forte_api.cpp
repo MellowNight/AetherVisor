@@ -1,11 +1,13 @@
 #include "pch.h"
 #include "forte_api.h"
 
+/*  parameter order: rcx, rdx, r8, r9, r12, r11  */
+
 namespace ForteVisor
 {
-    int MemcpyExclusiveToNcr3(uintptr_t dest, uintptr_t src, int32_t core_id)
+    int RemapPageSingleNcr3(uintptr_t old_page, uintptr_t copy_page, int32_t core_id)
     {
-        svm_vmmcall(VMMCALL_ID::exclusive_ncr3_memcpy, dest, src, core_id);
+        svm_vmmcall(VMMCALL_ID::remap_page_ncr3_specific, old_page, copy_page, core_id);
 
         return 0;
     }
