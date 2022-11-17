@@ -1475,7 +1475,6 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(34
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\shellcode.h(27,40): warning C4996: 'ExAllocatePool': ExAllocatePool is deprecated, use ExAllocatePool2.
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\shellcode.h(33,35): warning C4996: 'ExAllocatePool': ExAllocatePool is deprecated, use ExAllocatePool2.
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(89,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npthook_safety.cpp(56,66): warning C4267: '=': conversion from 'size_t' to 'LONG', possible loss of data
   paging_utils.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
