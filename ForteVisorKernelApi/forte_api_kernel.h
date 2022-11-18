@@ -14,6 +14,12 @@ enum VMMCALL_ID : uintptr_t
     remap_page_ncr3_specific = 0x8236FF,
 };
 
+enum NCR3_DIRECTORIES
+{
+    primary,
+    noexecute,
+    tertiary
+};
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
