@@ -6,7 +6,7 @@
 #include "vmexit.h"
 #include "utils.h"
 
-namespace NptHooks
+namespace NPTHooks
 {
 	int hook_count;
 	NptHook* npt_hook_array;
@@ -15,7 +15,7 @@ namespace NptHooks
 	{
 		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
 
-		int max_hooks = 500;
+		int max_hooks = 1000;
 		
 		npt_hook_array = (NptHook*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHook) * max_hooks, 'hook');
 
@@ -111,7 +111,7 @@ namespace NptHooks
 
 		auto hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[noexecute_cr3_id]);
 
-		if (address != patch)
+		if (address != patch && patch_len != PAGE_SIZE)
 		{
 			hooked_npte->PageFrameNumber = hook_entry->hooked_pte->PageFrameNumber;
 		}
@@ -124,14 +124,16 @@ namespace NptHooks
 
 
 		/*	place our hook in the copied page for the 2nd NCR3, and don't overwrite already existing hooks on the page	*/
-
-		if (!reused_hook)
+	
+		if (address != patch && patch_len != PAGE_SIZE)
 		{
-			memcpy(hooked_copy, PAGE_ALIGN(address), PAGE_SIZE);
+			if (!reused_hook)
+			{
+				memcpy(hooked_copy, PAGE_ALIGN(address), PAGE_SIZE);
+			}
+
+			memcpy((uint8_t*)hooked_copy + page_offset, patch, patch_len);
 		}
-
-		memcpy((uint8_t*)hooked_copy + page_offset, patch, patch_len);
-
 		/*	SetNptHook epilogue	*/
 
 		vmcb_data->guest_vmcb.control_area.TlbControl = 3;

@@ -35,8 +35,8 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 
 	if (exit_info1.fields.execute == 1)
 	{
-		auto npt_hook = NptHooks::ForEachHook(
-			[](NptHooks::NptHook* hook_entry, void* data) -> bool {
+		auto npt_hook = NPTHooks::ForEachHook(
+			[](NPTHooks::NptHook* hook_entry, void* data) -> bool {
 				
 				if (PAGE_ALIGN(data) == PAGE_ALIGN(hook_entry->guest_physical_page))
 				{

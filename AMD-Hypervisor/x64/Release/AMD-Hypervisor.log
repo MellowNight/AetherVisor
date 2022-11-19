@@ -3271,12 +3271,12 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(29
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(9,29): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(13,43): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(74,25): warning C4244: 'initializing': conversion from 'UINT64' to 'int', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(132,31): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(131,31): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(69,21): warning C4244: 'initializing': conversion from 'UINT64' to 'int', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(137,31): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(136,31): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
   Generating Code...
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\utils.cpp(149): warning C4715: 'Utils::GetProcessId': not all control paths return a value
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(46): warning C4715: '<lambda_344bb46eecc48e530bae92d3583f1342>::operator()': not all control paths return a value
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(46): warning C4715: '<lambda_3fc24bfff8f653a4250456a30edd3dd0>::operator()': not all control paths return a value
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(160): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
 Zydis.lib(Decoder.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Decoder.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
 Zydis.lib(Utils.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Utils.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info

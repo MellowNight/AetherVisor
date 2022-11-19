@@ -21,11 +21,6 @@ void HandleMsrExit(CoreData* core_data, GPRegs* guest_regs)
 {
     uint32_t msr_id = guest_regs->rcx & (uint32_t)0xFFFFFFFF;
 
-    if (msr_id != 0x000C001029A)
-    {
-    //    DbgPrint("msr_id 0x%p guest_regs->rcx 0x%p \n", msr_id, guest_regs->rcx);
-    }
-
     if (!(((msr_id > 0) && (msr_id < 0x00001FFF)) || ((msr_id > 0xC0000000) && (msr_id < 0xC0001FFF)) || (msr_id > 0xC0010000) && (msr_id < 0xC0011FFF)))
     {
         InjectException(core_data, EXCEPTION_GP_FAULT, true, 0);
@@ -67,50 +62,60 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 
     switch (id)
     {
-        case VMMCALL_ID::remap_page_ncr3_specific:
+    case VMMCALL_ID::remap_page_ncr3_specific:
+    {
+        auto address = (void*)GuestRegisters->rdx;
+        auto copy_page = (uint8_t*)GuestRegisters->r8;
+        int core_id = GuestRegisters->r9;
+
+        DbgPrint("address %p \n", address);
+        DbgPrint("copy_page %p \n", copy_page);
+        DbgPrint("core_id %p \n", core_id);
+
+        auto vmroot_cr3 = __readcr3();
+
+        __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
+
+
+        if ((uintptr_t)address < 0x7FFFFFFFFFF)
         {
-            auto address = (void*)GuestRegisters->rdx;
-            auto copy_page = (uint8_t*)GuestRegisters->r8;
-            int core_id = GuestRegisters->r9;
-
-            DbgPrint("address %p \n", address);
-            DbgPrint("copy_page %p \n", copy_page);
-            DbgPrint("core_id %p \n", core_id);
-
-            auto vmroot_cr3 = __readcr3();
-
-            __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
-
-            auto target_physical_page = (uintptr_t)PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
-
-            auto copy_physical_page = (uintptr_t)PAGE_ALIGN(MmGetPhysicalAddress(copy_page).QuadPart);
-
-            /*	set the nPTE of other nCR3s to the page with spoofed memory	*/
-
-            auto copy_page_npte = PageUtils::GetPte((void*)target_physical_page, Hypervisor::Get()->ncr3_dirs[core_id]);
-
-            copy_page_npte->PageFrameNumber = copy_physical_page >> 12;
-
-            /* epilogue	*/
-
-            vmcb_data->guest_vmcb.control_area.TlbControl = 3;
-
-            __writecr3(vmroot_cr3);
-
-            break;
+            PageUtils::LockPages(address, IoReadAccess, UserMode);
         }
+        else
+        {
+            PageUtils::LockPages(address, IoReadAccess, KernelMode);
+        }
+
+        auto target_physical_page = (uintptr_t)PageUtils::GetPte((void*)address, __readcr3())->PageFrameNumber << PAGE_SHIFT; //PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+
+        auto copy_physical_page = (uintptr_t)PageUtils::GetPte((void*)copy_page, __readcr3())->PageFrameNumber << PAGE_SHIFT; //PAGE_ALIGN(MmGetPhysicalAddress(copy_page).QuadPart);
+
+        /*	set the nPTE of our nCR3 to the page with spoofed memory	*/
+
+        auto copy_page_npte = PageUtils::GetPte((void*)target_physical_page, Hypervisor::Get()->ncr3_dirs[core_id]);
+
+        copy_page_npte->PageFrameNumber = copy_physical_page >> PAGE_SHIFT;
+
+        /* epilogue	*/
+
+        vmcb_data->guest_vmcb.control_area.TlbControl = 3;
+
+        __writecr3(vmroot_cr3);
+
+        break;
+    }
         case VMMCALL_ID::remove_npt_hook:
         {
             auto vmroot_cr3 = __readcr3();
 
             __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
            
-            NptHooks::ForEachHook(
-                [](NptHooks::NptHook* hook_entry, void* data)-> bool {
+            NPTHooks::ForEachHook(
+                [](NPTHooks::NptHook* hook_entry, void* data)-> bool {
 
                     if (hook_entry->tag == (uintptr_t)data)
                     {
-                        NptHooks::UnsetHook(hook_entry);
+                        NPTHooks::UnsetHook(hook_entry);
                     }
                     return true;
                 },
@@ -123,7 +128,7 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
         }
         case VMMCALL_ID::set_npt_hook:
         {
-            NptHooks::SetNptHook(
+            NPTHooks::SetNptHook(
                 vmcb_data,
                 (void*)GuestRegisters->rdx,
                 (uint8_t*)GuestRegisters->r8,

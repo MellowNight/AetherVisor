@@ -156,7 +156,7 @@ bool VirtualizeAllProcessors()
 
 	//Utils::EnableWP(irql);
 
-	NptHooks::PageSynchronizationPatch();
+	NPTHooks::PageSynchronizationPatch();
 }
 
 
@@ -165,7 +165,7 @@ int Initialize()
 	Logger::Get()->Start();
 	Disasm::Init();
 	//TlbHooks::Init();
-	NptHooks::Init();
+	NPTHooks::Init();
 
 	return 0;
 }

@@ -2,7 +2,7 @@
 #include "portable_executable.h"
 #include "vmexit.h"
 
-namespace NptHooks
+namespace NPTHooks
 {
 	Hooks::JmpRipCode hk_MmCleanProcessAddressSpace;
 

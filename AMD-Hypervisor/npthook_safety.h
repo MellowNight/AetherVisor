@@ -2,7 +2,7 @@
 #include "npt_hook.h"
 #include "shellcode.h"
 
-namespace NptHooks
+namespace NPTHooks
 {
 	void PageSynchronizationPatch();
 };
