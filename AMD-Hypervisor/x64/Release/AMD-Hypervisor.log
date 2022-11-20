@@ -3272,8 +3272,8 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(34
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(9,29): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(13,43): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(69,21): warning C4244: 'initializing': conversion from 'UINT64' to 'int', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(137,31): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(136,31): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(160,31): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(159,31): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
   Generating Code...
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\utils.cpp(149): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(46): warning C4715: '<lambda_3fc24bfff8f653a4250456a30edd3dd0>::operator()': not all control paths return a value

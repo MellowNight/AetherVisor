@@ -76,27 +76,50 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 
         __writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
+        auto hook_entry = &NPTHooks::npt_hook_array[NPTHooks::hook_count];
 
         if ((uintptr_t)address < 0x7FFFFFFFFFF)
         {
-            PageUtils::LockPages(address, IoReadAccess, UserMode);
+            hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, UserMode);
         }
         else
         {
-            PageUtils::LockPages(address, IoReadAccess, KernelMode);
+            hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
         }
 
-        auto target_physical_page = (uintptr_t)PageUtils::GetPte((void*)address, __readcr3())->PageFrameNumber << PAGE_SHIFT; //PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+        auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-        auto copy_physical_page = (uintptr_t)PageUtils::GetPte((void*)copy_page, __readcr3())->PageFrameNumber << PAGE_SHIFT; //PAGE_ALIGN(MmGetPhysicalAddress(copy_page).QuadPart);
+        NPTHooks::hook_count += 1;
 
-        /*	set the nPTE of our nCR3 to the page with spoofed memory	*/
+        hook_entry->active = true;
+        hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
 
-        auto copy_page_npte = PageUtils::GetPte((void*)target_physical_page, Hypervisor::Get()->ncr3_dirs[core_id]);
+        /*	get the guest pte and physical address of the hooked page	*/
 
-        copy_page_npte->PageFrameNumber = copy_physical_page >> PAGE_SHIFT;
+        hook_entry->guest_physical_page = (uint8_t*)physical_page;
 
-        /* epilogue	*/
+        hook_entry->guest_pte = PageUtils::GetPte((void*)address, hook_entry->process_cr3);
+
+        hook_entry->original_nx = hook_entry->guest_pte->ExecuteDisable;
+
+        hook_entry->guest_pte->ExecuteDisable = 0;
+        hook_entry->guest_pte->Write = 1;
+
+
+        /*	get the nested pte of the guest physical address, and set its PFN to the copy page in kernel	*/
+
+        hook_entry->hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[core_id]);
+
+        hook_entry->hookless_npte->PageFrameNumber = hook_entry->hooked_pte->PageFrameNumber;
+
+        auto hooked_copy = PageUtils::VirtualAddrFromPfn(hook_entry->hooked_pte->PageFrameNumber);
+
+
+        /*	place the new memory in our copy page here	*/
+
+        memcpy((uint8_t*)hooked_copy, copy_page, PAGE_SIZE);
+
+        /*	SetNptHook epilogue	*/
 
         vmcb_data->guest_vmcb.control_area.TlbControl = 3;
 
