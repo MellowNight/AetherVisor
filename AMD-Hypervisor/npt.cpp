@@ -5,6 +5,36 @@
 
 #pragma optimize( "", off )
 
+
+void LogSandboxPageAccess(CoreData* vcpu_data)
+{
+	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
+
+	auto vmroot_cr3 = __readcr3();
+
+	__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+
+	wchar_t module_name[MAX_PATH];
+
+	auto dll = Utils::ModuleFromAddress(IoGetCurrentProcess(), guest_rip, module_name);
+
+	/*	log the address/module that the sandboxed code tried to execute, along with the return address	*/
+
+	if (dll)
+	{
+		Logger::Get()->Log("[Sandbox] guest RIP address %ws+0x%p, [rsp] \n", module_name,
+			guest_rip, *(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp);
+	}
+	else
+	{
+		Logger::Get()->Log("[Sandbox] guest RIP address %p, [rsp] \n",
+			guest_rip, *(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp);
+
+	}
+
+	__writecr3(vmroot_cr3);
+}
+
 void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 {
 	PHYSICAL_ADDRESS faulting_physical;
@@ -18,7 +48,7 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 
 	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
-	Logger::Get()->Log("[#NPF HANDLER]     guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
+	Logger::Get()->LogJunk("[#NPF HANDLER]	guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
 
 	if (exit_info1.fields.valid == 0)
 	{
@@ -56,7 +86,7 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 		{
 			if (npt_hook)
 			{
-				Logger::Get()->Log("instruction is split, entering hook page! \n");
+				Logger::Get()->LogJunk("instruction is split, entering hook page!\n");
 
 				/*	if CPU is entering the page:	*/
 
@@ -65,7 +95,7 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 			}
 			else
 			{
-				Logger::Get()->Log("instruction is split, leaving hook page! \n");
+				Logger::Get()->LogJunk("instruction is split, leaving hook page! \n");
 
 				/*	if CPU is leaving the page:	*/
 
@@ -79,22 +109,28 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 			PageUtils::GetPte((void*)page2_physical, ncr3.QuadPart)->ExecuteDisable = 0;
 		}
 
-		/// Logger::Get()->Log("npt_hook = %p, switch_ncr3 = %d, GuestRip = %p, RSP = %p \n", npt_hook, switch_ncr3, guest_rip, vcpu_data->guest_vmcb.save_state_area.Rsp);
-
 		/*	clean ncr3 cache	*/
 
 		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
 		vcpu_data->guest_vmcb.control_area.TlbControl = 1;
 
-		/*  switch to hook CR3, with hooks mapped or switch to innocent CR3, without any hooks  */
 		if (switch_ncr3)
 		{
 			if (npt_hook)
 			{
+				/*  move into hooked page and switch to ncr3 with hooks mapped  */
+
 				vcpu_data->guest_vmcb.control_area.NCr3 = npt_hook->noexecute_ncr3;
 			}
 			else
 			{
+				/*  move out of hooked page and switch to ncr3 without hooks mapped  */
+
+				if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
+				{
+					LogSandboxPageAccess(vcpu_data);
+				}
+
 				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 			}
 		}

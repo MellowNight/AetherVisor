@@ -20,7 +20,7 @@ namespace NPTHooks
 	
 		uintptr_t process_cr3;		/*	process where this hook resides in			*/
 
-		int32_t tag;	/*	identify this hook		*/
+		int64_t tag;	/*	identify this hook		*/
 		bool active;	/*	is this hook active?	*/
 
 		uintptr_t noexecute_ncr3;

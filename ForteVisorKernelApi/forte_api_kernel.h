@@ -1,6 +1,4 @@
 #pragma once
-#include "pch.h"
-#include "framework.h"
 #include <ntddk.h>
 #include <cstdint>
 
@@ -18,7 +16,7 @@ enum NCR3_DIRECTORIES
 {
     primary,
     noexecute,
-    tertiary
+    sandbox,
 };
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);

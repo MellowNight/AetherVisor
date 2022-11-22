@@ -32,3 +32,5 @@ enum VMEXIT
 void InjectException(CoreData* core_data, int vector, bool push_error_code, int error_code);
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
+
+void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM);

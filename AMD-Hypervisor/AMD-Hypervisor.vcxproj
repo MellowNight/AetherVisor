@@ -207,6 +207,7 @@
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="prepare_vm.cpp" />
     <ClCompile Include="vmexit.cpp" />
+    <ClCompile Include="vmmcall_handler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="instructions.asm" />

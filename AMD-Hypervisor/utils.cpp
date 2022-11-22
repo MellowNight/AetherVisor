@@ -5,6 +5,40 @@
 
 namespace Utils
 {
+    PVOID ModuleFromAddress(IN PEPROCESS pProcess, uintptr_t address, wchar_t* out_name)
+    {
+#define LDR_IMAGESIZE 0x40
+
+        PPEB peb = PsGetProcessPeb(pProcess);
+
+        if (!peb)
+        {
+            return NULL;
+        }
+
+        // Still no loader
+        if (!peb->Ldr)
+        {
+            return NULL;
+        }
+
+        // Search in InLoadOrderModuleList
+        for (PLIST_ENTRY list_entry = peb->Ldr->InLoadOrderModuleList.Flink; 
+            list_entry != &peb->Ldr->InLoadOrderModuleList;
+            list_entry = list_entry->Flink)
+        {
+            LDR_DATA_TABLE_ENTRY* mod = CONTAINING_RECORD(list_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+            if ((uintptr_t)mod->DllBase <= address && address <= ((uintptr_t)mod->DllBase + *(uintptr_t*)((uintptr_t)mod + LDR_IMAGESIZE)))
+            {
+                wcscpy(out_name, mod->BaseDllName.Buffer);
+                return mod->DllBase;
+            }
+        }
+
+        return NULL;
+    }
+
     int ForEachCore(void(*callback)(void* params), void* params)
     {
         auto core_count = KeQueryActiveProcessorCount(0);

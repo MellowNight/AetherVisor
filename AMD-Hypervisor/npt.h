@@ -12,3 +12,10 @@ void HandleNestedPageFault(
 	CoreData* VpData,
 	GPRegs* GuestContext
 );
+
+enum NCR3_DIRECTORIES
+{
+    primary,
+    noexecute,
+    sandbox,
+};

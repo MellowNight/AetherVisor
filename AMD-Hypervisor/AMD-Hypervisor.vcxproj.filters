@@ -123,6 +123,9 @@
     <ClCompile Include="npthook_safety.cpp">
       <Filter>Source Files\hooking</Filter>
     </ClCompile>
+    <ClCompile Include="vmmcall_handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="instructions.asm">

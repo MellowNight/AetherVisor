@@ -23,13 +23,6 @@ struct CoreData
     uint8_t     host_save_area[0x1000];
 };
 
-enum NCR3_DIRECTORIES
-{
-    primary,
-    noexecute,
-    tertiary
-};
-
 /* the hypervisor    */
 
 class Hypervisor
