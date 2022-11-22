@@ -5,6 +5,7 @@
 
 #pragma optimize( "", off )
 
+void* sandbox_handler = NULL;
 
 void LogSandboxPageAccess(CoreData* vcpu_data)
 {
@@ -14,23 +15,12 @@ void LogSandboxPageAccess(CoreData* vcpu_data)
 
 	__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
 
-	wchar_t module_name[MAX_PATH];
+	/*	Push 2nd ret	*/
 
-	auto dll = Utils::ModuleFromAddress(IoGetCurrentProcess(), guest_rip, module_name);
+	vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+	*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip
 
-	/*	log the address/module that the sandboxed code tried to execute, along with the return address	*/
-
-	if (dll)
-	{
-		Logger::Get()->Log("[Sandbox] guest RIP address %ws+0x%p, [rsp] \n", module_name,
-			guest_rip, *(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp);
-	}
-	else
-	{
-		Logger::Get()->Log("[Sandbox] guest RIP address %p, [rsp] \n",
-			guest_rip, *(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp);
-
-	}
+	vcpu_data->guest_vmcb.save_state_area.Rip = sandbox_handler;
 
 	__writecr3(vmroot_cr3);
 }
