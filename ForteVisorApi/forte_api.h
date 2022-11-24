@@ -50,7 +50,7 @@ extern "C" int __stdcall sandbox_handler_wrap();
 
 namespace ForteVisor
 {
-    extern "C" void SandboxHandler(void* registers, void* return_address);
+    extern "C"     void SandboxHandler(GeneralRegisters * registers, void* return_address, void* o_guest_rip);
 
     int RemapPageSingleNcr3(uintptr_t old_page, uintptr_t new_page, int32_t core_id);
 
@@ -58,7 +58,7 @@ namespace ForteVisor
 
     int SandboxPage(uintptr_t address, uintptr_t tag);
 
-    void RegisterSandboxHandler(void* address);
+    void RegisterSandboxHandler(decltype(sandbox_handler) address);
 
     int RemoveNptHook(int32_t tag);
 

@@ -12,9 +12,9 @@ namespace ForteVisor
         sandbox_handler(registers, return_address, o_guest_rip);
     }
 
-    void RegisterSandboxHandler(void* address)
+    void RegisterSandboxHandler(decltype(sandbox_handler) address)
     {
-        sandbox_handler = static_cast<decltype(sandbox_handler)>(address);
+        sandbox_handler = address;
         svm_vmmcall(VMMCALL_ID::register_sandbox, sandbox_handler_wrap);
     }
 
