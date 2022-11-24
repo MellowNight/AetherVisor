@@ -228,7 +228,7 @@ void SetupTssIst()
 	__debugbreak();
 }
 
-void SetupMSRPM(CoreData* core_data)
+void SetupMSRPM(VcpuData* core_data)
 {
 	size_t bits_per_msr = 16000 / 8000;
 	size_t bits_per_byte = sizeof(uint8_t) * 8;
@@ -250,7 +250,7 @@ void SetupMSRPM(CoreData* core_data)
 	RtlSetBits(&bitmap, efer_offset, 2);
 }
 
-void ConfigureProcessor(CoreData* core_data, CONTEXT* context_record)
+void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 {
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;

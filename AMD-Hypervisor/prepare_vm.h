@@ -9,7 +9,7 @@ bool IsSvmUnlocked();
 void EnableSvme();
 
 void ConfigureProcessor(
-	CoreData* core_data, 
+	VcpuData* core_data, 
 	CONTEXT* context_record
 );
 

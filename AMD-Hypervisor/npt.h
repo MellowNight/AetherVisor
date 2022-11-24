@@ -16,7 +16,7 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, PTEAccess flags
 void* AllocateNewTable(PML4E_64* PageEntry);
 
 void HandleNestedPageFault(
-	CoreData* VpData,
+	VcpuData* VpData,
 	GeneralRegisters* GuestContext
 );
 

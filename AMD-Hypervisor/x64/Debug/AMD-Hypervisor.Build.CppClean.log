@@ -1,10 +1,12 @@
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\vc143.pdb
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\vmmcall_handler.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\vmexit.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\prepare_vm.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\utils.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\npt.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\npt_hook.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\paging_utils.obj
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\npt_sandbox.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\npthook_safety.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\logging.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\debug\main.obj

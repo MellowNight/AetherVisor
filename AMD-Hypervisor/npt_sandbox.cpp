@@ -28,26 +28,82 @@ namespace Sandbox
 		sandbox_page_count = 0;
 	}
 
-	void LogSandboxPageAccess(CoreData* vcpu_data)
+	uint8_t* EmulateInstruction(VcpuData* vcpu_data, uint8_t* guest_rip, GeneralRegisters* guest_regs)
+	{
+		uint8_t* execute_target = 0;
+
+		ZydisDecodedOperand operands[5];
+
+		ZydisRegisterContext context;
+
+		Disasm::HvRegContextToZydisRegContext(vcpu_data, guest_regs, &context);
+
+		auto instruction = Disasm::Disassemble(guest_rip, operands);
+
+		if (instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_COND_BR ||
+			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_UNCOND_BR ||
+			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_CALL)
+		{
+			execute_target = (uint8_t*)Disasm::GetCallJmpTarget(instruction, operands, (uintptr_t)guest_rip, &context);
+		}
+		else
+		{
+
+		}
+
+		return execute_target;
+	}
+
+	void LogSandboxPageAccess(VcpuData* vcpu_data, GeneralRegisters* guest_context, PHYSICAL_ADDRESS faulting_physical)
 	{
 		auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
+
+		/*	if the RIP is inside of a sandbox page	*/
+
+		//auto sandboxed_page = Sandbox::ForEachHook(
+		//	[](SandboxPage* sandboxed_page, void* data)-> bool {
+
+		//		if (sandboxed_page->guest_virtual_page == data)
+		//		{
+		//			return true;
+		//		}
+
+		//		return false;
+		//	},
+		//	(void*)PAGE_ALIGN(guest_rip)
+		//);
 
 		BOOL is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? TRUE : FALSE;
 
 		if (is_system_page)
-		{
-			if (((uintptr_t)guest_rip > 0x7FFFFFFFFFFF))
+		{	
+			auto target_guest_rip = MmGetVirtualForPhysical(faulting_physical);
+
+			if (((uintptr_t)target_guest_rip > 0x7FFFFFFFFFFF))
 			{
 				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
 				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = (uintptr_t)guest_rip;
+
+				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = (uintptr_t)target_guest_rip;
 			}
 		}
-		else if (((uintptr_t)guest_rip < 0x7FFFFFFFFFFF))
+		else
 		{
-			vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
-			vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-			*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = (uintptr_t)guest_rip;
+			auto vmroot_cr3 = __readcr3();
+
+			__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+
+			auto execute_target = (uintptr_t)EmulateInstruction(vcpu_data, (uint8_t*)guest_rip);
+
+			if (execute_target && (execute_target < 0x7FFFFFFFFFFF))
+			{
+				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
+
+				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = (uintptr_t)execute_target;
+
+			}
+			__writecr3(vmroot_cr3);
 		}
 	}
 
@@ -81,7 +137,7 @@ namespace Sandbox
 		Sandbox::IsolatePage() is basically just a modified version of NPTHooks::SetNptHook
 	*/
 
-	SandboxPage* IsolatePage(CoreData* vmcb_data, void* address, int32_t tag)
+	SandboxPage* IsolatePage(VcpuData* vmcb_data, void* address, int32_t tag)
 	{
 		auto vmroot_cr3 = __readcr3();
 
@@ -105,10 +161,10 @@ namespace Sandbox
 		hook_entry->active = true;
 		hook_entry->tag = tag;
 		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
-		hook_entry->noexecute_ncr3 = Hypervisor::Get()->ncr3_dirs[NCR3_DIRECTORIES::sandbox];
 
-		/*	get the guest pte and physical address of the hooked page	*/
+		/*	get the guest pte and physical address of the sandboxed page	*/
 
+		hook_entry->guest_virtual_page = (uint8_t*)address;
 		hook_entry->guest_physical_page = (uint8_t*)physical_page;
 
 		hook_entry->guest_pte = PageUtils::GetPte((void*)address, hook_entry->process_cr3);

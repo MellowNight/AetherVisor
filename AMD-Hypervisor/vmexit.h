@@ -30,8 +30,8 @@ enum VMEXIT
     VMEXIT_MWAIT_CONDITIONAL = 0x8C,
 };
 
-void InjectException(CoreData* core_data, int vector, bool push_error_code, int error_code);
+void InjectException(VcpuData* core_data, int vector, bool push_error_code, int error_code);
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
-void HandleVmmcall(CoreData* vmcb_data, GeneralRegisters* GuestRegisters, bool* EndVM);
+void HandleVmmcall(VcpuData* vmcb_data, GeneralRegisters* GuestRegisters, bool* EndVM);

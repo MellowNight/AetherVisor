@@ -1,6 +1,6 @@
 #include "vmexit.h"
 
-void InjectException(CoreData* core_data, int vector, bool push_error_code, int error_code)
+void InjectException(VcpuData* core_data, int vector, bool push_error_code, int error_code)
 {
     EventInjection event_injection = { 0 };
 
@@ -17,7 +17,7 @@ void InjectException(CoreData* core_data, int vector, bool push_error_code, int 
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
 
-void HandleMsrExit(CoreData* core_data, GeneralRegisters* guest_regs)
+void HandleMsrExit(VcpuData* core_data, GeneralRegisters* guest_regs)
 {
     uint32_t msr_id = guest_regs->rcx & (uint32_t)0xFFFFFFFF;
 
@@ -54,7 +54,7 @@ void HandleMsrExit(CoreData* core_data, GeneralRegisters* guest_regs)
 }
 
 
-extern "C" bool HandleVmexit(CoreData* core_data, GeneralRegisters* GuestRegisters)
+extern "C" bool HandleVmexit(VcpuData* core_data, GeneralRegisters* GuestRegisters)
 {
     /*	load host extra state	*/
 

@@ -59,7 +59,7 @@ bool VirtualizeAllProcessors()
 
 			auto vcpu_data = Hypervisor::Get()->vcpu_data;
 
-			vcpu_data[i] = (CoreData*)ExAllocatePoolZero(NonPagedPool, sizeof(CoreData), 'Vmcb');
+			vcpu_data[i] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
 
 			ConfigureProcessor(vcpu_data[i], reg_context);
 

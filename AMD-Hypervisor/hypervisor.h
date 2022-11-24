@@ -11,12 +11,12 @@
     Self - Pointer to vprocessor on stack
 */
 
-struct CoreData
+struct VcpuData
 {
     uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(uint64_t) * 4];
     uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
     uintptr_t   host_vmcb_physicaladdr;
-    struct CoreData* self;
+    struct VcpuData* self;
     uint8_t     pad[8];
     VMCB        guest_vmcb;
     VMCB        host_vmcb;
@@ -46,7 +46,7 @@ public:
     uintptr_t ncr3_dirs[3];
 
     PHYSICAL_MEMORY_RANGE phys_mem_range[12];
-    CoreData* vcpu_data[32];
+    VcpuData* vcpu_data[32];
     int core_count;
 
     /* Static access method. */

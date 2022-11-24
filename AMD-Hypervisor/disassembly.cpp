@@ -3,6 +3,17 @@
 
 namespace Disasm
 {
+	void HvRegContextToZydisRegContext(VcpuData* vcpu_data, GeneralRegisters* guest_regs, ZydisRegisterContext* context)
+	{
+		context->values[ZYDIS_REGISTER_RAX] = guest_regs->r10;
+		context->values[ZYDIS_REGISTER_R10] = guest_regs->r10;
+		context->values[ZYDIS_REGISTER_R10] = guest_regs->r10;
+		context->values[ZYDIS_REGISTER_R10] = guest_regs->r10;
+		context->values[ZYDIS_REGISTER_R10] = guest_regs->r10;
+		context->values[ZYDIS_REGISTER_R10] = guest_regs->r10;
+		context->values[ZYDIS_REGISTER_R10] = guest_regs->r10;
+	}
+
 	ZydisDecodedInstruction Disassemble(uint8_t* instruction, ZydisDecodedOperand* operands)
 	{
 		ZydisDecodedInstruction zydis_insn;
@@ -34,14 +45,16 @@ namespace Disasm
 		return insns_len;
 	}
 
-	ZyanU64 GetJmpTarget(ZydisDecodedInstruction& instruction, ZydisDecodedOperand* operands, ZyanU64 runtime_address)
+	ZyanU64 GetCallJmpTarget(
+		ZydisDecodedInstruction& instruction, 
+		ZydisDecodedOperand* operands, 
+		ZyanU64 runtime_address, 
+		ZydisRegisterContext* registers
+	)
 	{
 		auto destination = 0ULL;
-
-		if ((operands[0].type == ZYDIS_OPERAND_TYPE_IMMEDIATE && operands[0].imm.is_relative == TRUE) || operands[0].type == ZYDIS_OPERAND_TYPE_MEMORY)
-		{
-			ZydisCalcAbsoluteAddress(&instruction, &operands[0], runtime_address, &destination);
-		}
+		
+		ZydisCalcAbsoluteAddressEx(&instruction, &operands[0], runtime_address, registers, &destination);
 
 		return destination;
 	}

@@ -10,7 +10,8 @@ namespace Sandbox
 		LIST_ENTRY	list_entry;
 
 		PMDL mdl;		/*	mdl used for locking hooked pages	*/
-		uint8_t* guest_physical_page;	/*	guest physical address of the hooked page	*/
+		uint8_t* guest_physical_page;	/*	guest physical address of the sandboxed page	*/
+		uint8_t* guest_virtual_page;	/*	guest virtual address of the sandboxed page	*/
 		void* hooked_page;				/*	guest virtual address of the hooked page	*/
 
 		PT_ENTRY_64* hookless_npte;		/*	nested PTE of page without hooks			*/
@@ -22,8 +23,6 @@ namespace Sandbox
 
 		int64_t tag;	/*	identify this hook		*/
 		bool active;	/*	is this hook active?	*/
-
-		uintptr_t noexecute_ncr3;
 
 		void Init()
 		{
@@ -39,9 +38,9 @@ namespace Sandbox
 	extern	int sandbox_page_count;
 	extern	SandboxPage* sandbox_page_array;
 
-	void LogSandboxPageAccess(CoreData* vcpu_data);
+	void LogSandboxPageAccess(VcpuData* vcpu_data, GeneralRegisters* guest_context, PHYSICAL_ADDRESS faulting_physical);
 
-	SandboxPage* IsolatePage(CoreData* vmcb_data, void* address, int32_t tag = 0);
+	SandboxPage* IsolatePage(VcpuData* vmcb_data, void* address, int32_t tag = 0);
 
 	SandboxPage* ForEachHook(bool(HookCallback)(SandboxPage* hook_entry, void* data), void* callback_data);
 

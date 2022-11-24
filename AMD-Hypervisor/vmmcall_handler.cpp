@@ -4,7 +4,7 @@
 /*  HandleVmmcall only handles the vmmcall for 1 core.
     It is the guest's responsibility to set thread affinity.
 */
-void HandleVmmcall(CoreData* vmcb_data, GeneralRegisters* GuestRegisters, bool* EndVM)
+void HandleVmmcall(VcpuData* vmcb_data, GeneralRegisters* GuestRegisters, bool* EndVM)
 {
     auto id = GuestRegisters->rcx;
 

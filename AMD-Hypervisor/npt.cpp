@@ -6,7 +6,7 @@
 
 #pragma optimize( "", off )
 
-bool HandleSplitInstruction(CoreData* vcpu_data, uintptr_t guest_rip, PHYSICAL_ADDRESS faulting_physical, void* hook_struct)
+bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_ADDRESS faulting_physical, BOOL is_hooked_page)
 {
 	PHYSICAL_ADDRESS ncr3;
 
@@ -20,7 +20,7 @@ bool HandleSplitInstruction(CoreData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 
 	if (PAGE_ALIGN(guest_rip + insn_len) != PAGE_ALIGN(guest_rip))
 	{
-		if (hook_struct)
+		if (is_hooked_page)
 		{
 			Logger::Get()->LogJunk("instruction is split, entering hook page!\n");
 
@@ -48,7 +48,7 @@ bool HandleSplitInstruction(CoreData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 	return switch_ncr3;
 }
 
-void HandleNestedPageFault(CoreData* vcpu_data, GeneralRegisters* GuestContext)
+void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* GuestContext)
 {
 	PHYSICAL_ADDRESS faulting_physical;
 	faulting_physical.QuadPart = vcpu_data->guest_vmcb.control_area.ExitInfo2;
@@ -61,13 +61,18 @@ void HandleNestedPageFault(CoreData* vcpu_data, GeneralRegisters* GuestContext)
 
 	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
-	Logger::Get()->LogJunk("[#NPF HANDLER]	 guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
+	/*	clean ncr3 cache	*/
+
+	vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+	vcpu_data->guest_vmcb.control_area.TlbControl = 1;
+
+	Logger::Get()->LogJunk("[#NPF HANDLER]	guest physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
 
 	if (exit_info1.fields.valid == 0)
 	{
 		if (ncr3.QuadPart != Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
-			/*	map in the missing memory (1st and second NCR3 only)	*/
+			/*	map in the missing memory (primary and hook NCR3 only)	*/
 
 			int num_bytes = vcpu_data->guest_vmcb.control_area.NumOfBytesFetched;
 
@@ -80,16 +85,14 @@ void HandleNestedPageFault(CoreData* vcpu_data, GeneralRegisters* GuestContext)
 			return;
 		}
 
-		/*	clean ncr3 cache	*/
-
-		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
-		vcpu_data->guest_vmcb.control_area.TlbControl = 1;
-
 		/*  move out of sandbox context and set RIP to the instrumentation function  */
 
 		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
-			Sandbox::LogSandboxPageAccess(vcpu_data);
+			// DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
+			//DbgPrint("vcpu_data->guest_vmcb.control_area.NRip 0x%p \n", vcpu_data->guest_vmcb.control_area.NRip);
+
+			Sandbox::LogSandboxPageAccess(vcpu_data, faulting_physical);
 		}
 
 		vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
@@ -104,6 +107,8 @@ void HandleNestedPageFault(CoreData* vcpu_data, GeneralRegisters* GuestContext)
 		auto sandbox_page = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox],
 			[](PT_ENTRY_64* pte, void* callback_data) -> int
 			{
+				/*	if the page isn't present in the sandbox ncr3, then its not a sandbox page  */
+
 				if (pte->LargePage == true || pte->Present == 0)
 				{
 					*(BOOL*)callback_data = FALSE;
@@ -121,33 +126,33 @@ void HandleNestedPageFault(CoreData* vcpu_data, GeneralRegisters* GuestContext)
 			return;
 		}
 
-		auto npt_hook = NPTHooks::ForEachHook(
-			[](NPTHooks::NptHook* hook_entry, void* data) -> bool {
-				
-				if (PAGE_ALIGN(data) == PAGE_ALIGN(hook_entry->guest_physical_page))
-				{
-					return true;
-				}
+		BOOL is_hooked_page = TRUE;
 
-			}, (void*)faulting_physical.QuadPart
+		auto npthooked_page = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[noexecute],
+			[](PT_ENTRY_64* pte, void* callback_data) -> int
+			{
+				/*	if the page allows execute in the noexecute ncr3, then it is an npt hooked page */
+
+				if (pte->ExecuteDisable != 0)
+				{
+					*(BOOL*)callback_data = FALSE;
+				}
+				return 0;
+
+			}, (void*)&is_hooked_page
 		);
 
 		/*	handle cases where an instruction is split across 2 pages	*/
 
-		auto switch_ncr3 = HandleSplitInstruction(vcpu_data, guest_rip, faulting_physical, (void*)npt_hook);
-
-		/*	clean ncr3 cache	*/
-
-		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
-		vcpu_data->guest_vmcb.control_area.TlbControl = 1;
+		auto switch_ncr3 = HandleSplitInstruction(vcpu_data, guest_rip, faulting_physical, is_hooked_page);
 
 		if (switch_ncr3)
 		{
-			if (npt_hook)
+			if (is_hooked_page)
 			{
 				/*  move into hooked page and switch to ncr3 with hooks mapped  */
 
-				vcpu_data->guest_vmcb.control_area.NCr3 = npt_hook->noexecute_ncr3;
+				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[noexecute];
 			}
 			else
 			{
