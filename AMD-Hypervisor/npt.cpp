@@ -48,7 +48,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 	return switch_ncr3;
 }
 
-void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* GuestContext)
+void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_registers)
 {
 	PHYSICAL_ADDRESS faulting_physical;
 	faulting_physical.QuadPart = vcpu_data->guest_vmcb.control_area.ExitInfo2;
@@ -92,7 +92,9 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* GuestContext)
 			// DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
 			//DbgPrint("vcpu_data->guest_vmcb.control_area.NRip 0x%p \n", vcpu_data->guest_vmcb.control_area.NRip);
 
-			Sandbox::LogSandboxPageAccess(vcpu_data, faulting_physical);
+			bool is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? true : false;
+
+			Sandbox::LogSandboxPageAccess(vcpu_data, guest_registers, faulting_physical);
 		}
 
 		vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];

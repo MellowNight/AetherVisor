@@ -38,7 +38,7 @@ namespace Sandbox
 	extern	int sandbox_page_count;
 	extern	SandboxPage* sandbox_page_array;
 
-	void LogSandboxPageAccess(VcpuData* vcpu_data, GeneralRegisters* guest_context, PHYSICAL_ADDRESS faulting_physical);
+	uintptr_t EmulateInstruction(VcpuData* vcpu_data, uint8_t* guest_rip, GeneralRegisters* guest_regs, bool is_kernel);
 
 	SandboxPage* IsolatePage(VcpuData* vmcb_data, void* address, int32_t tag = 0);
 

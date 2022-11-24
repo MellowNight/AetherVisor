@@ -28,9 +28,16 @@ namespace Sandbox
 		sandbox_page_count = 0;
 	}
 
-	uint8_t* EmulateInstruction(VcpuData* vcpu_data, uint8_t* guest_rip, GeneralRegisters* guest_regs)
+	uintptr_t EmulateInstruction(VcpuData* vcpu_data, uint8_t* guest_rip, GeneralRegisters* guest_regs, bool is_kernel)
 	{
-		uint8_t* execute_target = 0;
+		auto vmroot_cr3 = __readcr3();
+
+		if (!is_kernel)
+		{
+			__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+		}
+
+		uintptr_t execute_target = 0;
 
 		ZydisDecodedOperand operands[5];
 
@@ -44,67 +51,58 @@ namespace Sandbox
 			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_UNCOND_BR ||
 			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_CALL)
 		{
-			execute_target = (uint8_t*)Disasm::GetCallJmpTarget(instruction, operands, (uintptr_t)guest_rip, &context);
+			/*	handle calls/jmps	*/
+
+			execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
+
+			if (!is_kernel)
+			{
+				if (execute_target && (execute_target < 0x7FFFFFFFFFFF))
+				{
+					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
+
+					vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = execute_target;
+				}
+			}
+			else
+			{
+				if (execute_target && (execute_target > 0x7FFFFFFFFFFF))
+				{
+					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
+
+					vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = execute_target;
+				}
+			}
 		}
 		else
 		{
+			/*	handle reads/writes	*/
 
+			for (auto i = 0; i < instruction.operand_count; ++i)
+			{
+				auto rw_target = (uint8_t*)Disasm::GetMemoryAccessTarget(instruction, &operands[i], (uintptr_t)guest_rip, &context);
+
+
+				if (operands[i].actions & ZYDIS_OPERAND_ACTION_WRITE)
+				{
+					if ()
+				}
+				else if (operands[i].actions & ZYDIS_OPERAND_ACTION_READ)
+				{
+
+				}
+			}
+
+		}
+
+		if (!is_kernel)
+		{
+			__writecr3(vmroot_cr3);
 		}
 
 		return execute_target;
-	}
-
-	void LogSandboxPageAccess(VcpuData* vcpu_data, GeneralRegisters* guest_context, PHYSICAL_ADDRESS faulting_physical)
-	{
-		auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
-
-		/*	if the RIP is inside of a sandbox page	*/
-
-		//auto sandboxed_page = Sandbox::ForEachHook(
-		//	[](SandboxPage* sandboxed_page, void* data)-> bool {
-
-		//		if (sandboxed_page->guest_virtual_page == data)
-		//		{
-		//			return true;
-		//		}
-
-		//		return false;
-		//	},
-		//	(void*)PAGE_ALIGN(guest_rip)
-		//);
-
-		BOOL is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? TRUE : FALSE;
-
-		if (is_system_page)
-		{	
-			auto target_guest_rip = MmGetVirtualForPhysical(faulting_physical);
-
-			if (((uintptr_t)target_guest_rip > 0x7FFFFFFFFFFF))
-			{
-				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
-				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-
-				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = (uintptr_t)target_guest_rip;
-			}
-		}
-		else
-		{
-			auto vmroot_cr3 = __readcr3();
-
-			__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
-
-			auto execute_target = (uintptr_t)EmulateInstruction(vcpu_data, (uint8_t*)guest_rip);
-
-			if (execute_target && (execute_target < 0x7FFFFFFFFFFF))
-			{
-				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
-
-				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = (uintptr_t)execute_target;
-
-			}
-			__writecr3(vmroot_cr3);
-		}
 	}
 
 	SandboxPage* ForEachHook(bool(HookCallback)(SandboxPage* hook_entry, void* data), void* callback_data)

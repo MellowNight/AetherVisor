@@ -11,7 +11,7 @@ namespace Disasm
 	/*	Gets total instructions length closest to byte_length	*/
 	int	LengthOfInstructions(void* address, int byte_length);
 
-	ZyanU64 GetCallJmpTarget(
+	ZyanU64 GetMemoryAccessTarget(
 		ZydisDecodedInstruction& instruction,
 		ZydisDecodedOperand* operands,
 		ZyanU64 runtime_address,
