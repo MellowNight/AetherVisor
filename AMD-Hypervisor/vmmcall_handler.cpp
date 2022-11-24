@@ -21,7 +21,7 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
         Sandbox::IsolatePage(
             vmcb_data,
             (void*)GuestRegisters->rdx,
-            NULL  
+            GuestRegisters->r8
         );
 
         break;

@@ -27,7 +27,7 @@ namespace ForteVisor
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, int32_t tag)
     {
-        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, noexecute_cr3_id, tag);
+        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, tag);
 
         return 0;
     }

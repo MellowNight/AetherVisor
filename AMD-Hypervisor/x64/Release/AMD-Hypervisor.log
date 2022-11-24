@@ -3882,6 +3882,7 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(25
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(282,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(294,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(24,27): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(33,21): warning C4244: 'initializing': conversion from 'UINT64' to 'int', possible loss of data
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(99,37): warning C4389: '==': signed/unsigned mismatch
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(120,27): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
