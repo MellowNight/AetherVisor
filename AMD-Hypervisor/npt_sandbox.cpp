@@ -32,20 +32,22 @@ namespace Sandbox
 	{
 		auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
-		BOOL is_kernel = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? TRUE : FALSE;
+		BOOL is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? TRUE : FALSE;
 
-		if (is_kernel)
+		if (is_system_page)
 		{
 			if (((uintptr_t)guest_rip > 0x7FFFFFFFFFFF))
 			{
 				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
-				vcpu_data->guest_vmcb.save_state_area.Rax = (uintptr_t)guest_rip;
+				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = (uintptr_t)guest_rip;
 			}
 		}
 		else if (((uintptr_t)guest_rip < 0x7FFFFFFFFFFF))
 		{
 			vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
-			vcpu_data->guest_vmcb.save_state_area.Rax = (uintptr_t)guest_rip;
+			vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+			*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = (uintptr_t)guest_rip;
 		}
 	}
 
@@ -124,7 +126,7 @@ namespace Sandbox
 		hook_entry->hookless_npte->ExecuteDisable = 1;
 
 
-		/*	get the nested pte of the guest physical address in the sandbox NCR3, and map it to our page	*/
+		/*	assign a new nested pte for the guest physical address in the sandbox NCR3	*/
 
 		PHYSICAL_ADDRESS sandbox_ncr3;
 
@@ -132,9 +134,7 @@ namespace Sandbox
 
 		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(sandbox_ncr3);
 
-		auto hooked_npte = AssignNPTEntry(pml4_base, (uintptr_t)physical_page, true);
-
-		hooked_npte->ExecuteDisable = 0;
+		auto hooked_npte = AssignNPTEntry(pml4_base, (uintptr_t)physical_page, PTEAccess{ true, true, true });
 
 		auto hooked_copy = PageUtils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
 

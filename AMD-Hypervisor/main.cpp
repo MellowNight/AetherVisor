@@ -5,56 +5,7 @@
 #include "prepare_vm.h"
 #include "vmexit.h"
 #include "paging_utils.h"
-#include <ntdddisk.h>
-
-Hooks::JmpRipCode ntqvm_hook;
-
-NTSTATUS NTAPI NtQueryVirtualMemory_hook(_In_ HANDLE ProcessHandle, _In_opt_ PVOID BaseAddress, _In_ MEMORY_INFORMATION_CLASS MemoryInformationClass, _Out_writes_bytes_(MemoryInformationLength) PVOID MemoryInformation, _In_ SIZE_T MemoryInformationLength, _Out_opt_ PSIZE_T ReturnLength)
-{
-	auto status = static_cast<decltype(&NtQueryVirtualMemory)>(ntqvm_hook.original_bytes)(
-		ProcessHandle, BaseAddress, MemoryInformationClass, MemoryInformation, MemoryInformationLength, ReturnLength
-	);
-
-	return status;
-}
-
-Hooks::JmpRipCode ioctl_hk;
-
-
-NTSTATUS NTAPI NtDeviceIoControlFile_handler(
-	_In_ HANDLE FileHandle,
-	_In_opt_ HANDLE Event,
-	_In_opt_ PIO_APC_ROUTINE ApcRoutine,
-	_In_opt_ PVOID ApcContext,
-	_Out_ PIO_STATUS_BLOCK IoStatusBlock,
-	_In_ ULONG IoControlCode,
-	_In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
-	_In_ ULONG InputBufferLength,
-	_Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
-	_In_ ULONG OutputBufferLength
-)
-{
-	/*  original bytes are fucked   */
-	auto status = static_cast<decltype(&NtDeviceIoControlFile_handler)>((void*)ioctl_hk.original_bytes)(
-		FileHandle,
-		Event,
-		ApcRoutine,
-		ApcContext,
-		IoStatusBlock,
-		IoControlCode,
-		InputBuffer,
-		InputBufferLength,
-		OutputBuffer,
-		OutputBufferLength
-	);
-
-	if (IoControlCode == IOCTL_STORAGE_QUERY_PROPERTY)
-	{
-		DbgPrint("NtDeviceIoControlFile called \n");
-	}
-
-	return status;
-}
+#include "npt_sandbox.h"
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 
@@ -78,9 +29,9 @@ bool VirtualizeAllProcessors()
 		return false;
 	}
 
-	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[primary], true);
-	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[noexecute], false);
-	// BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], false);
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[primary], PTEAccess{ true, true, true });
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[noexecute], PTEAccess{ true, true, false });
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], PTEAccess{ false, true, true });
 
 	
 	for (int i = 0; i <= NCR3_DIRECTORIES::sandbox; ++i)
@@ -164,7 +115,7 @@ int Initialize()
 {
 	Logger::Get()->Start();
 	Disasm::Init();
-	//TlbHooks::Init();
+	Sandbox::Init();
 	NPTHooks::Init();
 
 	return 0;

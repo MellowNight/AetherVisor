@@ -48,7 +48,7 @@ bool HandleSplitInstruction(CoreData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 	return switch_ncr3;
 }
 
-void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
+void HandleNestedPageFault(CoreData* vcpu_data, GeneralRegisters* GuestContext)
 {
 	PHYSICAL_ADDRESS faulting_physical;
 	faulting_physical.QuadPart = vcpu_data->guest_vmcb.control_area.ExitInfo2;
@@ -75,7 +75,7 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 
 			auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
 
-			auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, true);
+			auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, PTEAccess{ true, true, true });
 
 			return;
 		}
@@ -85,7 +85,7 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
 		vcpu_data->guest_vmcb.control_area.TlbControl = 1;
 
-		/*  move out of sandbox context and capture a snapshot  */
+		/*  move out of sandbox context and set RIP to the instrumentation function  */
 
 		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
@@ -193,7 +193,7 @@ int GetPhysicalMemoryRanges()
 
 /*	assign a new NPT entry to an unmapped guest physical address	*/
 
-PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
+PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, PTEAccess flags)
 {
 	ADDRESS_TRANSLATION_HELPER	Helper;
 	Helper.AsUInt64 = PhysicalAddr;
@@ -242,14 +242,14 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute)
 
 	Pte->PageFrameNumber = static_cast<PFN_NUMBER>(PhysicalAddr >> PAGE_SHIFT);
 	Pte->Supervisor = 1;
-	Pte->Write = 1;
-	Pte->Present = 1;
-	Pte->ExecuteDisable = !execute;
+	Pte->Write = flags.writable;
+	Pte->Present = flags.present;
+	Pte->ExecuteDisable = !flags.execute;
 
 	return Pte;
 }
 
-uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
+uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, PTEAccess flags)
 {
 	auto run_count = GetPhysicalMemoryRanges();
 
@@ -266,7 +266,7 @@ uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 
 		for (PFN_NUMBER PFN = PagesBase; PFN < PagesBase + PageCount; ++PFN)
 		{
-			AssignNPTEntry(npml4_virtual, PFN << PAGE_SHIFT, execute);
+			AssignNPTEntry(npml4_virtual, PFN << PAGE_SHIFT, flags);
 		}
 	}
 
@@ -274,7 +274,7 @@ uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, bool execute)
 
 	apic_bar.Flags = __readmsr(MSR::APIC_BAR);
 
-	AssignNPTEntry(npml4_virtual, apic_bar.ApicBase << PAGE_SHIFT, true);
+	AssignNPTEntry(npml4_virtual, apic_bar.ApicBase << PAGE_SHIFT, flags);
 
 	return *NCr3;
 }

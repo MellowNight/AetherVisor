@@ -423,7 +423,7 @@ struct VMCB
     char pad[PAGE_SIZE - sizeof(VmcbControlArea) - sizeof(VmcbSaveStateArea)];
 };
 
-struct GPRegs
+struct GeneralRegisters
 {
     UINT64  r15;
     UINT64  r14;

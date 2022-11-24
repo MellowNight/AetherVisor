@@ -884,9 +884,9 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(29
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\shellcode.h(27,40): warning C4996: 'ExAllocatePool': ExAllocatePool is deprecated, use ExAllocatePool2.
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\shellcode.h(33,35): warning C4996: 'ExAllocatePool': ExAllocatePool is deprecated, use ExAllocatePool2.
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(173,38): warning C4100: 'DriverObject': unreferenced formal parameter
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(180,66): warning C4100: 'RegistryPath': unreferenced formal parameter
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(180,36): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(124,38): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(131,66): warning C4100: 'RegistryPath': unreferenced formal parameter
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(131,36): warning C4100: 'DriverObject': unreferenced formal parameter
   logging.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2676,7 +2676,7 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(28
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(294,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(68,21): warning C4389: '!=': signed/unsigned mismatch
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(51,57): warning C4100: 'GuestContext': unreferenced formal parameter
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(51,67): warning C4100: 'GuestContext': unreferenced formal parameter
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(72,8): warning C4189: 'num_bytes': local variable is initialized but not referenced
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(74,9): warning C4189: 'insn_bytes': local variable is initialized but not referenced
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(78,9): warning C4189: 'pte': local variable is initialized but not referenced
@@ -3889,8 +3889,8 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(119,27): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
   Generating Code...
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\utils.cpp(183): warning C4715: 'Utils::GetProcessId': not all control paths return a value
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(132): warning C4715: '<lambda_d5e61340287e72b6c28014d9026f6b86>::operator()': not all control paths return a value
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(160): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(132): warning C4715: '<lambda_a2a515b6c27d3f2a7b07be1e8606ec6d>::operator()': not all control paths return a value
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(111): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
 Zydis.lib(Decoder.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Decoder.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
 Zydis.lib(Utils.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Utils.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
 Zydis.lib(Register.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Register.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info

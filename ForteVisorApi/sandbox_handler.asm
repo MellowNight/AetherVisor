@@ -46,8 +46,9 @@ sandbox_handler_wrap proc frame
 
     PUSHAQ
 
-    mov rcx, rsp    ; pass the registers
-    mov rdx,  [rsp + 8 * 16 + 1]    ; pass the return address
+    mov rcx, rsp                   ; pass the registers
+    mov rdx, [rsp + 8 * 16 + 1]    ; pass the guest RIP
+    mov rdx, [rsp + 8 * 16 + 2]    ; pass the return address
     
     call SandboxHandler
 

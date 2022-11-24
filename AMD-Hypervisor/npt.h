@@ -2,15 +2,22 @@
 #include "utils.h"
 #include "hypervisor.h"
 
-uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, bool execute);
+struct PTEAccess
+{
+    bool present;
+    bool writable;
+    bool execute;
+};
 
-PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, bool execute);
+uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, PTEAccess flags);
+
+PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, PTEAccess flags);
 
 void* AllocateNewTable(PML4E_64* PageEntry);
 
 void HandleNestedPageFault(
 	CoreData* VpData,
-	GPRegs* GuestContext
+	GeneralRegisters* GuestContext
 );
 
 enum NCR3_DIRECTORIES
