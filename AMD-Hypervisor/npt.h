@@ -19,3 +19,5 @@ enum NCR3_DIRECTORIES
     noexecute,
     sandbox,
 };
+
+extern void* sandbox_handler;

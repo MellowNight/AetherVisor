@@ -40,18 +40,21 @@ POPAQ macro
         pop     rax
 endm
 
-sandbox_handler proc frame
+sandbox_handler_wrap proc frame
 	
-	.endprolog
+    .endprolog
 
     PUSHAQ
 
-	call SandboxHandler
+    mov rcx, rsp    ; pass the registers
+    mov rdx,  [rsp + 8 * 16 + 1]    ; pass the return address
+    
+    call SandboxHandler
 
-	POPAQ
+    POPAQ
 
-	ret
+    ret
 	
-sandbox_handler endp
+sandbox_handler_wrap endp
 
 end

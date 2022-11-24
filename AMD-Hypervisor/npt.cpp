@@ -1,3 +1,4 @@
+#include "npt_sandbox.h"
 #include "npt_hook.h"
 #include "logging.h"
 #include "hypervisor.h"
@@ -5,24 +6,46 @@
 
 #pragma optimize( "", off )
 
-void* sandbox_handler = NULL;
-
-void LogSandboxPageAccess(CoreData* vcpu_data)
+bool HandleSplitInstruction(CoreData* vcpu_data, uintptr_t guest_rip, PHYSICAL_ADDRESS faulting_physical, void* hook_struct)
 {
-	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
+	PHYSICAL_ADDRESS ncr3;
 
-	auto vmroot_cr3 = __readcr3();
+	ncr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3;
 
-	__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+	bool switch_ncr3 = true;
 
-	/*	Push 2nd ret	*/
+	int insn_len = 16;
 
-	vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-	*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip
+	/*	handle cases where an instruction is split across 2 pages	*/
 
-	vcpu_data->guest_vmcb.save_state_area.Rip = sandbox_handler;
+	if (PAGE_ALIGN(guest_rip + insn_len) != PAGE_ALIGN(guest_rip))
+	{
+		if (hook_struct)
+		{
+			Logger::Get()->LogJunk("instruction is split, entering hook page!\n");
 
-	__writecr3(vmroot_cr3);
+			/*	if CPU is entering the page:	*/
+
+			switch_ncr3 = true;
+			ncr3.QuadPart = Hypervisor::Get()->ncr3_dirs[sandbox];
+		}
+		else
+		{
+			Logger::Get()->LogJunk("instruction is split, leaving hook page! \n");
+
+			/*	if CPU is leaving the page:	*/
+
+			switch_ncr3 = false;
+		}
+
+		auto page1_physical = faulting_physical.QuadPart;
+		auto page2_physical = PageUtils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3)->PageFrameNumber << PAGE_SHIFT;
+
+		PageUtils::GetPte((void*)page1_physical, ncr3.QuadPart)->ExecuteDisable = 0;
+		PageUtils::GetPte((void*)page2_physical, ncr3.QuadPart)->ExecuteDisable = 0;
+	}
+
+	return switch_ncr3;
 }
 
 void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
@@ -38,23 +61,66 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 
 	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
-	Logger::Get()->LogJunk("[#NPF HANDLER]	guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
+	Logger::Get()->LogJunk("[#NPF HANDLER]	 guest RIP physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
 
 	if (exit_info1.fields.valid == 0)
 	{
-		int num_bytes = vcpu_data->guest_vmcb.control_area.NumOfBytesFetched;
+		if (ncr3.QuadPart != Hypervisor::Get()->ncr3_dirs[sandbox])
+		{
+			/*	map in the missing memory (1st and second NCR3 only)	*/
 
-		auto insn_bytes = vcpu_data->guest_vmcb.control_area.GuestInstructionBytes;
+			int num_bytes = vcpu_data->guest_vmcb.control_area.NumOfBytesFetched;
 
-		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
+			auto insn_bytes = vcpu_data->guest_vmcb.control_area.GuestInstructionBytes;
 
-		auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, true);
+			auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
+
+			auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, true);
+
+			return;
+		}
+
+		/*	clean ncr3 cache	*/
+
+		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+		vcpu_data->guest_vmcb.control_area.TlbControl = 1;
+
+		/*  move out of sandbox context and capture a snapshot  */
+
+		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
+		{
+			Sandbox::LogSandboxPageAccess(vcpu_data);
+		}
+
+		vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 
 		return;
 	}
 
 	if (exit_info1.fields.execute == 1)
 	{
+		BOOL is_sandbox_page = TRUE;
+
+		auto sandbox_page = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox],
+			[](PT_ENTRY_64* pte, void* callback_data) -> int
+			{
+				if (pte->LargePage == true || pte->Present == 0)
+				{
+					*(BOOL*)callback_data = FALSE;
+				}
+
+				return 0;
+
+			}, (void*)&is_sandbox_page
+		);
+
+		if (is_sandbox_page)
+		{
+			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
+
+			return;
+		}
+
 		auto npt_hook = NPTHooks::ForEachHook(
 			[](NPTHooks::NptHook* hook_entry, void* data) -> bool {
 				
@@ -66,38 +132,9 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 			}, (void*)faulting_physical.QuadPart
 		);
 
-		bool switch_ncr3 = true;
-
-		int insn_len = 16;
-
 		/*	handle cases where an instruction is split across 2 pages	*/
 
-		if (PAGE_ALIGN(guest_rip + insn_len) != PAGE_ALIGN(guest_rip))
-		{
-			if (npt_hook)
-			{
-				Logger::Get()->LogJunk("instruction is split, entering hook page!\n");
-
-				/*	if CPU is entering the page:	*/
-
-				switch_ncr3 = true;
-				ncr3.QuadPart = npt_hook->noexecute_ncr3;
-			}
-			else
-			{
-				Logger::Get()->LogJunk("instruction is split, leaving hook page! \n");
-
-				/*	if CPU is leaving the page:	*/
-
-				switch_ncr3 = false;
-			}
-
-			auto page1_physical = faulting_physical.QuadPart;
-			auto page2_physical = PageUtils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3)->PageFrameNumber << PAGE_SHIFT;
-
-			PageUtils::GetPte((void*)page1_physical, ncr3.QuadPart)->ExecuteDisable = 0;
-			PageUtils::GetPte((void*)page2_physical, ncr3.QuadPart)->ExecuteDisable = 0;
-		}
+		auto switch_ncr3 = HandleSplitInstruction(vcpu_data, guest_rip, faulting_physical, (void*)npt_hook);
 
 		/*	clean ncr3 cache	*/
 
@@ -114,13 +151,6 @@ void HandleNestedPageFault(CoreData* vcpu_data, GPRegs* GuestContext)
 			}
 			else
 			{
-				/*  move out of hooked page and switch to ncr3 without hooks mapped  */
-
-				if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
-				{
-					LogSandboxPageAccess(vcpu_data);
-				}
-
 				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 			}
 		}

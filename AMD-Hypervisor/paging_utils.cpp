@@ -35,7 +35,8 @@ namespace PageUtils
         return STATUS_SUCCESS;
     }
 
-    PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, int (*page_table_callback)(PT_ENTRY_64*))
+    PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, 
+        int (*page_table_callback)(PT_ENTRY_64*, void*), void* callback_data)
     {
         ADDRESS_TRANSLATION_HELPER helper;
 
@@ -55,7 +56,7 @@ namespace PageUtils
 
         if (page_table_callback)
         {
-            page_table_callback((PT_ENTRY_64*)pml4e);
+            page_table_callback((PT_ENTRY_64*)pml4e, callback_data);
         }
 
         if (pml4e->Present == FALSE)
@@ -72,7 +73,7 @@ namespace PageUtils
 
         if (page_table_callback)
         {
-            page_table_callback((PT_ENTRY_64*)pdpte);
+            page_table_callback((PT_ENTRY_64*)pdpte, callback_data);
         }
 
         if ((pdpte->Present == FALSE) || (pdpte->LargePage != FALSE))
@@ -89,7 +90,7 @@ namespace PageUtils
 
         if (page_table_callback)
         {
-            page_table_callback((PT_ENTRY_64*)pde);
+            page_table_callback((PT_ENTRY_64*)pde, callback_data);
         }
 
         if ((pde->Present == FALSE) || pde->LargePage == TRUE)
@@ -108,7 +109,7 @@ namespace PageUtils
 
         if (page_table_callback)
         {
-            page_table_callback((PT_ENTRY_64*)pte);
+            page_table_callback((PT_ENTRY_64*)pte, callback_data);
         }
 
         return  (PT_ENTRY_64*)pte;

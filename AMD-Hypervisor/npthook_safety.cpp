@@ -52,7 +52,7 @@ namespace NPTHooks
 				hk_MmCleanProcessAddressSpace = Hooks::JmpRipCode{ clean_process_address_space, (uintptr_t)MmCleanProcessAddressSpace_hook };
 
 				svm_vmmcall(VMMCALL_ID::set_npt_hook, clean_process_address_space, hk_MmCleanProcessAddressSpace.hook_code, 
-					hk_MmCleanProcessAddressSpace.hook_size, NCR3_DIRECTORIES::sandbox, NULL);
+					hk_MmCleanProcessAddressSpace.hook_size, NCR3_DIRECTORIES::noexecute, NULL);
 			}
 		}
 	}

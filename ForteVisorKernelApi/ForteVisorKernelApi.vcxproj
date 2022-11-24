@@ -44,6 +44,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <MASM Include="..\ForteVisorApi\sandbox_handler.asm" />
     <MASM Include="vmmcall.asm" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

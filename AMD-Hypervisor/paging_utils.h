@@ -17,10 +17,7 @@ namespace PageUtils
 
     NTSTATUS UnlockPages(PMDL mdl);
 
-    PT_ENTRY_64* GetPte(
-        void* virtual_address, 
-        uintptr_t pml4_base_pa, 
-        int (*page_table_callback)(PT_ENTRY_64*) = NULL
-    );
+    PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa,
+        int (*page_table_callback)(PT_ENTRY_64*, void*) = NULL, void* callback_data = NULL);
 };
 

@@ -11,8 +11,9 @@ enum VMMCALL_ID : uintptr_t
     remove_npt_hook = 0x1166AAFF22,
     is_hv_present = 0xEEFF,
     remap_page_ncr3_specific = 0x8236FF,
+    sandbox_page = 0x8236FE,
+    register_sandbox = 0x8F36FE,
 };
-
 
 enum VMEXIT
 {

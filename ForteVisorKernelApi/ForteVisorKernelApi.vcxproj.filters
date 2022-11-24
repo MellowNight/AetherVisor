@@ -37,5 +37,8 @@
     <MASM Include="vmmcall.asm">
       <Filter>Source Files</Filter>
     </MASM>
+    <MASM Include="..\ForteVisorApi\sandbox_handler.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

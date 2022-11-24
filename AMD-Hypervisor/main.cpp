@@ -80,7 +80,7 @@ bool VirtualizeAllProcessors()
 
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[primary], true);
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[noexecute], false);
-	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], false);
+	// BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], false);
 
 	
 	for (int i = 0; i <= NCR3_DIRECTORIES::sandbox; ++i)

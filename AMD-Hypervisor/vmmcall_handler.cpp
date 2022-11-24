@@ -1,4 +1,5 @@
 #include "vmexit.h"
+#include "npt_sandbox.h"
 
 /*  HandleVmmcall only handles the vmmcall for 1 core.
     It is the guest's responsibility to set thread affinity.
@@ -9,6 +10,22 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
 
     switch (id)
     {
+    case VMMCALL_ID::register_sandbox:
+    {
+        Sandbox::sandbox_handler = (void*)GuestRegisters->rdx;
+
+        break;
+    }
+    case VMMCALL_ID::sandbox_page:
+    {
+        Sandbox::IsolatePage(
+            vmcb_data,
+            (void*)GuestRegisters->rdx,
+            NULL  
+        );
+
+        break;
+    }
     case VMMCALL_ID::remap_page_ncr3_specific:
     {
         auto address = (void*)GuestRegisters->rdx;
@@ -86,7 +103,7 @@ void HandleVmmcall(CoreData* vmcb_data, GPRegs* GuestRegisters, bool* EndVM)
                 return true;
             },
             (void*)GuestRegisters->rdx
-                );
+        );
 
         __writecr3(vmroot_cr3);
 

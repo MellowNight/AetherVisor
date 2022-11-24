@@ -167,6 +167,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <MASM Include="sandbox_handler.asm" />
     <MASM Include="vmmcall.asm">
       <FileType>Document</FileType>
     </MASM>

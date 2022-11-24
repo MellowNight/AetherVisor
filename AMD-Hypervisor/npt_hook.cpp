@@ -15,7 +15,7 @@ namespace NPTHooks
 	{
 		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
 
-		int max_hooks = 1000;
+		int max_hooks = 6000;
 		
 		npt_hook_array = (NptHook*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHook) * max_hooks, 'hook');
 
