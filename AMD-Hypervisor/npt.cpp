@@ -94,10 +94,8 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 			bool is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? true : false;
 
-			Sandbox::LogSandboxPageAccess(vcpu_data, guest_registers, faulting_physical);
+			Sandbox::InstructionInstrumentation(vcpu_data, guest_registers, faulting_physical, is_system_page);
 		}
-
-		vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 
 		return;
 	}

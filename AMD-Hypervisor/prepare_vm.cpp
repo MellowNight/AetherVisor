@@ -1,9 +1,7 @@
 #include "prepare_vm.h"
 #include "logging.h"
 
-extern "C" void _sgdt(
-	OUT void* Descriptor
-);
+extern "C" void _sgdt(void* Descriptor);
 
 extern "C" int16_t __readtr();
 
@@ -275,11 +273,12 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 
 	// intercept_vector2.intercept_pf = 1;
 	// intercept_vector2.intercept_bp = 1;
+	intercept_vector2.intercept_db = 1;
+
+	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
 
 	/*	intercept MSR access	*/
 	core_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << 28);
-
-	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
 	
 	core_data->guest_vmcb.control_area.GuestAsid = 1;
 

@@ -28,7 +28,7 @@ namespace Sandbox
 		sandbox_page_count = 0;
 	}
 
-	uintptr_t EmulateInstruction(VcpuData* vcpu_data, uint8_t* guest_rip, GeneralRegisters* guest_regs, bool is_kernel)
+	void InstructionInstrumentation(VcpuData* vcpu_data, uint8_t* guest_rip, GeneralRegisters* guest_regs, bool is_kernel)
 	{
 		auto vmroot_cr3 = __readcr3();
 
@@ -36,8 +36,6 @@ namespace Sandbox
 		{
 			__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
 		}
-
-		uintptr_t execute_target = 0;
 
 		ZydisDecodedOperand operands[5];
 
@@ -53,7 +51,7 @@ namespace Sandbox
 		{
 			/*	handle calls/jmps	*/
 
-			execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
+			auto execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
 
 			if (!is_kernel)
 			{
@@ -75,26 +73,16 @@ namespace Sandbox
 					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = execute_target;
 				}
 			}
+
+			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 		}
 		else
 		{
-			/*	handle reads/writes	*/
+			/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
 
-			for (auto i = 0; i < instruction.operand_count; ++i)
-			{
-				auto rw_target = (uint8_t*)Disasm::GetMemoryAccessTarget(instruction, &operands[i], (uintptr_t)guest_rip, &context);
+			vcpu_data->guest_vmcb.save_state_area.Rflags |= EFLAGS_TRAP_FLAG_BIT;
 
-
-				if (operands[i].actions & ZYDIS_OPERAND_ACTION_WRITE)
-				{
-					if ()
-				}
-				else if (operands[i].actions & ZYDIS_OPERAND_ACTION_READ)
-				{
-
-				}
-			}
-
+			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}
 
 		if (!is_kernel)
@@ -102,7 +90,7 @@ namespace Sandbox
 			__writecr3(vmroot_cr3);
 		}
 
-		return execute_target;
+		return;
 	}
 
 	SandboxPage* ForEachHook(bool(HookCallback)(SandboxPage* hook_entry, void* data), void* callback_data)
@@ -129,8 +117,7 @@ namespace Sandbox
 		sandbox_page_count -= 1;
 	}
 
-	/*	
-	
+	/*
 		IMPORTANT: if you want to set a hook in a globally mapped DLL such as ntdll.dll, you must trigger copy on write first!	
 		Sandbox::IsolatePage() is basically just a modified version of NPTHooks::SetNptHook
 	*/

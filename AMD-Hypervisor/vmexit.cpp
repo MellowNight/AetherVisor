@@ -69,6 +69,31 @@ extern "C" bool HandleVmexit(VcpuData* core_data, GeneralRegisters* GuestRegiste
             HandleMsrExit(core_data, GuestRegisters);
             break;
         }
+        case VMEXIT::DB:
+        {
+            DR6 dr6;
+
+            dr6.flags = vcpu_data->guest_vmcb.control_area.Dr6;
+
+            if (dr6.SingleInstruction == 1 && vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step]) 
+            {
+                vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
+
+                vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
+
+				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = vcpu_data->guest_vmcb.save_state_area.Rip;
+
+                vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+                vcpu_data->guest_vmcb.control_area.TlbControl = 1;
+            }
+            else      
+            {
+                InjectException(core_data, EXCEPTION_VECTOR::Debug, FALSE, 0);
+            }
+
+            break;
+        }
         case VMEXIT::VMRUN: 
         {
             InjectException(core_data, EXCEPTION_GP_FAULT, false, 0);
