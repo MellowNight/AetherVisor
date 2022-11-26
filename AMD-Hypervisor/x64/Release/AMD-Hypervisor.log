@@ -297,7 +297,6 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(25
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(282,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(294,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\disassembly.cpp(6,47): warning C4100: 'vcpu_data': unreferenced formal parameter
   hypervisor.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -1789,9 +1788,6 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(162,10): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(239,10): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(259,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt_sandbox.cpp(96,86): error C2660: 'Sandbox::EmulateInstruction': function does not take 2 arguments
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt_sandbox.cpp(31,11): message : see declaration of 'Sandbox::EmulateInstruction'
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt_sandbox.cpp(98,7): error C3536: 'execute_target': cannot be used before it is initialized
   paging_utils.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -2688,8 +2684,10 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(28
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(294,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(73,21): warning C4389: '!=': signed/unsigned mismatch
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(95,62): error C2660: 'Sandbox::LogSandboxPageAccess': function does not take 2 arguments
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt_sandbox.h(41,7): message : see declaration of 'Sandbox::LogSandboxPageAccess'
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(77,8): warning C4189: 'num_bytes': local variable is initialized but not referenced
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(79,9): warning C4189: 'insn_bytes': local variable is initialized but not referenced
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(83,9): warning C4189: 'pte': local variable is initialized but not referenced
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(212,11): warning C4189: 'Pte': local variable is initialized but not referenced
   utils.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -3290,12 +3288,13 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(25
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(282,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(294,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(225,52): warning C4242: '=': conversion from 'int' to 'uint8_t', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(243,63): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(250,36): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(269,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(270,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(377,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(223,52): warning C4242: '=': conversion from 'int' to 'uint8_t', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(241,63): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(248,36): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(267,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(268,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(276,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(376,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
   vmexit.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -3592,8 +3591,8 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(25
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(282,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(294,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(9,29): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(13,43): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(10,29): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmexit.cpp(14,43): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
   vmmcall_handler.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -3890,11 +3889,20 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(25
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(282,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(294,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_definitions.h(343,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(24,27): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(33,21): warning C4244: 'initializing': conversion from 'UINT64' to 'int', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(99,37): warning C4389: '==': signed/unsigned mismatch
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(120,27): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(119,27): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(34,27): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(43,21): warning C4244: 'initializing': conversion from 'UINT64' to 'int', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(109,37): warning C4389: '==': signed/unsigned mismatch
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(130,27): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall_handler.cpp(129,27): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
   Generating Code...
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\utils.cpp(183): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(111): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
+Zydis.lib(Decoder.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Decoder.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
+Zydis.lib(Utils.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Utils.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
+Zydis.lib(Register.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Register.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
+Zydis.lib(DecoderData.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(DecoderData.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
+Zydis.lib(SharedData.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(SharedData.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
+  AMD-Hypervisor.vcxproj -> C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\AMD-Hypervisor.sys
+  Driver is 'Universal'.
+  Inf2Cat task was skipped as there were no inf files to process
+  

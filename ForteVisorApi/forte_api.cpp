@@ -1,21 +1,35 @@
 #include "pch.h"
 #include "forte_api.h"
 
-void (*sandbox_handler)(GeneralRegisters* registers, void* return_address, void* o_guest_rip) = NULL;
+void (*sandbox_execute_handler)(GeneralRegisters* registers, void* return_address, void* o_guest_rip) = NULL;
+void (*sandbox_rw_handler)(GeneralRegisters* registers, void* o_guest_rip) = NULL;
 
 /*  parameter order: rcx, rdx, r8, r9, r12, r11  */
 
 namespace ForteVisor
 {
-    void SandboxHandler(GeneralRegisters* registers, void* return_address, void* o_guest_rip)
+    void SandboxRwHandler(GeneralRegisters* registers, void* return_address, void* o_guest_rip)
     {
-        sandbox_handler(registers, return_address, o_guest_rip);
+        sandbox_rw_handler(registers, o_guest_rip);
     }
 
-    void RegisterSandboxHandler(decltype(sandbox_handler) address)
+    void SandboxExecuteHandler(GeneralRegisters* registers, void* return_address, void* o_guest_rip)
     {
-        sandbox_handler = address;
-        svm_vmmcall(VMMCALL_ID::register_sandbox, sandbox_handler_wrap);
+        sandbox_execute_handler(registers, return_address, o_guest_rip);
+    }
+
+    void RegisterSandboxHandler(SandboxHookId handler_id, void* address)
+    {
+        if (handler_id == readwrite_handler)
+        {
+            sandbox_rw_handler = static_cast<decltype(sandbox_rw_handler)>(address);
+            svm_vmmcall(VMMCALL_ID::register_sandbox, handler_id, rw_handler_wrap);
+        }
+        else if (handler_id == execute_handler)
+        {
+            sandbox_execute_handler = static_cast<decltype(sandbox_execute_handler)>(address);
+            svm_vmmcall(VMMCALL_ID::register_sandbox, handler_id, execute_handler_wrap);
+        }
     }
 
     int RemapPageSingleNcr3(uintptr_t old_page, uintptr_t copy_page, int32_t core_id)
@@ -27,7 +41,7 @@ namespace ForteVisor
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag)
     {
-        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, NCR3_DIRECTORIES::sandbox, sandbox_handler);
+        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, noexecute_cr3_id, tag);
 
         return 0;
     }

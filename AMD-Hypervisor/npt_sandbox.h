@@ -34,11 +34,18 @@ namespace Sandbox
 		}
 	};
 
-	extern	void* sandbox_handler;
+	enum SandboxHookId
+	{
+		readwrite_handler = 0,
+		execute_handler = 1,
+	};
+
+	extern	void* sandbox_hooks[2];
+
 	extern	int sandbox_page_count;
 	extern	SandboxPage* sandbox_page_array;
 
-	uintptr_t EmulateInstruction(VcpuData* vcpu_data, uint8_t* guest_rip, GeneralRegisters* guest_regs, bool is_kernel);
+	void InstructionInstrumentation(VcpuData* vcpu_data, uint8_t* guest_rip, GeneralRegisters* guest_regs, bool is_kernel);
 
 	SandboxPage* IsolatePage(VcpuData* vmcb_data, void* address, int32_t tag = 0);
 

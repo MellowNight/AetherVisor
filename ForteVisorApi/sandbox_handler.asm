@@ -1,4 +1,5 @@
-extern SandboxHandler : proc
+extern SandboxRwHandler : proc
+extern SandboxExecuteHandler : proc
 
 .code
 
@@ -40,7 +41,7 @@ POPAQ macro
         pop     rax
 endm
 
-sandbox_handler_wrap proc frame
+execute_handler_wrap proc frame
 	
     .endprolog
 
@@ -50,12 +51,30 @@ sandbox_handler_wrap proc frame
     mov rdx, [rsp + 8 * 16 + 8]       ; pass the return address
     mov r8, [rsp + 8 * 16]    ; pass the original guest RIP
     
-    call SandboxHandler
+    call SandboxExecuteHandler
 
     POPAQ
 
     ret
 	
-sandbox_handler_wrap endp
+execute_handler_wrap endp
+
+
+rw_handler_wrap proc frame
+	
+    .endprolog
+
+    PUSHAQ
+
+    mov rcx, rsp                  ; pass the registers
+    mov r8, [rsp + 8 * 16]    ; pass the original guest RIP
+    
+    call SandboxRwHandler
+
+    POPAQ
+
+    ret
+	
+rw_handler_wrap endp
 
 end

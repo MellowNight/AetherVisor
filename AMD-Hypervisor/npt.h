@@ -27,5 +27,3 @@ enum NCR3_DIRECTORIES
     sandbox,
     sandbox_single_step
 };
-
-extern void* sandbox_handler;

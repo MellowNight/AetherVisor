@@ -8,7 +8,8 @@
 
 namespace Sandbox
 {
-	void* sandbox_handler = NULL;
+	void* sandbox_hooks[2] = { NULL, NULL };
+
 	int sandbox_page_count;
 	SandboxPage* sandbox_page_array;
 
@@ -37,7 +38,7 @@ namespace Sandbox
 			__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
 		}
 
-		ZydisDecodedOperand operands[5];
+		ZydisDecodedOperand operands[5] = { 0 };
 
 		ZydisRegisterContext context;
 
@@ -49,28 +50,39 @@ namespace Sandbox
 			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_UNCOND_BR ||
 			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_CALL)
 		{
-			/*	handle calls/jmps	*/
+			/*	handle calls/ (execute_target is wrong here)	*/
 
 			auto execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
+
+			DbgPrint("\n execute_target %p \n", execute_target);
+			DbgPrint("guest_rip %p \n", guest_rip);
 
 			if (!is_kernel)
 			{
 				if (execute_target && (execute_target < 0x7FFFFFFFFFFF))
 				{
-					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
+					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
 
 					vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
 					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = execute_target;
+				}
+				else
+				{
+					DbgPrint("ADDRESS SPACE MISMATCH \n");
 				}
 			}
 			else
 			{
 				if (execute_target && (execute_target > 0x7FFFFFFFFFFF))
 				{
-					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
+					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
 
 					vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
 					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = execute_target;
+				}
+				else
+				{
+					DbgPrint("ADDRESS SPACE MISMATCH \n");
 				}
 			}
 
@@ -78,6 +90,8 @@ namespace Sandbox
 		}
 		else
 		{
+			DbgPrint("single stepping at guest_rip= %p \n", guest_rip);
+
 			/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
 
 			vcpu_data->guest_vmcb.save_state_area.Rflags |= EFLAGS_TRAP_FLAG_BIT;
@@ -124,6 +138,8 @@ namespace Sandbox
 
 	SandboxPage* IsolatePage(VcpuData* vmcb_data, void* address, int32_t tag)
 	{
+		/*	assign a new nested pte for the guest physical address in the sandbox NCR3	*/
+
 		auto vmroot_cr3 = __readcr3();
 
 		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
@@ -140,6 +156,8 @@ namespace Sandbox
 		}
 
 		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+
+		DbgPrint("IsolatePage() physical_page = %p \n", physical_page);
 
 		sandbox_page_count += 1;
 
@@ -162,30 +180,19 @@ namespace Sandbox
 
 		/*	disable execute on the nested pte of the guest physical address, in NCR3 1	*/
 
-		hook_entry->hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[primary]);
+		hook_entry->hookless_npte = PageUtils::GetPte(physical_page, Hypervisor::Get()->ncr3_dirs[primary]);
 
 		hook_entry->hookless_npte->ExecuteDisable = 1;
 
+		auto sandbox_npte = PageUtils::GetPte(physical_page, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
-		/*	assign a new nested pte for the guest physical address in the sandbox NCR3	*/
+		sandbox_npte->ExecuteDisable = 0;
 
-		PHYSICAL_ADDRESS sandbox_ncr3;
-
-		sandbox_ncr3.QuadPart = Hypervisor::Get()->ncr3_dirs[NCR3_DIRECTORIES::sandbox];
-
-		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(sandbox_ncr3);
-
-		auto hooked_npte = AssignNPTEntry(pml4_base, (uintptr_t)physical_page, PTEAccess{ true, true, true });
-
-		auto hooked_copy = PageUtils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
-
-		memcpy((uint8_t*)hooked_copy, PAGE_ALIGN(address), PAGE_SIZE);
-
-		/*	SetNptHook epilogue	*/
-
-		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
+		/*	IsolatePage epilogue	*/
 
 		__writecr3(vmroot_cr3);
+
+		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
 
 		return hook_entry;
 	}

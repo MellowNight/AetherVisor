@@ -1,4 +1,5 @@
 #include "vmexit.h"
+#include "npt_sandbox.h"
 
 void InjectException(VcpuData* core_data, int vector, bool push_error_code, int error_code)
 {
@@ -54,78 +55,81 @@ void HandleMsrExit(VcpuData* core_data, GeneralRegisters* guest_regs)
 }
 
 
-extern "C" bool HandleVmexit(VcpuData* core_data, GeneralRegisters* GuestRegisters)
+extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters)
 {
     /*	load host extra state	*/
 
-    __svm_vmload(core_data->host_vmcb_physicaladdr);
+    __svm_vmload(vcpu_data->host_vmcb_physicaladdr);
 
     bool end_hypervisor = false;		
 
-    switch (core_data->guest_vmcb.control_area.ExitCode) 
+    switch (vcpu_data->guest_vmcb.control_area.ExitCode)
     {
         case VMEXIT::MSR: 
         {
-            HandleMsrExit(core_data, GuestRegisters);
+            HandleMsrExit(vcpu_data, GuestRegisters);
             break;
         }
         case VMEXIT::DB:
         {
             DR6 dr6;
 
-            dr6.flags = vcpu_data->guest_vmcb.control_area.Dr6;
+            dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6;
 
             if (dr6.SingleInstruction == 1 && vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step]) 
             {
+                DbgPrint("Finished single stepping %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
+
                 vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
 
-                vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)sandbox_handler;
+                vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
 
-				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = vcpu_data->guest_vmcb.save_state_area.Rip;
+                *(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = vcpu_data->guest_vmcb.save_state_area.Rip;
+
+                vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[Sandbox::readwrite_handler];
 
                 vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
                 vcpu_data->guest_vmcb.control_area.TlbControl = 1;
             }
             else      
             {
-                InjectException(core_data, EXCEPTION_VECTOR::Debug, FALSE, 0);
+                InjectException(vcpu_data, EXCEPTION_VECTOR::Debug, FALSE, 0);
             }
 
             break;
         }
         case VMEXIT::VMRUN: 
         {
-            InjectException(core_data, EXCEPTION_GP_FAULT, false, 0);
+            InjectException(vcpu_data, EXCEPTION_GP_FAULT, false, 0);
             break;
         }
         case VMEXIT::VMMCALL: 
         {            
-            HandleVmmcall(core_data, GuestRegisters, &end_hypervisor);
+            HandleVmmcall(vcpu_data, GuestRegisters, &end_hypervisor);
             break;
         }
         case VMEXIT::NPF:
         {
-            HandleNestedPageFault(core_data, GuestRegisters);
+            HandleNestedPageFault(vcpu_data, GuestRegisters);
             break;
         }
         case VMEXIT::INVALID: 
         {
             SegmentAttribute CsAttrib;
-            CsAttrib.as_uint16 = core_data->guest_vmcb.save_state_area.CsAttrib;
+            CsAttrib.as_uint16 = vcpu_data->guest_vmcb.save_state_area.CsAttrib;
 
-            IsProcessorReadyForVmrun(&core_data->guest_vmcb, CsAttrib);
+            IsProcessorReadyForVmrun(&vcpu_data->guest_vmcb, CsAttrib);
 
             break;
         }
         case VMEXIT::VMEXIT_MWAIT_CONDITIONAL:
         {
-            core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
+            vcpu_data->guest_vmcb.save_state_area.Rip = vcpu_data->guest_vmcb.control_area.NRip;
             break;
         }
         case 0x55: // CET shadow stack exception
         {
-            InjectException(core_data, 0x55, TRUE, 0);
+            InjectException(vcpu_data, 0x55, TRUE, 0);
             break;
         }
         default:
@@ -159,8 +163,8 @@ extern "C" bool HandleVmexit(VcpuData* core_data, GeneralRegisters* GuestRegiste
             8. return and jump back
         */
         
-        __writecr3(core_data->guest_vmcb.save_state_area.Cr3);
-        __svm_vmload(core_data->guest_vmcb_physicaladdr);
+        __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+        __svm_vmload(vcpu_data->guest_vmcb_physicaladdr);
 
         __svm_stgi();
         _disable();
@@ -171,10 +175,10 @@ extern "C" bool HandleVmexit(VcpuData* core_data, GeneralRegisters* GuestRegiste
         msr.svme = 0;
 
         __writemsr(MSR::EFER, msr.flags);
-        __writeeflags(core_data->guest_vmcb.save_state_area.Rflags);
+        __writeeflags(vcpu_data->guest_vmcb.save_state_area.Rflags);
 
-        GuestRegisters->rcx = core_data->guest_vmcb.save_state_area.Rsp;
-        GuestRegisters->rbx = core_data->guest_vmcb.control_area.NRip;
+        GuestRegisters->rcx = vcpu_data->guest_vmcb.save_state_area.Rsp;
+        GuestRegisters->rbx = vcpu_data->guest_vmcb.control_area.NRip;
 
         Logger::Get()->Log("ending hypervisor... \n");
     }

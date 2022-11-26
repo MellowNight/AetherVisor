@@ -98,10 +98,8 @@ namespace PageUtils
             return (PT_ENTRY_64*)pde;
         }
 
-
         PTE_64* pt;
         PTE_64* pte;
-
 
         pt = (PTE_64*)PageUtils::VirtualAddrFromPfn(pde->PageFrameNumber);
 

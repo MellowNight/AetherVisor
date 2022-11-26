@@ -31,7 +31,8 @@ bool VirtualizeAllProcessors()
 
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[primary], PTEAccess{ true, true, true });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[noexecute], PTEAccess{ true, true, false });
-	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], PTEAccess{ false, true, true });
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], PTEAccess{ true, true, false });
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox_single_step], PTEAccess{ true, true, true });
 
 	
 	for (int i = 0; i <= NCR3_DIRECTORIES::sandbox; ++i)
@@ -103,7 +104,6 @@ bool VirtualizeAllProcessors()
 	//svm_vmmcall(VMMCALL_ID::remap_page_ncr3_specific, NtDeviceIoControl, spoofed_page, primary);
 
 	//DbgPrint("first byte of NtDeviceIoControl (2): 0x%p \n", *(uint8_t*)NtDeviceIoControl);
-
 
 	//Utils::EnableWP(irql);
 

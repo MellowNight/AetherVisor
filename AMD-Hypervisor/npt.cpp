@@ -89,12 +89,12 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
-			// DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
+			DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
 			//DbgPrint("vcpu_data->guest_vmcb.control_area.NRip 0x%p \n", vcpu_data->guest_vmcb.control_area.NRip);
 
 			bool is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? true : false;
 
-			Sandbox::InstructionInstrumentation(vcpu_data, guest_registers, faulting_physical, is_system_page);
+			Sandbox::InstructionInstrumentation(vcpu_data, (uint8_t*)guest_rip, guest_registers, is_system_page);
 		}
 
 		return;
@@ -102,53 +102,26 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 	if (exit_info1.fields.execute == 1)
 	{
-		BOOL is_sandbox_page = TRUE;
+		auto sandbox_npte = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
-		auto sandbox_page = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox],
-			[](PT_ENTRY_64* pte, void* callback_data) -> int
-			{
-				/*	if the page isn't present in the sandbox ncr3, then its not a sandbox page  */
-
-				if (pte->LargePage == true || pte->Present == 0)
-				{
-					*(BOOL*)callback_data = FALSE;
-				}
-
-				return 0;
-
-			}, (void*)&is_sandbox_page
-		);
-
-		if (is_sandbox_page)
+		if (sandbox_npte->ExecuteDisable == FALSE)
 		{
+			DbgPrint("0x%p is a sandbox page! \n", faulting_physical.QuadPart);
+
 			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
 
 			return;
 		}
 
-		BOOL is_hooked_page = TRUE;
-
-		auto npthooked_page = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[noexecute],
-			[](PT_ENTRY_64* pte, void* callback_data) -> int
-			{
-				/*	if the page allows execute in the noexecute ncr3, then it is an npt hooked page */
-
-				if (pte->ExecuteDisable != 0)
-				{
-					*(BOOL*)callback_data = FALSE;
-				}
-				return 0;
-
-			}, (void*)&is_hooked_page
-		);
+		auto npthooked_page = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[noexecute]);
 
 		/*	handle cases where an instruction is split across 2 pages	*/
 
-		auto switch_ncr3 = HandleSplitInstruction(vcpu_data, guest_rip, faulting_physical, is_hooked_page);
+		auto switch_ncr3 = HandleSplitInstruction(vcpu_data, guest_rip, faulting_physical, !npthooked_page->ExecuteDisable);
 
 		if (switch_ncr3)
 		{
-			if (is_hooked_page)
+			if (!npthooked_page->ExecuteDisable)
 			{
 				/*  move into hooked page and switch to ncr3 with hooks mapped  */
 
@@ -262,7 +235,7 @@ uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, PTEAccess flags)
 
 	*NCr3 = MmGetPhysicalAddress(npml4_virtual).QuadPart;
 
-	Logger::Get()->Log("[SETUP] pml4 at %p \n", npml4_virtual);
+	DbgPrint("[SETUP] pml4 at %p flags.present %i flags.write  %i flags.execute  %i \n", npml4_virtual, flags.present, flags.writable, flags.execute);
 
 	for (int run = 0; run < run_count; ++run)
 	{

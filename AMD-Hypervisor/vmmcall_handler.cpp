@@ -12,7 +12,17 @@ void HandleVmmcall(VcpuData* vmcb_data, GeneralRegisters* GuestRegisters, bool* 
     {
     case VMMCALL_ID::register_sandbox:
     {
-        Sandbox::sandbox_handler = (void*)GuestRegisters->rdx;
+        auto handler_id = GuestRegisters->rdx;
+
+        if (handler_id == Sandbox::readwrite_handler || handler_id == Sandbox::execute_handler)
+        {
+            Sandbox::sandbox_hooks[handler_id] = (void*)GuestRegisters->r8;
+        }
+        else
+        {
+            /*  invalid input   */
+            __debugbreak();
+        }
 
         break;
     }
