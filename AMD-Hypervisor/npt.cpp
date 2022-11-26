@@ -14,7 +14,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 
 	bool switch_ncr3 = true;
 
-	int insn_len = 16;
+	int insn_len = 10;
 
 	/*	handle cases where an instruction is split across 2 pages	*/
 
@@ -27,7 +27,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 			/*	if CPU is entering the page:	*/
 
 			switch_ncr3 = true;
-			ncr3.QuadPart = Hypervisor::Get()->ncr3_dirs[sandbox];
+			ncr3.QuadPart = Hypervisor::Get()->ncr3_dirs[noexecute];
 		}
 		else
 		{
@@ -66,7 +66,7 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 	vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
 	vcpu_data->guest_vmcb.control_area.TlbControl = 1;
 
-	Logger::Get()->LogJunk("[#NPF HANDLER]	guest physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
+	Logger::Get()->LogJunk("[#NPF HANDLER] 	guest physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
 
 	if (exit_info1.fields.valid == 0)
 	{
@@ -84,17 +84,15 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 			return;
 		}
-
-		/*  move out of sandbox context and set RIP to the instrumentation function  */
-
-		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
+		else
 		{
-			DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
-			//DbgPrint("vcpu_data->guest_vmcb.control_area.NRip 0x%p \n", vcpu_data->guest_vmcb.control_area.NRip);
+			DbgPrint("single stepping at guest_rip= %p \n", guest_rip);
 
-			bool is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? true : false;
+			/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
 
-			Sandbox::InstructionInstrumentation(vcpu_data, (uint8_t*)guest_rip, guest_registers, is_system_page);
+			vcpu_data->guest_vmcb.save_state_area.Rflags |= EFLAGS_TRAP_FLAG_BIT;
+
+			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}
 
 		return;
@@ -102,6 +100,18 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 	if (exit_info1.fields.execute == 1)
 	{
+		/*  move out of sandbox context and set RIP to the instrumentation function  */
+
+		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
+		{
+			//DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
+			//DbgPrint("vcpu_data->guest_vmcb.control_area.NRip 0x%p \n", vcpu_data->guest_vmcb.control_area.NRip);
+
+			bool is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? true : false;
+
+			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, is_system_page);
+		}
+
 		auto sandbox_npte = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
 		if (sandbox_npte->ExecuteDisable == FALSE)

@@ -28,7 +28,7 @@ void HandleVmmcall(VcpuData* vmcb_data, GeneralRegisters* GuestRegisters, bool* 
     }
     case VMMCALL_ID::sandbox_page:
     {
-        Sandbox::IsolatePage(
+        Sandbox::AddPageToSandbox(
             vmcb_data,
             (void*)GuestRegisters->rdx,
             GuestRegisters->r8
@@ -120,7 +120,9 @@ void HandleVmmcall(VcpuData* vmcb_data, GeneralRegisters* GuestRegisters, bool* 
         break;
     }
     case VMMCALL_ID::set_npt_hook:
-    {
+    {			
+        DbgPrint("noexecute_cr3 id = %i \n \n", GuestRegisters->r12);
+
         NPTHooks::SetNptHook(
             vmcb_data,
             (void*)GuestRegisters->rdx,

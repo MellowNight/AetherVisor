@@ -29,7 +29,7 @@ namespace Sandbox
 		sandbox_page_count = 0;
 	}
 
-	void InstructionInstrumentation(VcpuData* vcpu_data, uint8_t* guest_rip, GeneralRegisters* guest_regs, bool is_kernel)
+	void InstructionInstrumentation(VcpuData* vcpu_data, uintptr_t guest_rip, GeneralRegisters* guest_regs, bool is_kernel)
 	{
 		auto vmroot_cr3 = __readcr3();
 
@@ -44,27 +44,27 @@ namespace Sandbox
 
 		Disasm::HvRegContextToZydisRegContext(vcpu_data, guest_regs, &context);
 
-		auto instruction = Disasm::Disassemble(guest_rip, operands);
+		auto instruction = Disasm::Disassemble((uint8_t*)guest_rip, operands);
 
 		if (instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_COND_BR ||
 			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_UNCOND_BR ||
 			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_CALL)
 		{
-			/*	handle calls/ (execute_target is wrong here)	*/
+			/*	handle calls/jmps (execute_target is wrong here)	*/
 
-			auto execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
+			//auto execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
 
-			DbgPrint("\n execute_target %p \n", execute_target);
+			//DbgPrint("\n execute_target %p \n", execute_target);
 			DbgPrint("guest_rip %p \n", guest_rip);
 
 			if (!is_kernel)
 			{
-				if (execute_target && (execute_target < 0x7FFFFFFFFFFF))
+				if (guest_rip && (guest_rip < 0x7FFFFFFFFFFF))
 				{
 					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
 
 					vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = execute_target;
+					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
 				}
 				else
 				{
@@ -73,12 +73,12 @@ namespace Sandbox
 			}
 			else
 			{
-				if (execute_target && (execute_target > 0x7FFFFFFFFFFF))
+				if (guest_rip && (guest_rip > 0x7FFFFFFFFFFF))
 				{
 					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
 
 					vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = execute_target;
+					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
 				}
 				else
 				{
@@ -87,16 +87,6 @@ namespace Sandbox
 			}
 
 			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
-		}
-		else
-		{
-			DbgPrint("single stepping at guest_rip= %p \n", guest_rip);
-
-			/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
-
-			vcpu_data->guest_vmcb.save_state_area.Rflags |= EFLAGS_TRAP_FLAG_BIT;
-
-			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}
 
 		if (!is_kernel)
@@ -124,19 +114,13 @@ namespace Sandbox
 		hook_entry->hookless_npte->ExecuteDisable = 0;
 		hook_entry->process_cr3 = 0;
 		hook_entry->active = false;
-		hook_entry->guest_pte->ExecuteDisable = hook_entry->original_nx;
 
 		PageUtils::UnlockPages(hook_entry->mdl);
 
 		sandbox_page_count -= 1;
 	}
 
-	/*
-		IMPORTANT: if you want to set a hook in a globally mapped DLL such as ntdll.dll, you must trigger copy on write first!	
-		Sandbox::IsolatePage() is basically just a modified version of NPTHooks::SetNptHook
-	*/
-
-	SandboxPage* IsolatePage(VcpuData* vmcb_data, void* address, int32_t tag)
+	void DenyMemoryAccess(VcpuData* vmcb_data, void* address)
 	{
 		/*	assign a new nested pte for the guest physical address in the sandbox NCR3	*/
 
@@ -144,45 +128,55 @@ namespace Sandbox
 
 		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
-		auto hook_entry = &sandbox_page_array[sandbox_page_count];
+
+
+		/*	IsolatePage epilogue	*/
+
+		__writecr3(vmroot_cr3);
+
+		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
+	}
+
+	/*
+		IMPORTANT: if you want to set a hook in a globally mapped DLL such as ntdll.dll, you must trigger copy on write first!	
+		Sandbox::AddPageToSandbox() is basically just a modified version of NPTHooks::SetNptHook
+	*/
+
+	SandboxPage* AddPageToSandbox(VcpuData* vmcb_data, void* address, int32_t tag)
+	{
+		/*	assign a new nested pte for the guest physical address in the sandbox NCR3	*/
+
+		auto vmroot_cr3 = __readcr3();
+
+		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
+
+		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
 		if ((uintptr_t)address < 0x7FFFFFFFFFF)
 		{
-			hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, UserMode);
+			sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, UserMode);
 		}
 		else
 		{
-			hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
+			sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
 		}
 
 		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-		DbgPrint("IsolatePage() physical_page = %p \n", physical_page);
+		DbgPrint("AddPageToSandbox() physical_page = %p \n", physical_page);
 
 		sandbox_page_count += 1;
 
-		hook_entry->active = true;
-		hook_entry->tag = tag;
-		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
-
-		/*	get the guest pte and physical address of the sandboxed page	*/
-
-		hook_entry->guest_virtual_page = (uint8_t*)address;
-		hook_entry->guest_physical_page = (uint8_t*)physical_page;
-
-		hook_entry->guest_pte = PageUtils::GetPte((void*)address, hook_entry->process_cr3);
-
-		hook_entry->original_nx = hook_entry->guest_pte->ExecuteDisable;
-
-		hook_entry->guest_pte->ExecuteDisable = 0;
-		hook_entry->guest_pte->Write = 1;
+		sandbox_entry->active = true;
+		sandbox_entry->tag = tag;
+		sandbox_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
 
 
 		/*	disable execute on the nested pte of the guest physical address, in NCR3 1	*/
 
-		hook_entry->hookless_npte = PageUtils::GetPte(physical_page, Hypervisor::Get()->ncr3_dirs[primary]);
+		sandbox_entry->hookless_npte = PageUtils::GetPte(physical_page, Hypervisor::Get()->ncr3_dirs[primary]);
 
-		hook_entry->hookless_npte->ExecuteDisable = 1;
+		sandbox_entry->hookless_npte->ExecuteDisable = 1;
 
 		auto sandbox_npte = PageUtils::GetPte(physical_page, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
@@ -194,7 +188,7 @@ namespace Sandbox
 
 		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
 
-		return hook_entry;
+		return sandbox_entry;
 	}
 
 };
