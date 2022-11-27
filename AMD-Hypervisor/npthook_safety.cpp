@@ -31,6 +31,7 @@ namespace NPTHooks
 		/*	place a callback on NtTerminateProcess to remove npt hooks inside terminating processes, to prevent PFN check bsods	*/
 
 		ULONG nt_size = NULL;
+
 		auto ntoskrnl = (uintptr_t)Utils::GetKernelModule(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
 
 		auto pe_hdr = PeHeader(ntoskrnl);
@@ -45,14 +46,20 @@ namespace NPTHooks
 			{
 				uint8_t* start = section[i].VirtualAddress + (uint8_t*)ntoskrnl;
 
-				uintptr_t clean_process_address_space = NULL;
+				uintptr_t clean_process_address_space = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\xE8\x00\x00\x00\x00\x33\xD2\x48\x8D\x4C\x24\x00\xE8\x00\x00\x00\x00\x4C\x39\xBE", 20, 0x00);
 
-				clean_process_address_space = RELATIVE_ADDR(Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\xE8\x00\x00\x00\x00\x33\xD2\x48\x8D\x4C\x24\x00\xE8\x00\x00\x00\x00\x4C\x39\xBE", 20, 0x00), 1, 5);
+				clean_process_address_space = RELATIVE_ADDR(clean_process_address_space, 1, 5);
 
 				hk_MmCleanProcessAddressSpace = Hooks::JmpRipCode{ clean_process_address_space, (uintptr_t)MmCleanProcessAddressSpace_hook };
 
-				svm_vmmcall(VMMCALL_ID::set_npt_hook, clean_process_address_space, hk_MmCleanProcessAddressSpace.hook_code, 
-					hk_MmCleanProcessAddressSpace.hook_size, NCR3_DIRECTORIES::noexecute, NULL);
+				svm_vmmcall(
+					VMMCALL_ID::set_npt_hook, 
+					clean_process_address_space, 
+					hk_MmCleanProcessAddressSpace.hook_code, 
+					hk_MmCleanProcessAddressSpace.hook_size, 
+					NCR3_DIRECTORIES::noexecute, 
+					NULL
+				);
 			}
 		}
 	}

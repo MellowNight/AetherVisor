@@ -24,6 +24,8 @@ void HandleMsrExit(VcpuData* core_data, GeneralRegisters* guest_regs)
 
     if (!(((msr_id > 0) && (msr_id < 0x00001FFF)) || ((msr_id > 0xC0000000) && (msr_id < 0xC0001FFF)) || (msr_id > 0xC0010000) && (msr_id < 0xC0011FFF)))
     {
+        /*  PUBG and Fortnite's unimplemented MSR checks    */
+
         InjectException(core_data, EXCEPTION_GP_FAULT, true, 0);
         core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
 
@@ -116,6 +118,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
         case VMEXIT::INVALID: 
         {
             SegmentAttribute CsAttrib;
+            
             CsAttrib.as_uint16 = vcpu_data->guest_vmcb.save_state_area.CsAttrib;
 
             IsProcessorReadyForVmrun(&vcpu_data->guest_vmcb, CsAttrib);
@@ -135,13 +138,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
         default:
         {
            /* KeBugCheckEx(MANUALLY_INITIATED_CRASH, core_data->guest_vmcb.control_area.ExitCode, core_data->guest_vmcb.control_area.ExitInfo1, core_data->guest_vmcb.control_area.ExitInfo2, core_data->guest_vmcb.save_state_area.Rip);
-
-            Logger::Get()->Log("[VMEXIT] vmexit with unknown reason %p ! guest vmcb at %p \n",
-                core_data->guest_vmcb.control_area.ExitCode, &core_data->guest_vmcb);
-
-            Logger::Get()->Log("[VMEXIT] RIP is %p \n", core_data->guest_vmcb.save_state_area.Rip);
-
-            __debugbreak();*/
+           */
 
             break;
         }

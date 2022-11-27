@@ -14,10 +14,9 @@ namespace Hooks
         {
         }
 
-        JmpRipCode(uintptr_t hook_address, uintptr_t jmp_target)
+        JmpRipCode(uintptr_t hook_address, uintptr_t jmp_target) : hook_addr(hook_address), 
         {
-            hook_addr = hook_address;
-            hook_size = Disasm::LengthOfInstructions((void*)hook_address, 14);
+`           hook_size = Disasm::LengthOfInstructions((void*)hook_address, 14);
             orig_bytes_size = hook_size + 14;      /*  because orig_bytes includes jmp back code   */
 
             auto jmp_back_location = hook_address + hook_size;

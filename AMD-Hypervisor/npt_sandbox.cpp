@@ -122,15 +122,19 @@ namespace Sandbox
 
 	void DenyMemoryAccess(VcpuData* vmcb_data, void* address)
 	{
-		/*	assign a new nested pte for the guest physical address in the sandbox NCR3	*/
+		/*	set nPTE->present = 0	*/
 
 		auto vmroot_cr3 = __readcr3();
 
 		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
+		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
+		auto sandbox_npte = PageUtils::GetPte(physical_page, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
-		/*	IsolatePage epilogue	*/
+		sandbox_npte->Present = 0;
+
+		/*	DenyMemoryAccess epilogue	*/
 
 		__writecr3(vmroot_cr3);
 
@@ -144,7 +148,7 @@ namespace Sandbox
 
 	SandboxPage* AddPageToSandbox(VcpuData* vmcb_data, void* address, int32_t tag)
 	{
-		/*	assign a new nested pte for the guest physical address in the sandbox NCR3	*/
+		/*	enable execute for the nPTE of the guest address in the sandbox NCR3	*/
 
 		auto vmroot_cr3 = __readcr3();
 
@@ -169,8 +173,6 @@ namespace Sandbox
 
 		sandbox_entry->active = true;
 		sandbox_entry->tag = tag;
-		sandbox_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
-
 
 		/*	disable execute on the nested pte of the guest physical address, in NCR3 1	*/
 

@@ -27,6 +27,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 			/*	if CPU is entering the page:	*/
 
 			switch_ncr3 = true;
+
 			ncr3.QuadPart = Hypervisor::Get()->ncr3_dirs[noexecute];
 		}
 		else
@@ -100,10 +101,10 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 	if (exit_info1.fields.execute == 1)
 	{
-		/*  move out of sandbox context and set RIP to the instrumentation function  */
-
 		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
+			/*  move out of sandbox context and set RIP to the instrumentation function  */
+
 			//DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
 			//DbgPrint("vcpu_data->guest_vmcb.control_area.NRip 0x%p \n", vcpu_data->guest_vmcb.control_area.NRip);
 
@@ -116,6 +117,8 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 		if (sandbox_npte->ExecuteDisable == FALSE)
 		{
+			/*  enter into the sandbox context	*/
+
 			DbgPrint("0x%p is a sandbox page! \n", faulting_physical.QuadPart);
 
 			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
@@ -147,9 +150,13 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 #pragma optimize( "", on )
 
-/*	gPTE pfn would be equal to nPTE pfn,
-	because guest physical addresses are 1:1 mapped to host physical
+/*	
+	gPTE pfn would be equal to nPTE pfn at the beginning,
+	because both entries are pointing to the same physical page.
+
+	The nPTE pfn will map a different physical address when an NPT hook is set.
 */
+
 void* AllocateNewTable(PML4E_64* PageEntry)
 {
 	void* page_table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
@@ -184,6 +191,7 @@ int GetPhysicalMemoryRanges()
 PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, PTEAccess flags)
 {
 	ADDRESS_TRANSLATION_HELPER	Helper;
+	
 	Helper.AsUInt64 = PhysicalAddr;
 
 	PML4E_64* Pml4e = &n_Pml4[Helper.AsIndex.Pml4];
@@ -237,13 +245,13 @@ PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, PTEAccess flags
 	return Pte;
 }
 
-uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, PTEAccess flags)
+uintptr_t BuildNestedPagingTables(uintptr_t* ncr3, PTEAccess flags)
 {
 	auto run_count = GetPhysicalMemoryRanges();
 
-	PML4E_64* npml4_virtual = (PML4E_64*)ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+	auto npml4_virtual = (PML4E_64*)ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
 
-	*NCr3 = MmGetPhysicalAddress(npml4_virtual).QuadPart;
+	*ncr3 = MmGetPhysicalAddress(npml4_virtual).QuadPart;
 
 	DbgPrint("[SETUP] pml4 at %p flags.present %i flags.write  %i flags.execute  %i \n", npml4_virtual, flags.present, flags.writable, flags.execute);
 
@@ -264,5 +272,5 @@ uintptr_t BuildNestedPagingTables(uintptr_t* NCr3, PTEAccess flags)
 
 	AssignNPTEntry(npml4_virtual, apic_bar.ApicBase << PAGE_SHIFT, flags);
 
-	return *NCr3;
+	return *ncr3;
 }

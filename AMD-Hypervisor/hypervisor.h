@@ -16,7 +16,7 @@ struct VcpuData
     uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(uint64_t) * 4];
     uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
     uintptr_t   host_vmcb_physicaladdr;
-    struct VcpuData* self;
+    struct      VcpuData* self;
     uint8_t     pad[8];
     VMCB        guest_vmcb;
     VMCB        host_vmcb;
@@ -51,8 +51,6 @@ public:
 
     /* Static access method. */
     static Hypervisor* Get();
-
-    static char disk_serial[13];
 
 public:
     bool IsHypervisorPresent(

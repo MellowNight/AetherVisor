@@ -45,7 +45,6 @@ extern "C" void __stdcall rw_handler_wrap();
 
 namespace ForteVisor
 {
-
     enum NCR3_DIRECTORIES
     {
         primary,
@@ -68,6 +67,8 @@ namespace ForteVisor
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag);
 
     int SandboxPage(uintptr_t address, uintptr_t tag);
+
+    void DenyMemoryAccessToSandbox();
 
     void RegisterSandboxHandler(SandboxHookId handler_id, void* address);
 

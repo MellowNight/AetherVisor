@@ -3,8 +3,6 @@
 
 #define LOG_MAX_LEN 256
 
-/*  Singleton for the Logger    */
-
 class Logger
 {
 private:
@@ -13,6 +11,7 @@ private:
     void Init()
     {
     }
+
 public:
 
     /* Static access method. */

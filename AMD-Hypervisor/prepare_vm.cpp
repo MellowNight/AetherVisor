@@ -141,6 +141,7 @@ bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 	}
 
 	Logger::Get()->Log("consistency checks passed \n");
+
 	return true;
 
 	/*	to do: msr and IOIO map address checks, and some more. */
@@ -177,8 +178,7 @@ void SetupTssIst()
 	SEGMENT_SELECTOR selector;
 	selector.Flags = __readtr();
 
-	auto seg_descriptor = *(SEGMENT_DESCRIPTOR_64*)(
-		gdtr.base + (selector.Index * 8));
+	auto seg_descriptor = *(SEGMENT_DESCRIPTOR_64*)(gdtr.base + (selector.Index * 8));
 
 	auto base = (uintptr_t)(
 		seg_descriptor.BaseAddressLow +
@@ -196,6 +196,7 @@ void SetupTssIst()
 	/*	Find free IST entry for page fault	*/
 
 	int idx = 0;
+
 	for (idx = 0; idx < 7; ++idx)
 	{
 		DbgPrint("idx %d \n", idx);
@@ -211,6 +212,7 @@ void SetupTssIst()
 	tss_base->ist[idx] = (uint8_t*)pf_stack + PAGE_SIZE * 16;
 
 	DescriptorTableRegister	idtr;
+
 	__sidt(&idtr);
 
 	DbgPrint("IDT base %p \n", idtr.base);
@@ -223,6 +225,7 @@ void SetupTssIst()
 	((InterruptDescriptor64*)idtr.base)[0xE].ist = idx; 
 
 	Utils::EnableWP(irql);
+
 	__debugbreak();
 }
 
@@ -239,12 +242,15 @@ void SetupMSRPM(VcpuData* core_data)
 	RTL_BITMAP bitmap;
 
     RtlInitializeBitMap(&bitmap, (PULONG)msrpm, msrpm_size * 8);
+
     RtlClearAllBits(&bitmap);
 
 	auto section2_offset = (0x800 * bits_per_byte);
+
 	auto efer_offset = section2_offset + (bits_per_msr * (MSR::EFER - 0xC0000000));
 
 	/*	intercept EFER read and write	*/
+
 	RtlSetBits(&bitmap, efer_offset, 2);
 }
 
@@ -252,6 +258,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 {
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
+
 	core_data->self = core_data;
 
 	core_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
@@ -269,7 +276,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 
 	core_data->guest_vmcb.control_area.InterceptVec4 = intercept_vector4.as_int32;
 
-	InterceptVector2 intercept_vector2 = {0};
+	InterceptVector2 intercept_vector2 = { 0 };
 
 	// intercept_vector2.intercept_pf = 1;
 	// intercept_vector2.intercept_bp = 1;
@@ -278,6 +285,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
 
 	/*	intercept MSR access	*/
+	
 	core_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << 28);
 	
 	core_data->guest_vmcb.control_area.GuestAsid = 1;

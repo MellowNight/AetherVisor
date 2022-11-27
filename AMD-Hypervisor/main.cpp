@@ -11,12 +11,6 @@ extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 
 bool VirtualizeAllProcessors()
 {
-	Logger::Get()->Log("[SETUP] test etw log \n");
-
-	int iasdsa = 0;
-
-	DbgPrint("[SETUP] test dbgprint %d \n", iasdsa);
-
 	if (!IsSvmSupported())
 	{
 		Logger::Get()->Log("[SETUP] SVM isn't supported on this processor! \n");

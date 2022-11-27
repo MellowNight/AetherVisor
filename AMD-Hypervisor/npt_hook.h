@@ -36,13 +36,26 @@ namespace NPTHooks
 	};
 	
 
-	extern	int hook_count;
+	extern	int	hook_count;
 	extern	NptHook* npt_hook_array;
 
-	NptHook* SetNptHook(VcpuData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, int32_t tag = 0);
-	NptHook* ForEachHook(bool(HookCallback)(NptHook* hook_entry, void* data), void* callback_data);
+	NptHook* SetNptHook(
+		VcpuData* vmcb_data, 
+		void* address, 
+		uint8_t* patch, 
+		size_t patch_len, 
+		int32_t noexecute_cr3_id,
+		int32_t tag = 0
+	);
 
-	void UnsetHook(NptHook* hook_entry);
+	NptHook* ForEachHook(
+		bool(HookCallback)(NptHook* hook_entry, void* data), 
+		void* callback_data
+	);
+
+	void UnsetHook(
+		NptHook* hook_entry
+	);
 
 	void Init();
 };

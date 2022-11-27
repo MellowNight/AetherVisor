@@ -15,9 +15,7 @@ namespace Sandbox
 		PT_ENTRY_64* hookless_npte;		/*	nested PTE of page without hooks			*/
 		PT_ENTRY_64* hooked_pte;		/*	guest PTE of the copy page with hooks		*/
 
-		uintptr_t process_cr3;		/*	process where this hook resides in			*/
-
-		int64_t tag;	/*	identify this hook		*/
+		int64_t	tag;	/*	identify this hook		*/
 		bool active;	/*	is this hook active?	*/
 
 		void Init()
@@ -26,6 +24,7 @@ namespace Sandbox
 			cr3.Flags = __readcr3();
 
 			hooked_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'HOOK');
+
 			hooked_pte = PageUtils::GetPte(hooked_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 		}
 	};
@@ -36,18 +35,38 @@ namespace Sandbox
 		execute_handler = 1,
 	};
 
-	extern	void* sandbox_hooks[2];
+	extern void*	sandbox_hooks[2];
 
-	extern	int sandbox_page_count;
-	extern	SandboxPage* sandbox_page_array;
+	extern SandboxPage*	sandbox_page_array;
 
-	void InstructionInstrumentation(VcpuData* vcpu_data, uintptr_t guest_rip, GeneralRegisters* guest_regs, bool is_kernel);
+	extern int	sandbox_page_count;
 
-	SandboxPage* AddPageToSandbox(VcpuData* vmcb_data, void* address, int32_t tag = 0);
+	void InstructionInstrumentation(
+		VcpuData* vcpu_data,
+		uintptr_t guest_rip, 
+		GeneralRegisters* guest_regs, 
+		bool is_kernel
+	);
 
-	SandboxPage* ForEachHook(bool(HookCallback)(SandboxPage* hook_entry, void* data), void* callback_data);
+	SandboxPage* AddPageToSandbox(
+		VcpuData* vmcb_data, 
+		void* address, 
+		int32_t tag = 0
+	);
 
-	void ReleasePage(SandboxPage* hook_entry);
+	void DenyMemoryAccess(
+		VcpuData* vmcb_data, 
+		void* address
+	);
+
+	SandboxPage* ForEachHook(
+		bool(HookCallback)(SandboxPage* hook_entry, void* data), 
+		void* callback_data
+	);
+
+	void ReleasePage(
+		SandboxPage* hook_entry
+	);
 
 	void Init();
 };
