@@ -49,6 +49,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 	return switch_ncr3;
 }
 
+
 void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_registers)
 {
 	PHYSICAL_ADDRESS faulting_physical;
@@ -105,8 +106,7 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 		{
 			/*  move out of sandbox context and set RIP to the instrumentation function  */
 
-			//DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
-			//DbgPrint("vcpu_data->guest_vmcb.control_area.NRip 0x%p \n", vcpu_data->guest_vmcb.control_area.NRip);
+			// DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
 
 			bool is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? true : false;
 
@@ -150,6 +150,7 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 #pragma optimize( "", on )
 
+
 /*	
 	gPTE pfn would be equal to nPTE pfn at the beginning,
 	because both entries are pointing to the same physical page.
@@ -170,6 +171,7 @@ void* AllocateNewTable(PML4E_64* PageEntry)
 	return page_table;
 }
 
+
 int GetPhysicalMemoryRanges()
 {
 	int number_of_runs = 0;
@@ -186,12 +188,13 @@ int GetPhysicalMemoryRanges()
 	return number_of_runs;
 }
 
+
 /*	assign a new NPT entry to an unmapped guest physical address	*/
 
 PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, PTEAccess flags)
 {
 	ADDRESS_TRANSLATION_HELPER	Helper;
-	
+
 	Helper.AsUInt64 = PhysicalAddr;
 
 	PML4E_64* Pml4e = &n_Pml4[Helper.AsIndex.Pml4];

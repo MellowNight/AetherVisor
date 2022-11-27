@@ -112,6 +112,5 @@ namespace PageUtils
 
         return  (PT_ENTRY_64*)pte;
     }
-
 };
 

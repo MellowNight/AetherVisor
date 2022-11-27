@@ -1,4 +1,4 @@
-extern SandboxRwHandler : proc
+extern SandboxMemAccessHandler : proc
 extern SandboxExecuteHandler : proc
 
 .code
@@ -69,7 +69,7 @@ rw_handler_wrap proc frame
     mov rcx, rsp                  ; pass the registers
     mov r8, [rsp + 8 * 16]    ; pass the original guest RIP
     
-    call SandboxRwHandler
+    call SandboxMemAccessHandler
 
     POPAQ
 

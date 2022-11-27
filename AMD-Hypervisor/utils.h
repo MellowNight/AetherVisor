@@ -5,9 +5,16 @@
 
 namespace Utils
 {
-	PVOID ModuleFromAddress(IN PEPROCESS pProcess, uintptr_t address, wchar_t* out_name);
+	PVOID ModuleFromAddress(
+		IN PEPROCESS pProcess, 
+		uintptr_t address, 
+		wchar_t* out_name
+	);
 
-	int ForEachCore(void(*callback)(void* params), void* params);
+	int ForEachCore(
+		void(*callback)(void* params), 
+		void* params
+	);
 
 	int Diff(
 		uintptr_t a,

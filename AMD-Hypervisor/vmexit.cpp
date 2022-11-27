@@ -18,45 +18,6 @@ void InjectException(VcpuData* core_data, int vector, bool push_error_code, int 
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
 
-void HandleMsrExit(VcpuData* core_data, GeneralRegisters* guest_regs)
-{
-    uint32_t msr_id = guest_regs->rcx & (uint32_t)0xFFFFFFFF;
-
-    if (!(((msr_id > 0) && (msr_id < 0x00001FFF)) || ((msr_id > 0xC0000000) && (msr_id < 0xC0001FFF)) || (msr_id > 0xC0010000) && (msr_id < 0xC0011FFF)))
-    {
-        /*  PUBG and Fortnite's unimplemented MSR checks    */
-
-        InjectException(core_data, EXCEPTION_GP_FAULT, true, 0);
-        core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
-
-        return;
-    }
-
-    LARGE_INTEGER msr_value;
-
-    msr_value.QuadPart = __readmsr(msr_id);
-
-    switch (msr_id)
-    {
-    case MSR::EFER:
-    {
-        auto efer = (MsrEfer*)&msr_value.QuadPart;
-        Logger::Get()->Log(" MSR::EFER caught, msr_value.QuadPart = %p \n", msr_value.QuadPart);
-
-        efer->svme = 0;
-        break;
-    }
-    default:
-        break;
-    }
-
-    core_data->guest_vmcb.save_state_area.Rax = msr_value.LowPart;
-    guest_regs->rdx = msr_value.HighPart;
-
-    core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
-}
-
-
 extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters)
 {
     /*	load host extra state	*/
@@ -74,30 +35,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
         }
         case VMEXIT::DB:
         {
-            DR6 dr6;
-
-            dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6;
-
-            if (dr6.SingleInstruction == 1 && vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step]) 
-            {
-                DbgPrint("Finished single stepping %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
-
-                vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
-
-                vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-
-                *(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = vcpu_data->guest_vmcb.save_state_area.Rip;
-
-                vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[Sandbox::readwrite_handler];
-
-                vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
-                vcpu_data->guest_vmcb.control_area.TlbControl = 1;
-            }
-            else      
-            {
-                InjectException(vcpu_data, EXCEPTION_VECTOR::Debug, FALSE, 0);
-            }
-
+            HandleDebugException(vcpu_data);
             break;
         }
         case VMEXIT::VMRUN: 
@@ -118,7 +56,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
         case VMEXIT::INVALID: 
         {
             SegmentAttribute CsAttrib;
-            
+
             CsAttrib.as_uint16 = vcpu_data->guest_vmcb.save_state_area.CsAttrib;
 
             IsProcessorReadyForVmrun(&vcpu_data->guest_vmcb, CsAttrib);

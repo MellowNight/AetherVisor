@@ -2,15 +2,15 @@
 #include "forte_api.h"
 
 void (*sandbox_execute_handler)(GeneralRegisters* registers, void* return_address, void* o_guest_rip) = NULL;
-void (*sandbox_rw_handler)(GeneralRegisters* registers, void* o_guest_rip) = NULL;
+void (*sandbox_mem_access_handler)(GeneralRegisters* registers, void* o_guest_rip) = NULL;
 
 /*  parameter order: rcx, rdx, r8, r9, r12, r11  */
 
 namespace ForteVisor
 {
-    void SandboxRwHandler(GeneralRegisters* registers, void* return_address, void* o_guest_rip)
+    void SandboxMemAccessHandler(GeneralRegisters* registers, void* o_guest_rip)
     {
-        sandbox_rw_handler(registers, o_guest_rip);
+        sandbox_mem_access_handler(registers, o_guest_rip);
     }
 
     void SandboxExecuteHandler(GeneralRegisters* registers, void* return_address, void* o_guest_rip)
@@ -30,13 +30,6 @@ namespace ForteVisor
             sandbox_execute_handler = static_cast<decltype(sandbox_execute_handler)>(address);
             svm_vmmcall(VMMCALL_ID::register_sandbox, handler_id, execute_handler_wrap);
         }
-    }
-
-    int RemapPageSingleNcr3(uintptr_t old_page, uintptr_t copy_page, int32_t core_id)
-    {
-        svm_vmmcall(VMMCALL_ID::remap_page_ncr3_specific, old_page, copy_page, core_id);
-
-        return 0;
     }
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag)

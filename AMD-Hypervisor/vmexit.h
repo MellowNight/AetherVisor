@@ -5,14 +5,13 @@
 
 enum VMMCALL_ID : uintptr_t
 {
-    set_mpk_hook = 0x22FFAA1166,
-    disable_hv = 0xFFAA221166,
-    set_npt_hook = 0x6611AAFF22,
-    remove_npt_hook = 0x1166AAFF22,
-    is_hv_present = 0xEEFF,
-    remap_page_ncr3_specific = 0x8236FF,
-    sandbox_page = 0x8236FE,
-    register_sandbox = 0x8F36FE,
+    disable_hv = 0x11111111,
+    set_npt_hook = 0x11111112,
+    remove_npt_hook = 0x11111113,
+    is_hv_present = 0x11111114,
+    sandbox_page = 0x11111116,
+    register_sandbox = 0x11111117,
+    deny_sandbox_reads = 0x11111118
 };
 
 enum VMEXIT
@@ -30,8 +29,17 @@ enum VMEXIT
     VMEXIT_MWAIT_CONDITIONAL = 0x8C,
 };
 
-void InjectException(VcpuData* core_data, int vector, bool push_error_code, int error_code);
+void InjectException(
+    VcpuData* core_data, 
+    int vector, 
+    bool push_error_code, 
+    int error_code
+);
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
-void HandleVmmcall(VcpuData* vmcb_data, GeneralRegisters* GuestRegisters, bool* EndVM);
+void HandleVmmcall(
+    VcpuData* vmcb_data, 
+    GeneralRegisters* GuestRegisters, 
+    bool* EndVM
+);

@@ -27,13 +27,7 @@ bool VirtualizeAllProcessors()
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[noexecute], PTEAccess{ true, true, false });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], PTEAccess{ true, true, false });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox_single_step], PTEAccess{ true, true, true });
-
 	
-	for (int i = 0; i <= NCR3_DIRECTORIES::sandbox; ++i)
-	{
-		DbgPrint("[SETUP] Hypervisor::Get()->ncr3_dirs[%d] = %p \n", i, Hypervisor::Get()->ncr3_dirs[i]);
-	}
-
 	for (int i = 0; i < Hypervisor::Get()->core_count; ++i)
 	{
 		KAFFINITY affinity = Utils::Exponent(2, i);
