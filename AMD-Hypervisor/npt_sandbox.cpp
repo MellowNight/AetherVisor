@@ -42,7 +42,7 @@ namespace Sandbox
 
 		ZydisRegisterContext context;
 
-		Disasm::HvRegContextToZydisRegContext(vcpu_data, guest_regs, &context);
+		Disasm::MyRegContextToZydisRegContext(vcpu_data, guest_regs, &context);
 
 		auto instruction = Disasm::Disassemble((uint8_t*)guest_rip, operands);
 
@@ -112,7 +112,6 @@ namespace Sandbox
 	void ReleasePage(SandboxPage* hook_entry)
 	{
 		hook_entry->hookless_npte->ExecuteDisable = 0;
-		hook_entry->process_cr3 = 0;
 		hook_entry->active = false;
 
 		PageUtils::UnlockPages(hook_entry->mdl);

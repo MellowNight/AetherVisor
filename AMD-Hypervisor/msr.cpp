@@ -14,15 +14,14 @@ void HandleMsrExit(VcpuData* core_data, GeneralRegisters* guest_regs)
         return;
     }
 
-    LARGE_INTEGER msr_value;
-
-    msr_value.QuadPart = __readmsr(msr_id);
+    LARGE_INTEGER   msr_value{ msr_value.QuadPart = __readmsr(msr_id) };
 
     switch (msr_id)
     {
     case MSR::EFER:
     {
         auto efer = (MsrEfer*)&msr_value.QuadPart;
+
         Logger::Get()->Log(" MSR::EFER caught, msr_value.QuadPart = %p \n", msr_value.QuadPart);
 
         efer->svme = 0;

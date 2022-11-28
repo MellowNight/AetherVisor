@@ -8,10 +8,12 @@ c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\npt_hook
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\paging_utils.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\npt_sandbox.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\npthook_safety.obj
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\msr.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\logging.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\main.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\hypervisor.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\disassembly.obj
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\debug_exception.obj
 c:\users\user123\documents\github\fortevisor\x64\release\amd-hypervisor.sys
 c:\users\user123\documents\github\fortevisor\x64\release\amd-hypervisor.pdb
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\instructions.obj

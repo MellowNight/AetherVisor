@@ -43,7 +43,7 @@ private:
     }
 public:
 
-    uintptr_t ncr3_dirs[3];
+    uintptr_t ncr3_dirs[4];
 
     PHYSICAL_MEMORY_RANGE phys_mem_range[12];
     VcpuData* vcpu_data[32];

@@ -12,7 +12,7 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* 
     {
     case VMMCALL_ID::deny_sandbox_reads:
     {
-        Sandbox::DenyMemoryAccess(vcpu_data, GuestRegisters->rdx);
+        Sandbox::DenyMemoryAccess(vcpu_data, (void*)GuestRegisters->rdx);
         break;
     }
     case VMMCALL_ID::register_sandbox:
@@ -62,7 +62,7 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* 
     case VMMCALL_ID::set_npt_hook:
     {			
         NPTHooks::SetNptHook(
-            vmcb_data, 
+            vcpu_data, 
             (void*)GuestRegisters->rdx, 
             (uint8_t*)GuestRegisters->r8,
             GuestRegisters->r9, 

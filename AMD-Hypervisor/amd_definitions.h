@@ -43,7 +43,7 @@ struct InterruptDescriptor64
 };
 
 /*  the vmcb structures are typed out by Satoshi Tanda @tandasat    */
-
+#pragma pack(1)
 struct VmcbControlArea
 {
     UINT16 InterceptCrRead;             // +0x000
@@ -85,6 +85,8 @@ struct VmcbControlArea
     UINT64 VmcbSaveStatePointer;        // +0x108
     UINT8 Reserved4[0x400 - 0x110];     // +0x110
 };
+#pragma pack()
+
 static_assert(sizeof(VmcbControlArea) == 0x400,
     "Vmcbcontrol_area Size Mismatch");
 
@@ -278,11 +280,27 @@ union InterceptVector2
         int32_t intercept_ss : 1;
         int32_t intercept_gp : 1;
         int32_t intercept_pf : 1;
-        int32_t pad : 17;
+        int32_t pad1 : 1;
+        int32_t pad2 : 1;
+        int32_t pad3 : 1;
+        int32_t pad4 : 1;
+        int32_t pad5 : 1;
+        int32_t pad6 : 1;
+        int32_t pad7 : 1;
+        int32_t pad8 : 1;
+        int32_t pad9 : 1;
+        int32_t pad10 : 1;
+        int32_t pad11 : 1;
+        int32_t pad12 : 1;
+        int32_t pad13 : 1;
+        int32_t pad14 : 1;
+        int32_t pad15 : 1;
+        int32_t intercept_db2 : 1;
+        int32_t pad17 : 1;
     };
     int32_t as_int32;
 };
-static_assert(sizeof(InterceptVector2) == 0x4, "InterceptVector4 Size Mismatch");
+static_assert(sizeof(InterceptVector2) == 0x4, "InterceptVector2 Size Mismatch");
 
 union InterceptVector4
 { 

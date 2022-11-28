@@ -65,7 +65,7 @@ namespace ForteVisor
 
     int SandboxPage(uintptr_t address, uintptr_t tag);
 
-    void DenyMemoryAccessToSandbox();
+    void DenySandboxMemAccess(void* page_addr);
 
     void RegisterSandboxHandler(SandboxHookId handler_id, void* address);
 

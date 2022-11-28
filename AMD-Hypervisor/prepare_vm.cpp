@@ -256,6 +256,22 @@ void SetupMSRPM(VcpuData* core_data)
 
 void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 {
+
+	core_data->guest_vmcb.save_state_area.Rflags = __readeflags();
+
+
+	RFLAGS rflag = { 0 };
+
+	rflag.Flags = core_data->guest_vmcb.save_state_area.Rflags;
+
+	rflag.TrapFlag = 1;
+
+	/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
+
+	core_data->guest_vmcb.save_state_area.Rflags = rflag.Flags;
+
+
+
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
 
@@ -281,8 +297,9 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	// intercept_vector2.intercept_pf = 1;
 	// intercept_vector2.intercept_bp = 1;
 	intercept_vector2.intercept_db = 1;
+//	intercept_vector2.intercept_db2 = 1;
 
-	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
+	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32; // ~(core_data->guest_vmcb.control_area.InterceptException & 0);
 
 	/*	intercept MSR access	*/
 	
@@ -300,12 +317,11 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.Cr0 = __readcr0();
 	core_data->guest_vmcb.save_state_area.Cr2 = __readcr2();
 	core_data->guest_vmcb.save_state_area.Cr3 = __readcr3();
-	core_data->guest_vmcb.save_state_area.Cr4 = __readcr4();
+	core_data->guest_vmcb.save_state_area.Cr4 = __readcr4(); 
 
 	core_data->guest_vmcb.save_state_area.Rip = context_record->Rip;
 	core_data->guest_vmcb.save_state_area.Rax = context_record->Rax;
 	core_data->guest_vmcb.save_state_area.Rsp = context_record->Rsp;
-	core_data->guest_vmcb.save_state_area.Rflags = __readeflags();
 	core_data->guest_vmcb.save_state_area.Efer = __readmsr(MSR::EFER);
 	core_data->guest_vmcb.save_state_area.GPat = __readmsr(MSR::PAT);
 

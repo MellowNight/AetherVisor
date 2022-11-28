@@ -91,6 +91,12 @@
     <ClInclude Include="npt_sandbox.h">
       <Filter>Source Files\nested paging</Filter>
     </ClInclude>
+    <ClInclude Include="debug_exception.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -131,6 +137,12 @@
     </ClCompile>
     <ClCompile Include="npt_sandbox.cpp">
       <Filter>Source Files\nested paging</Filter>
+    </ClCompile>
+    <ClCompile Include="debug_exception.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="msr.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

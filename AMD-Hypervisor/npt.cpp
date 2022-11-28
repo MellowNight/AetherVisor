@@ -52,14 +52,11 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 
 void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_registers)
 {
-	PHYSICAL_ADDRESS faulting_physical;
-	faulting_physical.QuadPart = vcpu_data->guest_vmcb.control_area.ExitInfo2;
+	PHYSICAL_ADDRESS faulting_physical	{ faulting_physical.QuadPart = vcpu_data->guest_vmcb.control_area.ExitInfo2 };
 
-	NestedPageFaultInfo1 exit_info1;
-	exit_info1.as_uint64 = vcpu_data->guest_vmcb.control_area.ExitInfo1;
+	NestedPageFaultInfo1 exit_info1	{ exit_info1.as_uint64 = vcpu_data->guest_vmcb.control_area.ExitInfo1 };
 
-	PHYSICAL_ADDRESS ncr3;
-	ncr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3;
+	PHYSICAL_ADDRESS ncr3	{ ncr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3 };
 
 	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
@@ -88,11 +85,17 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 		}
 		else
 		{
-			DbgPrint("single stepping at guest_rip= %p \n", guest_rip);
+			DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
+
+			RFLAGS rflag = { 0 };
+
+			rflag.Flags = vcpu_data->guest_vmcb.save_state_area.Rflags;
+
+			rflag.TrapFlag = 1;
 
 			/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
 
-			vcpu_data->guest_vmcb.save_state_area.Rflags |= EFLAGS_TRAP_FLAG_BIT;
+			vcpu_data->guest_vmcb.save_state_area.Rflags = rflag.Flags;
 
 			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}

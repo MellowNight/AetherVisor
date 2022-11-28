@@ -22,7 +22,7 @@ namespace ForteVisor
     {
         if (handler_id == readwrite_handler)
         {
-            sandbox_rw_handler = static_cast<decltype(sandbox_rw_handler)>(address);
+            sandbox_mem_access_handler = static_cast<decltype(sandbox_mem_access_handler)>(address);
             svm_vmmcall(VMMCALL_ID::register_sandbox, handler_id, rw_handler_wrap);
         }
         else if (handler_id == execute_handler)
@@ -30,6 +30,11 @@ namespace ForteVisor
             sandbox_execute_handler = static_cast<decltype(sandbox_execute_handler)>(address);
             svm_vmmcall(VMMCALL_ID::register_sandbox, handler_id, execute_handler_wrap);
         }
+    }
+
+    void DenySandboxMemAccess(void* page_addr)
+    {
+        svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, page_addr);
     }
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag)

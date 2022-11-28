@@ -40,8 +40,6 @@ namespace PageUtils
     {
         ADDRESS_TRANSLATION_HELPER helper;
 
-        PT_ENTRY_64* final_entry;
-
         helper.AsUInt64 = (uintptr_t)virtual_address;
 
         PHYSICAL_ADDRESS pml4_physical;
