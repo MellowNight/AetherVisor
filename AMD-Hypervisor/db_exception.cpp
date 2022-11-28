@@ -1,14 +1,24 @@
-#include "debug_exception.h"
+#include "db_exception.h"
 #include "npt_sandbox.h"
+#include "branch_tracer.h"
 
 void HandleDebugException(VcpuData* vcpu_data)
 {
-    DR6 dr6;
+    auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
-    dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6;
+    DR6 dr6{ dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6 };
 
     if (dr6.SingleInstruction == 1) 
     {
+        auto ctlflow_trace = BranchTracer::ForEachTrace();
+
+        if (ctlflow_trace)
+        {
+            
+
+            return dfsdfs;
+        }
+
         DbgPrint("HandleDebugException2222() \n");
 
         RFLAGS rflag{ rflag.Flags = vcpu_data->guest_vmcb.save_state_area.Rflags, rflag.TrapFlag = 0 };

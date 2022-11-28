@@ -10,6 +10,16 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* 
 
     switch (id)
     {
+    case VMMCALL_ID::trace_control_flow:
+    {
+        auto debugctl = __readmsr(IA32_DEBUGCTL_REGISTER);
+        
+        debugctl.btr = true;
+
+        __writemsr(debugctl);
+        
+        break;
+    }
     case VMMCALL_ID::deny_sandbox_reads:
     {
         Sandbox::DenyMemoryAccess(vcpu_data, (void*)GuestRegisters->rdx);
