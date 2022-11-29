@@ -7,16 +7,8 @@
 
 namespace BranchTracer
 {
-    struct CtlFlowTrace
-    {
-        uintptr_t tag;
-        bool active;
-        uint8_t* start_address;
-        uint8_t* last_branch_address;
-    };
-
-	extern int traced_path_count;
-	extern ControlFlow* control_flow_list;
+	extern bool active;
+	extern int lbr_stack_size;
 
 	void Init();
 

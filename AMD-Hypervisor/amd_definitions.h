@@ -4,9 +4,10 @@
 
 enum CPUID
 {
-    MAX_STANDARD_FN_NUMBER_AND_VENDOR_STRING = 0x0,
-    PROCESSOR_AND_FEATURE_IDENTIFIERS = 0x1,
-    MEMORY_ENCRYPTION_FEATURES = 0x8000001F,
+    vendor_and_max_standard_fn_number = 0x0,
+    processor_feature_identifier = 0x1,
+    ext_perfmon_and_debug = 0x80000022,
+    svm_features = 0x8000000A,
 };
 
 enum MSR : UINT64
@@ -166,7 +167,13 @@ typedef struct VmcbSaveStateArea
     UINT64 BrFrom;                      // +0x278
     UINT64 BrTo;                        // +0x280
     UINT64 LastExcepFrom;               // +0x288
-    UINT64 LastExcepTo;                 // +0x290
+    UINT64 LastExcepTo;                 // +0x290 ??? This isnt in VMCB layout chart
+    UINT64 DBGEXTNCFG;                  // +0x298
+
+    UINT8 Reserved7[0x670 - 0x2A0];     // +0x2A0
+    UINT64 LBR_STACK_FROM[16];          // +0x670
+    UINT64 LBR_STACK_TO[16];        
+    UINT64 LBR_SELECT;                  // +0x770
 };
 
 struct SegmentDescriptor

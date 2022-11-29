@@ -4,28 +4,24 @@
 
 void HandleDebugException(VcpuData* vcpu_data)
 {
+    if (BranchTracer::active)
+    {
+        vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
+    }
+
     auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
     DR6 dr6{ dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6 };
 
     if (dr6.SingleInstruction == 1) 
     {
-        auto ctlflow_trace = BranchTracer::ForEachTrace();
-
-        if (ctlflow_trace)
-        {
-            
-
-            return dfsdfs;
-        }
+        RFLAGS rflag{ rflag.Flags = vcpu_data->guest_vmcb.save_state_area.Rflags, rflag.TrapFlag = 0 };
+       
+        vcpu_data->guest_vmcb.save_state_area.Rflags = rflag.Flags;
 
         DbgPrint("HandleDebugException2222() \n");
 
-        RFLAGS rflag{ rflag.Flags = vcpu_data->guest_vmcb.save_state_area.Rflags, rflag.TrapFlag = 0 };
-
         /*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
-
-        vcpu_data->guest_vmcb.save_state_area.Rflags = rflag.Flags;
 
         if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
         {

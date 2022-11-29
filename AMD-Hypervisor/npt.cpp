@@ -111,9 +111,11 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 			// DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
 
-			bool is_system_page = (__readcr3() == vcpu_data->guest_vmcb.save_state_area.Cr3) ? true : false;
+			SEGMENT_ATTRIBUTE attribute{ attribute.AsUInt16 = VpData->GuestVmcb.StateSaveArea.SsAttrib };
 
-			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, is_system_page);
+			auto is_kernel_page = (attribute.Fields.Dpl == DPL_SYSTEM) ? true : false;
+
+			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, is_kernel_page);
 		}
 
 		auto sandbox_npte = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);

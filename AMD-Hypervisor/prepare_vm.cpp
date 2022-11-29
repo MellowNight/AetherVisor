@@ -256,22 +256,8 @@ void SetupMSRPM(VcpuData* core_data)
 
 void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 {
-
 	core_data->guest_vmcb.save_state_area.Rflags = __readeflags();
-
-
-	RFLAGS rflag = { 0 };
-
-	rflag.Flags = core_data->guest_vmcb.save_state_area.Rflags;
-
-	rflag.TrapFlag = 1;
-
-	/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
-
-	core_data->guest_vmcb.save_state_area.Rflags = rflag.Flags;
-
-
-
+	
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
 
@@ -391,8 +377,8 @@ bool IsSvmSupported()
 bool IsSvmUnlocked()
 {
 	MsrVmcr	msr;
-	msr.flags = __readmsr(MSR::VM_CR);
 
+	msr.flags = __readmsr(MSR::VM_CR);
 
 	if (msr.svm_lock == 0)
 	{

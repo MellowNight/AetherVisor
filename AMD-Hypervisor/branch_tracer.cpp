@@ -7,46 +7,51 @@
 
 namespace BranchTracer
 {
-	int traced_path_count;
+	bool active;
+	int lbr_stack_size;
     
-	CtlFlowTrace* trace_list;
-
-	void Init()
+	void StartTrace(VcpuData* vcpu_data)
 	{
-		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
+		active = true;
 
-		int max_traces = 5;
+		int cpuinfo[4];
 
-		control_flow_list = (ControlFlow*)ExAllocatePoolZero(NonPagedPool, sizeof(ControlFlow) * max_hooks, 'hook');
+		__cpuidex(&cpuinfo, CPUID::ext_perfmon_and_debug)
 
-		for (int i = 0; i < max_hooks; ++i)
+		if (!(cpuinfo[0] & (1 << 1)))
 		{
-			trace_list[i].Init();
+			DbgPrint("CPUID::ext_perfmon_and_debug::EAX %p does not support Last Branch Record Stack! \n", cpuinfo[0]);
+			return;
 		}
 
-		traced_path_count = 0;
-	}
+		__cpuidex(&cpuinfo, CPUID::svm_features)
 
-	CtlFlowTrace* ForEachTrace(bool(HookCallback)(ControlFlow* hook_entry, void* data), void* callback_data)
-	{
-		for (int i = 0; i < traced_path_count; ++i)
+		if (!(cpuinfo[3] & (1 << 26)))
 		{
-			if (HookCallback(&trace_list[i], callback_data))
-			{
-				return &trace_list[i];
-			}
+			DbgPrint("CPUID::svm_features::EDX %p does not support Last Branch Record Virtualization! \n", cpuinfo[0]);
+			return;
 		}
-		return 0;
-	}
 
-	void ReleasePage(ControlFlow* hook_entry)
-	{
-		hook_entry->hookless_npte->ExecuteDisable = 0;
-		hook_entry->active = false;
+		/*	LBR stack & LBR virtualization enable	*/
 
-		PageUtils::UnlockPages(hook_entry->mdl);
+		vcpu_data->guest_vmcb.control_area.LbrVirtualizationEnable |= (1 << 1);
 
-		sandbox_page_count -= 1;
+		vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
+
+		/*	suppress recording of branches that change permission level	*/
+
+		SEGMENT_ATTRIBUTE attribute{ attribute.AsUInt16 = VpData->GuestVmcb.StateSaveArea.SsAttrib };
+
+		auto is_kernel = (attribute.Fields.Dpl == DPL_SYSTEM) ? true : false;
+
+		if (is_kernel)
+        {
+			vcpu_data->guest_vmcb.save_state_area.LBR_SELECT &= ~((uint64_t)(1 << 1));   
+        }
+		else 
+		{
+			vcpu_data->guest_vmcb.save_state_area.LBR_SELECT &= ~((uint64_t)(1 << 0));
+		}
 	}
 
     /*  
