@@ -4,12 +4,25 @@
 
 void HandleDebugException(VcpuData* vcpu_data)
 {
+    auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
+
+    auto lbr_stack = &vcpu_data->guest_vmcb.save_state_area.lbr_stack[0];
+
     if (BranchTracer::active)
     {
         vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
+        
+        if (vcpu_data->guest_vmcb.control_area.NCr3 != Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
+        {
+            for (int i = 0; i < BranchTracer::lbr_stack_size; ++i)
+            {
+                if (lbr_stack[i].address == BranchTracer::first_branch || lbr_stack[i].address == Branch::last_branch)
+                {
+                    BranchTracer::LogToUsermode(lbr_stack[i]);
+                }
+            }
+        }
     }
-
-    auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
     DR6 dr6{ dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6 };
 
@@ -31,7 +44,7 @@ void HandleDebugException(VcpuData* vcpu_data)
 
             vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
 
-            *(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = vcpu_data->guest_vmcb.save_state_area.Rip;
+            *(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
 
             vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[Sandbox::readwrite_handler];
 

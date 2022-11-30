@@ -53,48 +53,4 @@ namespace BranchTracer
 			vcpu_data->guest_vmcb.save_state_area.LBR_SELECT &= ~((uint64_t)(1 << 0));
 		}
 	}
-
-    /*  
-        StartTrace(): Add an address to start tracing branches from
-    */
-
-	CtlFlowTrace* StartTrace(VcpuData* vmcb_data, void* address, int32_t tag)
-	{
-		/*	enable execute for the nPTE of the guest address in the sandbox NCR3	*/
-
-		auto vmroot_cr3 = __readcr3();
-
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
-
-		auto control_flow = &sandbox_page_array[sandbox_page_count];
-
-		if ((uintptr_t)address < 0x7FFFFFFFFFF)
-		{
-			control_flow->mdl = PageUtils::LockPages(address, IoReadAccess, UserMode);
-		}
-		else
-		{
-			control_flow->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
-		}
-
-		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
-
-		DbgPrint("AddPageToSandbox() physical_page = %p \n", physical_page);
-
-		traced_path_count += 1;
-
-		control_flow->active = true;
-		control_flow->tag = tag;
-
-        control_flow->start_address = address;
-
-		/*	IsolatePage epilogue	*/
-
-		__writecr3(vmroot_cr3);
-
-		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
-
-		return control_flow;
-	}
-
 };

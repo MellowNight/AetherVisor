@@ -171,8 +171,13 @@ typedef struct VmcbSaveStateArea
     UINT64 DBGEXTNCFG;                  // +0x298
 
     UINT8 Reserved7[0x670 - 0x2A0];     // +0x2A0
-    UINT64 LBR_STACK_FROM[16];          // +0x670
-    UINT64 LBR_STACK_TO[16];        
+
+    struct GuestLBRStack
+    {
+        UINT64 address;
+        UINT64 target;
+    } lbr_stack[16];                    // +0x670
+
     UINT64 LBR_SELECT;                  // +0x770
 };
 
