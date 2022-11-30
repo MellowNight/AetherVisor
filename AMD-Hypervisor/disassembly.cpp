@@ -70,20 +70,27 @@ namespace Disasm
 		return destination;
 	}
 
-	void ForEachInstruction(uint8_t* start, uint8_t* end, void(*Callback)(uint8_t* insn_addr, ZydisDecodedInstruction instruction))
+	uint8_t* ForEachInstruction(uint8_t* start, uint8_t* end, bool(*Callback)(uint8_t* insn_addr, ZydisDecodedInstruction instruction))
 	{
 		size_t instruction_size = NULL;
 
-		for (auto instruction = start; instruction < end; instruction = instruction + instruction_size)
+		uint8_t* instruction = 0;
+
+		for (instruction = start; instruction < end; instruction = instruction + instruction_size)
 		{
 			ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT_VISIBLE];
 
 			auto insn = Disasm::Disassemble(instruction, operands);
 
-			Callback(instruction, insn);
+			if (!Callback(instruction, insn))
+			{
+				break;
+			}
 
 			instruction_size = insn.length;
 		}
+
+		return instruction;
 	}
 
 	int Init()

@@ -31,11 +31,7 @@ namespace Disasm
 	);
 
 
-	void ForEachInstruction(
-		uint8_t* start, 
-		uint8_t* end, 
-		void(*Callback)(uint8_t* insn_addr, ZydisDecodedInstruction instruction)
-	);
+	uint8_t* ForEachInstruction(uint8_t* start, uint8_t* end, bool(*Callback)(uint8_t* insn_addr, ZydisDecodedInstruction instruction));
 
 	int Init();
 };

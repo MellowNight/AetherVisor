@@ -16,9 +16,21 @@ void HandleDebugException(VcpuData* vcpu_data)
         {
             for (int i = 0; i < BranchTracer::lbr_stack_size; ++i)
             {
-                if (lbr_stack[i].address == BranchTracer::first_branch || lbr_stack[i].address == Branch::last_branch)
+                if (lbr_stack[i].address == BranchTracer::cur_basic_block.end)
                 {
                     BranchTracer::LogToUsermode(lbr_stack[i]);
+
+                    BranchTracer::cur_basic_block.start = lbr_stack[i].target; 
+                    BranchTracer::cur_basic_block.end = Disasm::ForEachInstruction(BranchTracer::cur_basic_block.start, BranchTracer::cur_basic_block.start + PAGE_SIZE, 
+                        [](uint8_t* insn_addr, ZydisDecodedInstruction insn) -> bool {
+                            if (instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_COND_BR ||
+                                instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_UNCOND_BR ||
+                                instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_CALL)
+                            {
+                                return false;
+                            }   
+                        }
+                    );
                 }
             }
         }
