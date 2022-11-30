@@ -22,7 +22,8 @@ namespace BranchTracer
 		BasicBlock*	cur_block;
 		BasicBlock	records[1];
 	};
-	
-	extern uintptr_t log_buffer
-	extern void* log_buffer;
+
+	MDL* mdl;
+
+	extern LogBuffer* log_buffer;
 };

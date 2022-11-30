@@ -10,8 +10,12 @@ namespace BranchTracer
 	bool active;
 	int lbr_stack_size;
     
-	void StartTrace(VcpuData* vcpu_data)
+	void StartTrace(VcpuData* vcpu_data, void* output_buf, int output_buf_size)
 	{
+		log_buffer = (LogBuffer*)output_buf;
+		
+		mdl = PageUtils::LockPages(log_buffer, IoWriteAccess, UserMode, output_buf_size);
+		
 		active = true;
 
 		int cpuinfo[4];

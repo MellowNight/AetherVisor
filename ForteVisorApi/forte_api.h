@@ -11,7 +11,8 @@ enum VMMCALL_ID : uintptr_t
     is_hv_present = 0x11111114,
     sandbox_page = 0x11111116,
     register_sandbox = 0x11111117,
-    deny_sandbox_reads = 0x11111118
+    deny_sandbox_reads = 0x11111118,
+    start_branch_trace = 0x11111119,
 };
 
 struct GeneralRegisters
@@ -34,9 +35,14 @@ struct GeneralRegisters
     uintptr_t  rax;
 };
 
+struct LogBuffer
+{
+    BasicBlock*	cur_block;
+    BasicBlock	records[1];
+};
+
 extern "C" void (*sandbox_execute_handler)(GeneralRegisters * registers, void* return_address, void* o_guest_rip);
 extern "C" void (*sandbox_mem_access_handler)(GeneralRegisters* registers, void* o_guest_rip);
-
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 extern "C" void __stdcall execute_handler_wrap();
@@ -60,6 +66,8 @@ namespace ForteVisor
 
     extern "C"  void SandboxMemAccessHandler(GeneralRegisters* registers, void* o_guest_rip);
     extern "C"  void SandboxExecuteHandler(GeneralRegisters * registers, void* return_address, void* o_guest_rip);
+
+    void StartTrace();
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag);
 
