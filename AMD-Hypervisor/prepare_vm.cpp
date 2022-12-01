@@ -257,7 +257,7 @@ void SetupMSRPM(VcpuData* core_data)
 void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 {
 	core_data->guest_vmcb.save_state_area.Rflags = __readeflags();
-	
+
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
 
@@ -346,7 +346,7 @@ bool IsSvmSupported()
 {
 	int32_t	cpu_info[4] = { 0 };
 
-	__cpuid(cpu_info, CPUID::PROCESSOR_AND_FEATURE_IDENTIFIERS);
+	__cpuid(cpu_info, CPUID::processor_feature_identifier);
 
 	if ((cpu_info[2] & (1 << 1)) == 0)
 	{
@@ -357,7 +357,7 @@ bool IsSvmSupported()
 
 	char vendor_name[13];
 
-	__cpuid(vendor_name_result, CPUID::MAX_STANDARD_FN_NUMBER_AND_VENDOR_STRING);
+	__cpuid(vendor_name_result, CPUID::vendor_and_max_standard_fn_number);
 	memcpy(vendor_name, &vendor_name_result[1], sizeof(int));
 	memcpy(vendor_name + 4, &vendor_name_result[3], sizeof(int));
 	memcpy(vendor_name + 8, &vendor_name_result[2], sizeof(int));

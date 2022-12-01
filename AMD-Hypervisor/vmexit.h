@@ -11,7 +11,8 @@ enum VMMCALL_ID : uintptr_t
     is_hv_present = 0x11111114,
     sandbox_page = 0x11111116,
     register_sandbox = 0x11111117,
-    deny_sandbox_reads = 0x11111118
+    deny_sandbox_reads = 0x11111118,
+    start_branch_trace = 0x11111119,
 };
 
 enum VMEXIT

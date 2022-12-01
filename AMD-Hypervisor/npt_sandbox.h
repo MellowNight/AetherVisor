@@ -10,23 +10,15 @@ namespace Sandbox
 		LIST_ENTRY	list_entry;
 
 		PMDL mdl;		/*	mdl used for locking hooked pages	*/
-		void* hooked_page;				/*	guest virtual address of the hooked page	*/
 
-		PT_ENTRY_64* hookless_npte;		/*	nested PTE of page without hooks			*/
-		PT_ENTRY_64* hooked_pte;		/*	guest PTE of the copy page with hooks		*/
+		PT_ENTRY_64* primary_npte;		/*	nested PTE of page in primary nCR3			*/
 
-		int64_t	tag;	/*	identify this hook		*/
-		bool active;	/*	is this hook active?	*/
+		void* guest_physical;		/*	guest physical page address	*/
 
-		void Init()
-		{
-			CR3 cr3;
-			cr3.Flags = __readcr3();
+		int64_t	tag;	/*	identify this sandbox page		*/
+		bool active;	/*	is this page actively being sandboxed?	*/
 
-			hooked_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'HOOK');
-
-			hooked_pte = PageUtils::GetPte(hooked_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
-		}
+		bool unreadable;	/*	is this page an unreadable page?	*/
 	};
 
 	enum SandboxHookId

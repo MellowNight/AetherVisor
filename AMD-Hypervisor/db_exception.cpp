@@ -4,47 +4,54 @@
 
 void HandleDebugException(VcpuData* vcpu_data)
 {
+    auto vmroot_cr3 = __readcr3();
+
+    __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+
     auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
     auto lbr_stack = &vcpu_data->guest_vmcb.save_state_area.lbr_stack[0];
 
-    if (BranchTracer::active)
-    {
-        vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
-        
-        if (vcpu_data->guest_vmcb.control_area.NCr3 != Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
-        {
-            for (int i = 0; i < BranchTracer::lbr_stack_size; ++i)
-            {
-                if (lbr_stack[i].address == BranchTracer::cur_basic_block.end)
-                {
-                    BranchTracer::LogToUsermode(lbr_stack[i]);
+    //if (BranchTracer::active)
+    //{
+    //    vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
+    //    
+    //    if (vcpu_data->guest_vmcb.control_area.NCr3 != Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
+    //    {
+    //        for (int i = 0; i < BranchTracer::lbr_stack_size; ++i)
+    //        {
+    //            if (lbr_stack[i].address == BranchTracer::cur_basic_block.end)
+    //            {
+    //                BranchTracer::LogToUsermode(lbr_stack[i]);
 
-                    BranchTracer::cur_basic_block.start = lbr_stack[i].target; 
-                    BranchTracer::cur_basic_block.end = Disasm::ForEachInstruction(BranchTracer::cur_basic_block.start, BranchTracer::cur_basic_block.start + PAGE_SIZE, 
-                        [](uint8_t* insn_addr, ZydisDecodedInstruction insn) -> bool {
-                            if (instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_COND_BR ||
-                                instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_UNCOND_BR ||
-                                instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_CALL)
-                            {
-                                return false;
-                            }   
-                        }
-                    );
-                }
-            }
-        }
-    }
+    //                BranchTracer::log_buffer.cur_block.start = lbr_stack[i].target;
 
-    DR6 dr6{ dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6 };
+    //                BranchTracer::cur_basic_block.end = Disasm::ForEachInstruction(BranchTracer::cur_basic_block.start, BranchTracer::cur_basic_block.start + PAGE_SIZE, 
+    //                    [](uint8_t* insn_addr, ZydisDecodedInstruction insn) -> bool {
+    //                        if (instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_COND_BR ||
+    //                            instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_UNCOND_BR ||
+    //                            instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_CALL)
+    //                        {
+    //                            return false;
+    //                        }   
+    //                    }
+    //                );
+    //            }
+    //        }
+    //    }
+    //}
+
+    DR6 dr6;
+
+    dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6;
 
     if (dr6.SingleInstruction == 1) 
     {
-        RFLAGS rflag{ rflag.Flags = vcpu_data->guest_vmcb.save_state_area.Rflags, rflag.TrapFlag = 0 };
+        RFLAGS rflag;
+        rflag.Flags = vcpu_data->guest_vmcb.save_state_area.Rflags, 
+        rflag.TrapFlag = 0;
        
         vcpu_data->guest_vmcb.save_state_area.Rflags = rflag.Flags;
-
-        DbgPrint("HandleDebugException2222() \n");
 
         /*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
 
@@ -52,7 +59,7 @@ void HandleDebugException(VcpuData* vcpu_data)
         {
             DbgPrint("Finished single stepping %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
 
-            vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
+            vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 
             vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
 
@@ -68,4 +75,6 @@ void HandleDebugException(VcpuData* vcpu_data)
     {
         InjectException(vcpu_data, EXCEPTION_VECTOR::Debug, FALSE, 0);
     }
+
+    __writecr3(vmroot_cr3);
 }

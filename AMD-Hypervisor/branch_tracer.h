@@ -23,7 +23,9 @@ namespace BranchTracer
 		BasicBlock	records[1];
 	};
 
-	MDL* mdl;
+	extern MDL* mdl;
 
 	extern LogBuffer* log_buffer;
+
+	void StartTrace(VcpuData* vcpu_data, void* output_buf, int output_buf_size);
 };

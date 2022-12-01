@@ -69,21 +69,21 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 	if (exit_info1.fields.valid == 0)
 	{
-		if (ncr3.QuadPart != Hypervisor::Get()->ncr3_dirs[sandbox])
-		{
-			/*	map in the missing memory (primary and hook NCR3 only)	*/
+		auto denied_read_page = Sandbox::ForEachHook(
+			[](Sandbox::SandboxPage* hook_entry, void* data) -> bool {
 
-			int num_bytes = vcpu_data->guest_vmcb.control_area.NumOfBytesFetched;
+				if (data == hook_entry->guest_physical && hook_entry->unreadable)
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}, PAGE_ALIGN(faulting_physical.QuadPart)
+		);
 
-			auto insn_bytes = vcpu_data->guest_vmcb.control_area.GuestInstructionBytes;
-
-			auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
-
-			auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, PTEAccess{ true, true, true });
-
-			return;
-		}
-		else
+		if (denied_read_page && ncr3.QuadPart == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
 			DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
 
@@ -99,6 +99,18 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}
+		else
+		{
+			/*	map in the missing memory (primary and hook NCR3 only)	*/
+
+			int num_bytes = vcpu_data->guest_vmcb.control_area.NumOfBytesFetched;
+
+			auto insn_bytes = vcpu_data->guest_vmcb.control_area.GuestInstructionBytes;
+
+			auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
+
+			auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, PTEAccess{ true, true, true });
+		}
 
 		return;
 	}
@@ -111,11 +123,9 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 			// DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
 
-			SEGMENT_ATTRIBUTE attribute{ attribute.AsUInt16 = VpData->GuestVmcb.StateSaveArea.SsAttrib };
+			auto is_system_page = (vcpu_data->guest_vmcb.save_state_area.Cr3 == __readcr3()) ? true : false;
 
-			auto is_kernel_page = (attribute.Fields.Dpl == DPL_SYSTEM) ? true : false;
-
-			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, is_kernel_page);
+			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, is_system_page);
 		}
 
 		auto sandbox_npte = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);

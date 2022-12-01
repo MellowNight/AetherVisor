@@ -35,6 +35,12 @@ struct GeneralRegisters
     uintptr_t  rax;
 };
 
+struct BasicBlock
+{
+    uintptr_t start;
+    uintptr_t end;
+};
+
 struct LogBuffer
 {
     BasicBlock*	cur_block;

@@ -178,6 +178,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="amd_definitions.h" />
+    <ClInclude Include="branch_tracer.h" />
     <ClInclude Include="debug_exception.h" />
     <ClInclude Include="disassembly.h" />
     <ClInclude Include="hypervisor.h" />
@@ -199,7 +200,8 @@
     <ClInclude Include="vmexit.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="debug_exception.cpp" />
+    <ClCompile Include="branch_tracer.cpp" />
+    <ClCompile Include="db_exception.cpp" />
     <ClCompile Include="disassembly.cpp" />
     <ClCompile Include="hypervisor.cpp" />
     <ClCompile Include="main.cpp" />
@@ -213,7 +215,7 @@
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="prepare_vm.cpp" />
     <ClCompile Include="vmexit.cpp" />
-    <ClCompile Include="vmmcall_handler.cpp" />
+    <ClCompile Include="vmmcall.cpp" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="instructions.asm" />

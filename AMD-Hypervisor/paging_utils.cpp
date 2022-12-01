@@ -18,9 +18,9 @@ namespace PageUtils
         return MmGetPhysicalAddress((void*)va).QuadPart >> PAGE_SHIFT;
     }
 
-    PMDL LockPages(void* virtual_address, LOCK_OPERATION  operation, KPROCESSOR_MODE access_mode)
+    PMDL LockPages(void* virtual_address, LOCK_OPERATION operation, KPROCESSOR_MODE access_mode, int size)
     {
-        PMDL mdl = IoAllocateMdl(virtual_address, PAGE_SIZE, FALSE, FALSE, nullptr);
+        PMDL mdl = IoAllocateMdl(virtual_address, size, FALSE, FALSE, nullptr);
 
         MmProbeAndLockPages(mdl, KernelMode, operation);
 

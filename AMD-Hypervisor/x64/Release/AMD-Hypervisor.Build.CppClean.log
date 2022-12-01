@@ -1,5 +1,5 @@
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\vc143.pdb
-c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\vmmcall_handler.obj
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\vmmcall.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\vmexit.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\prepare_vm.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\utils.obj
@@ -13,7 +13,8 @@ c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\logging.
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\main.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\hypervisor.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\disassembly.obj
-c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\debug_exception.obj
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\db_exception.obj
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\branch_tracer.obj
 c:\users\user123\documents\github\fortevisor\x64\release\amd-hypervisor.sys
 c:\users\user123\documents\github\fortevisor\x64\release\amd-hypervisor.pdb
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\instructions.obj

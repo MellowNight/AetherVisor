@@ -1,7 +1,6 @@
 #pragma once
 #include "includes.h"
 
-
 enum CPUID
 {
     vendor_and_max_standard_fn_number = 0x0,

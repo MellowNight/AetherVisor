@@ -21,11 +21,6 @@ namespace Sandbox
 
 		sandbox_page_array = (SandboxPage*)ExAllocatePoolZero(NonPagedPool, sizeof(SandboxPage) * max_hooks, 'hook');
 
-		for (int i = 0; i < max_hooks; ++i)
-		{
-			sandbox_page_array[i].Init();
-		}
-
 		sandbox_page_count = 0;
 	}
 
@@ -46,48 +41,44 @@ namespace Sandbox
 
 		auto instruction = Disasm::Disassemble((uint8_t*)guest_rip, operands);
 
-		if (instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_COND_BR ||
-			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_UNCOND_BR ||
-			instruction.meta.category == ZydisInstructionCategory::ZYDIS_CATEGORY_CALL)
+
+		/*	handle calls/jmps (execute_target is wrong here)	*/
+
+		//auto execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
+
+		//DbgPrint("\n execute_target %p \n", execute_target);
+		DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
+
+		if (!is_kernel)
 		{
-			/*	handle calls/jmps (execute_target is wrong here)	*/
-
-			//auto execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
-
-			//DbgPrint("\n execute_target %p \n", execute_target);
-			DbgPrint("guest_rip %p \n", guest_rip);
-
-			if (!is_kernel)
+			if (guest_rip && (guest_rip < 0x7FFFFFFFFFFF))
 			{
-				if (guest_rip && (guest_rip < 0x7FFFFFFFFFFF))
-				{
-					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
+				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
 
-					vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
-				}
-				else
-				{
-					DbgPrint("ADDRESS SPACE MISMATCH \n");
-				}
+				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
 			}
 			else
 			{
-				if (guest_rip && (guest_rip > 0x7FFFFFFFFFFF))
-				{
-					vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
-
-					vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-					*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
-				}
-				else
-				{
-					DbgPrint("ADDRESS SPACE MISMATCH \n");
-				}
+				DbgPrint("ADDRESS SPACE MISMATCH \n");
 			}
-
-			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 		}
+		else
+		{
+			if (guest_rip && (guest_rip > 0x7FFFFFFFFFFF))
+			{
+				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
+
+				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
+			}
+			else
+			{
+				DbgPrint("ADDRESS SPACE MISMATCH \n");
+			}
+		}
+
+		vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 
 		if (!is_kernel)
 		{
@@ -111,7 +102,6 @@ namespace Sandbox
 
 	void ReleasePage(SandboxPage* hook_entry)
 	{
-		hook_entry->hookless_npte->ExecuteDisable = 0;
 		hook_entry->active = false;
 
 		PageUtils::UnlockPages(hook_entry->mdl);
@@ -127,9 +117,24 @@ namespace Sandbox
 
 		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
 
-		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
-		auto sandbox_npte = PageUtils::GetPte(physical_page, Hypervisor::Get()->ncr3_dirs[sandbox]);
+		if ((uintptr_t)address < 0x7FFFFFFFFFF)
+		{
+			sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, UserMode);
+		}
+		else
+		{
+			sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
+		}
+
+		sandbox_page_count += 1;
+
+		sandbox_entry->unreadable = true;
+
+		sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+
+		auto sandbox_npte = PageUtils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
 		sandbox_npte->Present = 0;
 
@@ -164,9 +169,9 @@ namespace Sandbox
 			sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
 		}
 
-		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+		sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-		DbgPrint("AddPageToSandbox() physical_page = %p \n", physical_page);
+		DbgPrint("AddPageToSandbox() physical_page = %p \n", sandbox_entry->guest_physical);
 
 		sandbox_page_count += 1;
 
@@ -175,11 +180,11 @@ namespace Sandbox
 
 		/*	disable execute on the nested pte of the guest physical address, in NCR3 1	*/
 
-		sandbox_entry->hookless_npte = PageUtils::GetPte(physical_page, Hypervisor::Get()->ncr3_dirs[primary]);
+		sandbox_entry->primary_npte = PageUtils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[primary]);
 
-		sandbox_entry->hookless_npte->ExecuteDisable = 1;
+		sandbox_entry->primary_npte->ExecuteDisable = 1;
 
-		auto sandbox_npte = PageUtils::GetPte(physical_page, Hypervisor::Get()->ncr3_dirs[sandbox]);
+		auto sandbox_npte = PageUtils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
 		sandbox_npte->ExecuteDisable = 0;
 

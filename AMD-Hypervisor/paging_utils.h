@@ -12,9 +12,10 @@ namespace PageUtils
     );
 
     PMDL LockPages(
-        void* virtual_address, 
-        LOCK_OPERATION  operation,
-        KPROCESSOR_MODE access_mode
+        void* virtual_address,
+        LOCK_OPERATION operation,
+        KPROCESSOR_MODE access_mode,
+        int size = PAGE_SIZE
     );
 
     NTSTATUS UnlockPages(

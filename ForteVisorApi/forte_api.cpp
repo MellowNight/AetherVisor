@@ -8,13 +8,13 @@ void (*sandbox_mem_access_handler)(GeneralRegisters* registers, void* o_guest_ri
 
 namespace ForteVisor
 {
-    LogBuffer log_buffer;
+    LogBuffer* log_buffer;
 
     void StartTrace(uint8_t* start_addr, uint8_t* stop_addr)
     {
         auto log_size = 0x1000;
 
-        log_buffer = malloc(log_size);
+        log_buffer = (LogBuffer*)VirtualAlloc(NULL, log_size, MEM_COMMIT, PAGE_READWRITE);
         
         svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, stop_addr, log_buffer);
     }    

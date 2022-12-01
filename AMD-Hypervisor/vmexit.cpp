@@ -1,6 +1,6 @@
 #include "vmexit.h"
 #include "npt_sandbox.h"
-#include "debug_exception.h"
+#include "db_exception.h"
 #include "msr.h"
 
 void InjectException(VcpuData* core_data, int vector, bool push_error_code, int error_code)

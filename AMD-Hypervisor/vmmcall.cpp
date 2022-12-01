@@ -1,5 +1,7 @@
 #include "vmexit.h"
 #include "npt_sandbox.h"
+#include "branch_tracer.h"
+#include "npt_hook.h"
 
 /*  HandleVmmcall only handles the vmmcall for 1 core.
     It is the guest's responsibility to set thread affinity.
@@ -10,13 +12,9 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* 
 
     switch (id)
     {
-    case VMMCALL_ID::trace_control_flow:
+    case VMMCALL_ID::start_branch_trace:
     {
-        auto debugctl = __readmsr(IA32_DEBUGCTL_REGISTER);
-        
-        debugctl.btr = true;
-
-        __writemsr(debugctl);
+        BranchTracer::StartTrace(vcpu_data, (void*)GuestRegisters->rcx, (int)GuestRegisters->rdx);
         
         break;
     }

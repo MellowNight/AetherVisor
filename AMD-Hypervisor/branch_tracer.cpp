@@ -4,12 +4,15 @@
 #include "portable_executable.h"
 #include "vmexit.h"
 #include "utils.h"
+#include "branch_tracer.h"
 
 namespace BranchTracer
 {
 	bool active;
 	int lbr_stack_size;
-    
+	MDL* mdl;
+	LogBuffer* log_buffer;
+
 	void StartTrace(VcpuData* vcpu_data, void* output_buf, int output_buf_size)
 	{
 		log_buffer = (LogBuffer*)output_buf;
@@ -20,7 +23,7 @@ namespace BranchTracer
 
 		int cpuinfo[4];
 
-		__cpuidex(&cpuinfo, CPUID::ext_perfmon_and_debug)
+		__cpuid(cpuinfo, CPUID::ext_perfmon_and_debug);
 
 		if (!(cpuinfo[0] & (1 << 1)))
 		{
@@ -28,7 +31,7 @@ namespace BranchTracer
 			return;
 		}
 
-		__cpuidex(&cpuinfo, CPUID::svm_features)
+		__cpuid(cpuinfo, CPUID::svm_features);
 
 		if (!(cpuinfo[3] & (1 << 26)))
 		{
@@ -44,9 +47,9 @@ namespace BranchTracer
 
 		/*	suppress recording of branches that change permission level	*/
 
-		SEGMENT_ATTRIBUTE attribute{ attribute.AsUInt16 = VpData->GuestVmcb.StateSaveArea.SsAttrib };
+		SegmentAttribute attribute{ attribute.as_uint16 = vcpu_data->guest_vmcb.save_state_area.SsAttrib };
 
-		auto is_kernel = (attribute.Fields.Dpl == DPL_SYSTEM) ? true : false;
+		auto is_kernel = (attribute.fields.dpl == 0) ? true : false;
 
 		if (is_kernel)
         {
