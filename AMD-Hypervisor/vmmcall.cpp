@@ -12,6 +12,13 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* 
 
     switch (id)
     {
+    case VMMCALL_ID::set_tr_write_intercept:
+    {            
+        DbgPrint("VMMCALL_ID::set_tr_write_intercept! \n");
+
+        vcpu_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << INTERCEPT_WRITECR3_SHIFT);
+        break;
+    }
     case VMMCALL_ID::start_branch_trace:
     {
         if (!branch_tracer.initialized)

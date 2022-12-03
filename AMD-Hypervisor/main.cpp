@@ -6,6 +6,8 @@
 #include "vmexit.h"
 #include "paging_utils.h"
 #include "npt_sandbox.h"
+#include "kernel_structures.h"
+#include "kernel_exports.h"
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 
@@ -73,6 +75,7 @@ bool VirtualizeAllProcessors()
 			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 		}
 	}
+	__writecr3(__readcr3());
 
 	NPTHooks::PageSynchronizationPatch();
 }
@@ -99,21 +102,11 @@ NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
 	HANDLE init_thread;
 
-	PsCreateSystemThread(
-		&init_thread,
-		GENERIC_ALL, NULL, NULL, NULL,
-		(PKSTART_ROUTINE)Initialize,
-		NULL
-	);
+	PsCreateSystemThread(&init_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)Initialize, NULL);
 
-	HANDLE thread_handle;
+	HANDLE hv_startup_thread;
 
-	PsCreateSystemThread(
-		&thread_handle, 
-		GENERIC_ALL, NULL, NULL, NULL,
-		(PKSTART_ROUTINE)VirtualizeAllProcessors,
-		NULL
-	);
+	PsCreateSystemThread(&hv_startup_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)VirtualizeAllProcessors, NULL);
 
 	return STATUS_SUCCESS;
 }

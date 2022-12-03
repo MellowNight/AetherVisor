@@ -22,7 +22,7 @@ void HandleDebugException(VcpuData* vcpu_data, GeneralRegisters* guest_ctx)
 
         DbgPrint("vcpu_data->guest_vmcb.save_state_area.TrBase \n", vcpu_data->guest_vmcb.save_state_area.TrBase);
 
-        branch_tracer.tr_base = vcpu_data->guest_vmcb.save_state_area.TrBase;
+       //  branch_tracer.tr_base = vcpu_data->guest_vmcb.save_state_area.TrBase;
 
         return;
     }
@@ -33,19 +33,20 @@ void HandleDebugException(VcpuData* vcpu_data, GeneralRegisters* guest_ctx)
         {
             auto lbr_stack = &vcpu_data->guest_vmcb.save_state_area.lbr_stack[0];
 
-            branch_tracer.LogBranch(lbr_stack);
+            DbgPrint("LogBranch() \n");
+         //   branch_tracer.LogBranch(lbr_stack);
         }
 
-        if (vcpu_data->guest_vmcb.control_area.InterceptVec3 & (~((uint32_t)1 << INTERCEPT_TR_WRITE_SHIFT)))
+        if (vcpu_data->guest_vmcb.control_area.InterceptVec3 & (~((uint32_t)1 << INTERCEPT_WRITECR3_SHIFT)))
         {
             DbgPrint("re-enabling TR write intercept %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
             DbgPrint("vcpu_data->guest_vmcb.save_state_area.TrBase \n", vcpu_data->guest_vmcb.save_state_area.TrBase);
 
-            /*  re-enable TR write intercept  */
+            /*  re-enable INTERCEPT_WRITECR3  */
 
-            vcpu_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << INTERCEPT_TR_WRITE_SHIFT);
+            vcpu_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << INTERCEPT_WRITECR3_SHIFT);
 
-            if (vcpu_data->guest_vmcb.save_state_area.TrBase == branch_tracer.tr_base)
+            if (vcpu_data->guest_vmcb.save_state_area.TrBase == branch_tracer.last_branch)
             {
                 branch_tracer.Start(vcpu_data);
             }

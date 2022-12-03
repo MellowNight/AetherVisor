@@ -51,14 +51,13 @@ public:
 	};
 
 	uintptr_t start_address;
+	uintptr_t last_branch;
 
 	MDL* mdl;
 
 	int log_buf_size;
 
 	LogBuffer* log_buffer;
-
-	uintptr_t tr_base;
 
 	void Start(VcpuData* vcpu_data);
 	void Stop(VcpuData* vcpu_data);

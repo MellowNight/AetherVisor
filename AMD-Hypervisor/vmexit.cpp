@@ -38,7 +38,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
         }
         case VMEXIT::DB:
         {
-            HandleDebugException(vcpu_data);
+            HandleDebugException(vcpu_data, GuestRegisters);
             break;
         }
         case VMEXIT::VMRUN: 
@@ -71,12 +71,13 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
             vcpu_data->guest_vmcb.save_state_area.Rip = vcpu_data->guest_vmcb.control_area.NRip;
             break;
         }
-        case VMEXIT::VMEXIT_TR_WRITE:
+        case VMEXIT::WRITE_CR3:
         {	         
-            /*  single step task switch */
+            __debugbreak();
+            DbgPrint("WRITE_CR3 intercept! trbase: %p \n", vcpu_data->guest_vmcb.save_state_area.TrBase);
 
-            vcpu_data->guest_vmcb.save_state_area.Rflags |= RFLAGS_TRAP_FLAG_BIT;
-            vcpu_data->guest_vmcb.control_area.InterceptVec3 &= (~((uint32_t)1 << INTERCEPT_TR_WRITE_SHIFT));
+            /*  if TR base matches, then start branch tracer    */
+            //  branch_tracer.Start(vcpu_data);
 
             break;
         }
@@ -86,10 +87,10 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
             break;
         }
         default:
-        {
-           /*
-           KeBugCheckEx(MANUALLY_INITIATED_CRASH, core_data->guest_vmcb.control_area.ExitCode, core_data->guest_vmcb.control_area.ExitInfo1, core_data->guest_vmcb.control_area.ExitInfo2, core_data->guest_vmcb.save_state_area.Rip);
-           */
+        {            
+            DbgPrint("unknown intercept at %p! code: %p \n", vcpu_data->guest_vmcb.save_state_area.Rip, vcpu_data->guest_vmcb.control_area.ExitCode);
+
+            KeBugCheckEx(MANUALLY_INITIATED_CRASH, vcpu_data->guest_vmcb.control_area.ExitCode, vcpu_data->guest_vmcb.control_area.ExitInfo1, vcpu_data->guest_vmcb.control_area.ExitInfo2, vcpu_data->guest_vmcb.save_state_area.Rip);
 
             break;
         }

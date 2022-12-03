@@ -1,4 +1,1 @@
-﻿  ForteVisorTool.cpp
-C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(1092,5): error MSB6006: "link.exe" exited with code 1257.
-LINK : fatal error C1047: The object or library file 'C:\Users\user123\Documents\GitHub\ForteVisor\dependencies\ForteVisor\lib\Usermode\Release\ForteVisorApi.lib' was created by a different version of the compiler than other objects like 'x64\Release\ForteVisorTool.obj'; rebuild all objects and libraries with the same compiler
-LINK : fatal error LNK1257: code generation failed
+﻿

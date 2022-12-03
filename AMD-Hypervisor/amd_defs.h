@@ -226,7 +226,7 @@ struct SegmentAttribute
     };
 };
 
-#define INTERCEPT_TR_WRITE_SHIFT 13
+#define INTERCEPT_WRITECR3_SHIFT 19
 
 struct GeneralRegisters
 {
@@ -364,9 +364,38 @@ union InterceptVector4
 { 
     struct
     {
-        int32_t  intercept_vmrun : 1; // intercept VMRUN
-        int32_t  intercept_vmmcall : 1;  // Intercept VMMCALL
-        int32_t  pad : 30;
+        int32_t intercept_vmrun : 1; // Intercept VMRUN instruction.
+        int32_t intercept_vmmcall : 1; // vmmcall  instruction.
+        int32_t Intercept_vmload : 1;   // intercept VMLOAD instruction.
+        int32_t intercept_vmsave : 1; 
+        int32_t Intercept_stgi : 1; 
+        int32_t Intercept_clgi : 1;
+        int32_t Intercept_skinit : 1;
+        int32_t intercept_RDTSCP : 1;
+        int32_t intercept_icebp : 1;
+        int32_t Intercept_wbinvd : 1;
+        int32_t Intercept_monitor : 1;  
+        int32_t intercept_mwait : 1;
+        int32_t intercept_mwait2 : 1;
+        int32_t Intercept_xsetbv : 1;
+        int32_t Intercept_rdpru : 1;
+        int32_t intercept_efer : 1;
+        int32_t write_cr0 : 1;
+        int32_t write_cr1 : 1;
+        int32_t write_cr2 : 1;
+        int32_t write_cr3 : 1;
+        int32_t write_cr4 : 1;
+        int32_t write_cr5 : 1;
+        int32_t write_cr6 : 1;
+        int32_t write_cr7 : 1;
+        int32_t write_cr8 : 1;
+        int32_t write_cr9 : 1;
+        int32_t write_cr10 : 1;
+        int32_t write_cr11 : 1;
+        int32_t write_cr12 : 1;
+        int32_t write_cr13 : 1;
+        int32_t write_cr14 : 1;
+        int32_t write_cr15 : 1;
     };
     int32_t	as_int32;
 };

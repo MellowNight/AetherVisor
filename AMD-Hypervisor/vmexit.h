@@ -13,6 +13,7 @@ enum VMMCALL_ID : uintptr_t
     register_sandbox = 0x11111117,
     deny_sandbox_reads = 0x11111118,
     start_branch_trace = 0x11111119,
+    set_tr_write_intercept = 0x1111111A,
 };
 
 enum VMEXIT
@@ -29,6 +30,7 @@ enum VMEXIT
     DB = 0x41,
     VMEXIT_MWAIT_CONDITIONAL = 0x8C,
     VMEXIT_TR_WRITE = 0x6D,
+    WRITE_CR3 = 0x13,
 };
 
 void InjectException(

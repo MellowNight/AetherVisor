@@ -18,13 +18,13 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if (efer_msr.svme == (uint32_t)0)
 	{
-		Logger::Get()->Log("SVME is %p, invalid state! \n", efer_msr.svme);
+		DbgPrint("SVME is %p, invalid state! \n", efer_msr.svme);
 		return false;
 	}
 
 	if ((efer_msr.reserved2 != 0) || (efer_msr.reserved3 != 0) || (efer_msr.reserved4 != 0))
 	{
-		Logger::Get()->Log("MBZ bit of EFER is set, Invalid state! \n");
+		DbgPrint("MBZ bit of EFER is set, Invalid state! \n");
 		return false;
 	}
 
@@ -33,13 +33,13 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if ((cr0.CacheDisable == 0) && (cr0.NotWriteThrough == 1))
 	{
-		Logger::Get()->Log("CR0.CD is zero and CR0.NW is set. \n");
+		DbgPrint("CR0.CD is zero and CR0.NW is set. \n");
 		return false;
 	}
 
 	if (cr0.Reserved4 != 0)
 	{
-		Logger::Get()->Log("CR0[63:32] are not zero. \n");
+		DbgPrint("CR0[63:32] are not zero. \n");
 		return false;
 	}
 	
@@ -57,7 +57,7 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if (rflags.Virtual8086ModeFlag == 1 && ((cr4.Flags << 23) & 1))
 	{
-		Logger::Get()->Log("CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
+		DbgPrint("CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
 	}
 
 	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
@@ -78,7 +78,7 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
 		|| (cr4.Reserved2 != 0) || (cr4.Reserved3 != 0) || (cr4.Reserved4 != 0))
 	{
-		Logger::Get()->Log("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
+		DbgPrint("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
 		return false;
 	}
 
@@ -99,13 +99,13 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if ((dr6.Flags & (0xFFFFFFFF00000000)) || (dr7.Reserved4 != 0))
 	{
-		Logger::Get()->Log("DR6[63:32] are not zero, or DR7[63:32] are not zero.Invalid State!\n");
+		DbgPrint("DR6[63:32] are not zero, or DR7[63:32] are not zero.Invalid State!\n");
 		return false;
 	}
 
 	if (cr0.PagingEnable == 0)
 	{
-		Logger::Get()->Log("Paging disabled, Invalid state! \n");
+		DbgPrint("Paging disabled, Invalid state! \n");
 		return false;
 	}
 
@@ -126,17 +126,17 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 
 	if (guest_vmcb->control_area.GuestAsid == 0)
 	{
-		Logger::Get()->Log("ASID is equal to zero. Invalid guest state \n");
+		DbgPrint("ASID is equal to zero. Invalid guest state \n");
 		return false;
 	}
 
 	if (!(guest_vmcb->control_area.InterceptVec4 & 1))
 	{
-		Logger::Get()->Log("The VMRUN intercept bit is clear. Invalid state! \n");
+		DbgPrint("The VMRUN intercept bit is clear. Invalid state! \n");
 		return false;
 	}
 
-	Logger::Get()->Log("consistency checks passed \n");
+	DbgPrint("consistency checks passed \n");
 
 	return true;
 
@@ -273,6 +273,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	intercept_vector4.intercept_vmrun = 1;
 
 	core_data->guest_vmcb.control_area.InterceptVec4 = intercept_vector4.as_int32;
+	core_data->guest_vmcb.control_area.InterceptCrWrite |= (1 << 3);
 
 	InterceptVector2 intercept_vector2 = { 0 };
 
@@ -283,10 +284,9 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 
 	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32; // ~(core_data->guest_vmcb.control_area.InterceptException & 0);
 
-	/*	intercept MSR access and TR writes (task switch)	*/
+	/*	intercept MSR access	*/
 	
 	core_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << 28);
-	core_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << INTERCEPT_TR_WRITE_SHIFT);
 
 	core_data->guest_vmcb.control_area.GuestAsid = 1;
 
@@ -360,7 +360,7 @@ bool IsSvmSupported()
 
 	vendor_name[12] = '\0';
 
-	Logger::Get()->Log("[SETUP] Vendor Name %s \n", vendor_name);
+	DbgPrint("[SETUP] Vendor Name %s \n", vendor_name);
 
 	if (strcmp(vendor_name, "AuthenticAMD") && strcmp(vendor_name, "VmwareVmware"))
 	{

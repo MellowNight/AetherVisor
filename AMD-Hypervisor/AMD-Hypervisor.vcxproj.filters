@@ -91,9 +91,6 @@
     <ClInclude Include="npt_sandbox.h">
       <Filter>Source Files\nested paging</Filter>
     </ClInclude>
-    <ClInclude Include="debug_exception.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="msr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -105,6 +102,9 @@
     </ClInclude>
     <ClInclude Include="vmexit.h">
       <Filter>Source Files\vmexit handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="db_exception.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

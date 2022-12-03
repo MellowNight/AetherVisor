@@ -179,7 +179,7 @@
   <ItemGroup>
     <ClInclude Include="amd_defs.h" />
     <ClInclude Include="branch_tracer.h" />
-    <ClInclude Include="debug_exception.h" />
+    <ClInclude Include="db_exception.h" />
     <ClInclude Include="disassembly.h" />
     <ClInclude Include="hypervisor.h" />
     <ClInclude Include="ia32.h" />
