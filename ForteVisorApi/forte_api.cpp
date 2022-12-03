@@ -10,13 +10,24 @@ namespace ForteVisor
 {
     LogBuffer* log_buffer;
 
-    void StartTrace(uint8_t* start_addr, uint8_t* stop_addr)
+    void TraceFunction(uint8_t* start_addr)
     {
         auto log_size = 0x1000;
 
         log_buffer = (LogBuffer*)VirtualAlloc(NULL, log_size, MEM_COMMIT, PAGE_READWRITE);
-        
-        svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, stop_addr, log_buffer);
+
+        svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, log_buffer, log_size);
+
+        /*  throw #DB to capture task register  */
+
+        DR7 dr7;
+        dr7.Flags = __readdr(7);
+
+        dr7.GlobalBreakpoint0 = 1;
+        dr7.Length0 = 0;
+        dr7.ReadWrite0 = 0;
+
+        __writedr(7, dr7.Flags);
     }    
 
     void SandboxMemAccessHandler(GeneralRegisters* registers, void* o_guest_rip)

@@ -87,15 +87,9 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 		{
 			DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
 
-			RFLAGS rflag = { 0 };
-
-			rflag.Flags = vcpu_data->guest_vmcb.save_state_area.Rflags;
-
-			rflag.TrapFlag = 1;
-
 			/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
 
-			vcpu_data->guest_vmcb.save_state_area.Rflags = rflag.Flags;
+			vcpu_data->guest_vmcb.save_state_area.Rflags |= RFLAGS_TRAP_FLAG_BIT;
 
 			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}
@@ -125,7 +119,7 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 
 			auto is_system_page = (vcpu_data->guest_vmcb.save_state_area.Cr3 == __readcr3()) ? true : false;
 
-			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, is_system_page);
+			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, Sandbox::execute_handler, is_system_page);
 		}
 
 		auto sandbox_npte = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);

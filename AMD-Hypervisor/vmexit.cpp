@@ -2,6 +2,7 @@
 #include "npt_sandbox.h"
 #include "db_exception.h"
 #include "msr.h"
+#include "disassembly.h"
 
 void InjectException(VcpuData* core_data, int vector, bool push_error_code, int error_code)
 {
@@ -61,13 +62,22 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
 
             CsAttrib.as_uint16 = vcpu_data->guest_vmcb.save_state_area.CsAttrib;
 
-            IsProcessorReadyForVmrun(&vcpu_data->guest_vmcb, CsAttrib);
+            IsCoreReadyForVmrun(&vcpu_data->guest_vmcb, CsAttrib);
 
             break;
         }
         case VMEXIT::VMEXIT_MWAIT_CONDITIONAL:
         {
             vcpu_data->guest_vmcb.save_state_area.Rip = vcpu_data->guest_vmcb.control_area.NRip;
+            break;
+        }
+        case VMEXIT::VMEXIT_TR_WRITE:
+        {	         
+            /*  single step task switch */
+
+            vcpu_data->guest_vmcb.save_state_area.Rflags |= RFLAGS_TRAP_FLAG_BIT;
+            vcpu_data->guest_vmcb.control_area.InterceptVec3 &= (~((uint32_t)1 << INTERCEPT_TR_WRITE_SHIFT));
+
             break;
         }
         case 0x55: // CET shadow stack exception
@@ -77,7 +87,8 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
         }
         default:
         {
-           /* KeBugCheckEx(MANUALLY_INITIATED_CRASH, core_data->guest_vmcb.control_area.ExitCode, core_data->guest_vmcb.control_area.ExitInfo1, core_data->guest_vmcb.control_area.ExitInfo2, core_data->guest_vmcb.save_state_area.Rip);
+           /*
+           KeBugCheckEx(MANUALLY_INITIATED_CRASH, core_data->guest_vmcb.control_area.ExitCode, core_data->guest_vmcb.control_area.ExitInfo1, core_data->guest_vmcb.control_area.ExitInfo2, core_data->guest_vmcb.save_state_area.Rip);
            */
 
             break;

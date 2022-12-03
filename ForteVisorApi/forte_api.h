@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <Windows.h>
 #include <math.h>
+#include <intrin.h>
+#include "ia32.h"
 
 enum VMMCALL_ID : uintptr_t
 {
@@ -73,7 +75,7 @@ namespace ForteVisor
     extern "C"  void SandboxMemAccessHandler(GeneralRegisters* registers, void* o_guest_rip);
     extern "C"  void SandboxExecuteHandler(GeneralRegisters * registers, void* return_address, void* o_guest_rip);
 
-    void StartTrace();
+    void TraceFunction(uint8_t* start_addr);
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag);
 

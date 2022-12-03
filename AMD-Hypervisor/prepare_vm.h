@@ -13,7 +13,7 @@ void ConfigureProcessor(
 	CONTEXT* context_record
 );
 
-bool IsProcessorReadyForVmrun(
+bool IsCoreReadyForVmrun(
 	VMCB* guest_vmcb, 
 	SegmentAttribute cs_attribute
 );

@@ -70,7 +70,7 @@
     <ClInclude Include="ia32.h">
       <Filter>Source Files\amd-v structs</Filter>
     </ClInclude>
-    <ClInclude Include="amd_definitions.h">
+    <ClInclude Include="amd_defs.h">
       <Filter>Source Files\amd-v structs</Filter>
     </ClInclude>
     <ClInclude Include="paging_utils.h">

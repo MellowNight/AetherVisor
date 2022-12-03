@@ -56,7 +56,7 @@ bool VirtualizeAllProcessors()
 
 			cs_attrib.as_uint16 = vcpu_data[i]->guest_vmcb.save_state_area.CsAttrib;
 
-			if (IsProcessorReadyForVmrun(&vcpu_data[i]->guest_vmcb, cs_attrib))
+			if (IsCoreReadyForVmrun(&vcpu_data[i]->guest_vmcb, cs_attrib))
 			{
 				DbgPrint("address of guest vmcb save state area = %p \n", &vcpu_data[i]->guest_vmcb.save_state_area.Rip);
 

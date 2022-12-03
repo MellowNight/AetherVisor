@@ -14,8 +14,11 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* 
     {
     case VMMCALL_ID::start_branch_trace:
     {
-        BranchTracer::StartTrace(vcpu_data, (void*)GuestRegisters->rcx, (int)GuestRegisters->rdx);
-        
+        if (!branch_tracer.initialized)
+        {
+            branch_tracer = BranchTracer{ GuestRegisters->rdx, (void*)GuestRegisters->r8, (int)GuestRegisters->r9 };
+        }
+
         break;
     }
     case VMMCALL_ID::deny_sandbox_reads:

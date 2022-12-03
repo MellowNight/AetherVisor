@@ -1,5 +1,5 @@
 #pragma once
-#include "amd_definitions.h"
+#include "amd_defs.h"
 
 #define RELATIVE_ADDR(insn, operand_offset, size) (ULONG64)(*(int*)((BYTE*)insn + operand_offset) + (BYTE*)insn + (int)size)
 

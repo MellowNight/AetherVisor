@@ -1,11 +1,7 @@
 #include "prepare_vm.h"
 #include "logging.h"
 
-extern "C" void _sgdt(void* Descriptor);
-
-extern "C" int16_t __readtr();
-
-bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
+bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 {
 	if (cs_attribute.fields.long_mode == 1)
 	{
@@ -287,12 +283,12 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 
 	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32; // ~(core_data->guest_vmcb.control_area.InterceptException & 0);
 
-	/*	intercept MSR access	*/
+	/*	intercept MSR access and TR writes (task switch)	*/
 	
 	core_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << 28);
-	
-	core_data->guest_vmcb.control_area.GuestAsid = 1;
+	core_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << INTERCEPT_TR_WRITE_SHIFT);
 
+	core_data->guest_vmcb.control_area.GuestAsid = 1;
 
 	/*	disable the fucking CET	*/
 	CR4 cr4;

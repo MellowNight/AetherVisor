@@ -28,6 +28,7 @@ enum VMEXIT
     GP = 0x4D,
     DB = 0x41,
     VMEXIT_MWAIT_CONDITIONAL = 0x8C,
+    VMEXIT_TR_WRITE = 0x6D,
 };
 
 void InjectException(

@@ -5,11 +5,38 @@
 #include "vmexit.h"
 #include "utils.h"
 
-namespace BranchTracer
+class BranchTracer
 {
-	extern bool active;
+public:
 
-	extern int lbr_stack_size;
+	BranchTracer() {}
+
+	BranchTracer(uintptr_t start_addr, void* output_buf, int out_buf_size)
+		: start_address(start_addr), log_buffer((LogBuffer*)output_buf), log_buf_size(out_buf_size)
+	{
+		mdl = PageUtils::LockPages(log_buffer, IoWriteAccess, UserMode, out_buf_size);
+
+		int cpuinfo[4];
+
+		__cpuid(cpuinfo, CPUID::ext_perfmon_and_debug);
+
+		if (!(cpuinfo[0] & (1 << 1)))
+		{
+			DbgPrint("CPUID::ext_perfmon_and_debug::EAX %p does not support Last Branch Record Stack! \n", cpuinfo[0]);
+			return;
+		}
+
+		__cpuid(cpuinfo, CPUID::svm_features);
+
+		if (!(cpuinfo[3] & (1 << 26)))
+		{
+			DbgPrint("CPUID::svm_features::EDX %p does not support Last Branch Record Virtualization! \n", cpuinfo[0]);
+			return;
+		}
+	}
+
+	bool active;	
+	bool initialized;
 
 	struct BasicBlock
 	{
@@ -23,9 +50,18 @@ namespace BranchTracer
 		BasicBlock	records[1];
 	};
 
-	extern MDL* mdl;
+	uintptr_t start_address;
 
-	extern LogBuffer* log_buffer;
+	MDL* mdl;
 
-	void StartTrace(VcpuData* vcpu_data, void* output_buf, int output_buf_size);
+	int log_buf_size;
+
+	LogBuffer* log_buffer;
+
+	uintptr_t tr_base;
+
+	void Start(VcpuData* vcpu_data);
+	void Stop(VcpuData* vcpu_data);
 };
+
+extern BranchTracer branch_tracer;

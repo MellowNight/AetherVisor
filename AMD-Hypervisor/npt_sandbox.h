@@ -27,7 +27,7 @@ namespace Sandbox
 		execute_handler = 1,
 	};
 
-	extern void*	sandbox_hooks[2];
+	extern void* sandbox_hooks[2];
 
 	extern SandboxPage*	sandbox_page_array;
 
@@ -35,8 +35,9 @@ namespace Sandbox
 
 	void InstructionInstrumentation(
 		VcpuData* vcpu_data,
-		uintptr_t guest_rip, 
-		GeneralRegisters* guest_regs, 
+		uintptr_t guest_rip,
+		GeneralRegisters* guest_regs,
+		SandboxHookId handler,
 		bool is_kernel
 	);
 

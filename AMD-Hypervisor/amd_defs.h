@@ -206,6 +206,53 @@ struct SegmentDescriptor
 static_assert(sizeof(SegmentDescriptor) == 8,
     "SEGMENT_DESCRIPTOR Size Mismatch");
 
+struct SegmentAttribute
+{
+    union
+    {
+        uint16_t as_uint16;
+        struct
+        {
+            uint16_t type : 4;        // [0:3]
+            uint16_t system : 1;      // [4]
+            uint16_t dpl : 2;         // [5:6]
+            uint16_t present : 1;     // [7]
+            uint16_t avl : 1;         // [8]
+            uint16_t long_mode : 1;   // [9]
+            uint16_t default_bit : 1; // [10]
+            uint16_t granularity : 1; // [11]
+            uint16_t reserved1 : 4;   // [12:15]
+        } fields;
+    };
+};
+
+#define INTERCEPT_TR_WRITE_SHIFT 13
+
+struct GeneralRegisters
+{
+    UINT64  r15;
+    UINT64  r14;
+    UINT64  r13;
+    UINT64  r12;
+    UINT64  r11;
+    UINT64  r10;
+    UINT64  r9;
+    UINT64  r8;
+    UINT64  rdi;
+    UINT64  rsi;
+    UINT64  rbp;
+    UINT64  rsp;
+    UINT64  rbx;
+    UINT64  rdx;
+    UINT64  rcx;
+    UINT64  rax;
+};
+
+
+extern "C" void _sgdt(void* Descriptor);
+
+extern "C" int16_t __readtr();
+
 
 /*	Core::X86::Msr::EFER	*/
 struct  MsrEfer
@@ -336,28 +383,6 @@ struct DescriptorTableRegister
 
 static_assert(sizeof(DescriptorTableRegister) == 0xA, "DESCRIPTOR_TABLE_REGISTER Size Mismatch");
 
-
-struct SegmentAttribute
-{
-    union
-    {
-        uint16_t as_uint16;
-        struct
-        {
-            uint16_t type : 4;        // [0:3]
-            uint16_t system : 1;      // [4]
-            uint16_t dpl : 2;         // [5:6]
-            uint16_t present : 1;     // [7]
-            uint16_t avl : 1;         // [8]
-            uint16_t long_mode : 1;   // [9]
-            uint16_t default_bit : 1; // [10]
-            uint16_t granularity : 1; // [11]
-            uint16_t reserved1 : 4;   // [12:15]
-        } fields;
-    };
-};
-
-
 /*  15.20 Event Injection   */
 union EventInjection
 {
@@ -450,24 +475,4 @@ struct VMCB
     VmcbControlArea control_area;
     VmcbSaveStateArea save_state_area;
     char pad[PAGE_SIZE - sizeof(VmcbControlArea) - sizeof(VmcbSaveStateArea)];
-};
-
-struct GeneralRegisters
-{
-    UINT64  r15;
-    UINT64  r14;
-    UINT64  r13;
-    UINT64  r12;
-    UINT64  r11;
-    UINT64  r10;
-    UINT64  r9;
-    UINT64  r8;
-    UINT64  rdi;
-    UINT64  rsi;
-    UINT64  rbp;
-    UINT64  rsp;
-    UINT64  rbx;
-    UINT64  rdx;
-    UINT64  rcx;
-    UINT64  rax;
 };

@@ -177,7 +177,7 @@
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="amd_definitions.h" />
+    <ClInclude Include="amd_defs.h" />
     <ClInclude Include="branch_tracer.h" />
     <ClInclude Include="debug_exception.h" />
     <ClInclude Include="disassembly.h" />

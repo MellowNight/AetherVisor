@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\AMD-Hypervisor\ia32.h" />
     <ClInclude Include="forte_api.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />

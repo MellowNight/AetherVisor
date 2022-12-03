@@ -24,7 +24,7 @@ namespace Sandbox
 		sandbox_page_count = 0;
 	}
 
-	void InstructionInstrumentation(VcpuData* vcpu_data, uintptr_t guest_rip, GeneralRegisters* guest_regs, bool is_kernel)
+	void InstructionInstrumentation(VcpuData* vcpu_data, uintptr_t guest_rip, GeneralRegisters* guest_regs, SandboxHookId handler, bool is_kernel)
 	{
 		auto vmroot_cr3 = __readcr3();
 
@@ -34,10 +34,6 @@ namespace Sandbox
 		}
 
 		ZydisDecodedOperand operands[5] = { 0 };
-
-		ZydisRegisterContext context;
-
-		Disasm::MyRegContextToZydisRegContext(vcpu_data, guest_regs, &context);
 
 		auto instruction = Disasm::Disassemble((uint8_t*)guest_rip, operands);
 
@@ -51,9 +47,9 @@ namespace Sandbox
 
 		if (!is_kernel)
 		{
-			if (guest_rip && (guest_rip < 0x7FFFFFFFFFFF))
+			if ((guest_rip && (guest_rip < 0x7FFFFFFFFFFF)) || handler == readwrite_handler)
 			{
-				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
+				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[handler];
 
 				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
 				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
@@ -65,9 +61,9 @@ namespace Sandbox
 		}
 		else
 		{
-			if (guest_rip && (guest_rip > 0x7FFFFFFFFFFF))
+			if ((guest_rip && (guest_rip > 0x7FFFFFFFFFFF)) || handler == readwrite_handler)
 			{
-				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[execute_handler];
+				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[handler];
 
 				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
 				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
@@ -79,6 +75,9 @@ namespace Sandbox
 		}
 
 		vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
+
+		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+		vcpu_data->guest_vmcb.control_area.TlbControl = 1;
 
 		if (!is_kernel)
 		{
