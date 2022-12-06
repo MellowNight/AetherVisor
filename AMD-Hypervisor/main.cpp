@@ -6,8 +6,7 @@
 #include "vmexit.h"
 #include "paging_utils.h"
 #include "npt_sandbox.h"
-#include "kernel_structures.h"
-#include "kernel_exports.h"
+#include "swapcontext_hook.h"
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 
@@ -75,18 +74,20 @@ bool VirtualizeAllProcessors()
 			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 		}
 	}
-	__writecr3(__readcr3());
 
-	NPTHooks::PageSynchronizationPatch();
+	NPTHooks::CleanupNptHooksOnExit();
 }
 
 
 int Initialize()
 {
 	Logger::Get()->Start();
+
 	Disasm::Init();
+
 	Sandbox::Init();
 	NPTHooks::Init();
+	SwapContextHook::Init();
 
 	return 0;
 }

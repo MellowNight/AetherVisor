@@ -4,7 +4,7 @@
 
 namespace NPTHooks
 {
-	Hooks::JmpRipCode hk_MmCleanProcessAddressSpace;
+	Hooks::JmpRipCode MmCleanProcessAddressSpace;
 
 	char __fastcall MmCleanProcessAddressSpace_hook(__int64 a1, __int64 a2)
 	{
@@ -23,12 +23,14 @@ namespace NPTHooks
 			(void*)__readcr3()
 		);
 
-		return static_cast<decltype(&MmCleanProcessAddressSpace_hook)>(hk_MmCleanProcessAddressSpace.original_bytes)(a1, a2);
+		return static_cast<decltype(&MmCleanProcessAddressSpace_hook)>(MmCleanProcessAddressSpace.original_bytes)(a1, a2);
 	}
 
-	void PageSynchronizationPatch()
+	void CleanupNptHooksOnExit()
 	{
-		/*	place a callback on NtTerminateProcess to remove npt hooks inside terminating processes, to prevent PFN check bsods	*/
+		/*	Hook NtTerminateProcess and remove NPT hooks inside terminating processes, 
+			to prevent physical memory mapping inconsistencies	
+		*/
 
 		ULONG nt_size = NULL;
 
@@ -50,16 +52,7 @@ namespace NPTHooks
 
 				clean_process_address_space = RELATIVE_ADDR(clean_process_address_space, 1, 5);
 
-				hk_MmCleanProcessAddressSpace = Hooks::JmpRipCode{ clean_process_address_space, (uintptr_t)MmCleanProcessAddressSpace_hook };
-
-				svm_vmmcall(
-					VMMCALL_ID::set_npt_hook, 
-					clean_process_address_space, 
-					hk_MmCleanProcessAddressSpace.hook_code, 
-					hk_MmCleanProcessAddressSpace.hook_size, 
-					NCR3_DIRECTORIES::noexecute, 
-					NULL
-				);
+				EASY_NPT_HOOK(Hooks::JmpRipCode, MmCleanProcessAddressSpace, clean_process_address_space)
 			}
 		}
 	}

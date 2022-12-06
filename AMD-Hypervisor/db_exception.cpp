@@ -10,52 +10,31 @@ void HandleDebugException(VcpuData* vcpu_data, GeneralRegisters* guest_ctx)
 
     auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
-    //  refactor this into branch_tracer.HandleDebugException and
-    //  sandbox.HandleDebugException
-
     DR6 dr6;
     dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6;
 
-    if (branch_tracer.initialized && guest_rip == branch_tracer.start_address)
+    if (BranchTracer::initialized && guest_rip == BranchTracer::start_address)
     {
-        /*  capture the TR of the target thread */
+        /*  capture the ID of the target thread */
 
-        DbgPrint("vcpu_data->guest_vmcb.save_state_area.TrBase \n", vcpu_data->guest_vmcb.save_state_area.TrBase);
+        DbgPrint("vcpu_data->guest_vmcb.save_state_area.gsbase  = %p \n", vcpu_data->guest_vmcb.save_state_area.GsBase);
+      
+        auto pcrb = (PETHREAD*)((_KPCR*)vcpu_data->guest_vmcb.save_state_area.GsBase)->CurrentPrcb;
+        
+        DbgPrint("((_KPCR*)vcpu_data->guest_vmcb.save_state_area.GsBase)->CurrentPrcb = %p \n",
+            pcrb);       
 
-       //  branch_tracer.tr_base = vcpu_data->guest_vmcb.save_state_area.TrBase;
+        auto thread_id = PsGetThreadId(*(pcrb + 1));
+        
+        DbgPrint("current ETHREAD ID = %p \n", thread_id);
+
+        BranchTracer::thread_id = thread_id;
 
         return;
     }
 
     if (dr6.SingleInstruction == 1) 
     {
-        if (branch_tracer.active && vcpu_data->guest_vmcb.save_state_area.DbgCtl & (1 << IA32_DEBUGCTL_BTF_BIT))
-        {
-            auto lbr_stack = &vcpu_data->guest_vmcb.save_state_area.lbr_stack[0];
-
-            DbgPrint("LogBranch() \n");
-         //   branch_tracer.LogBranch(lbr_stack);
-        }
-
-        if (vcpu_data->guest_vmcb.control_area.InterceptVec3 & (~((uint32_t)1 << INTERCEPT_WRITECR3_SHIFT)))
-        {
-            DbgPrint("re-enabling TR write intercept %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
-            DbgPrint("vcpu_data->guest_vmcb.save_state_area.TrBase \n", vcpu_data->guest_vmcb.save_state_area.TrBase);
-
-            /*  re-enable INTERCEPT_WRITECR3  */
-
-            vcpu_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << INTERCEPT_WRITECR3_SHIFT);
-
-            if (vcpu_data->guest_vmcb.save_state_area.TrBase == branch_tracer.last_branch)
-            {
-                branch_tracer.Start(vcpu_data);
-            }
-            else
-            {
-                branch_tracer.Stop(vcpu_data);
-            }
-        }
-
         vcpu_data->guest_vmcb.save_state_area.Rflags &= (~((uint64_t)1 << RFLAGS_TRAP_FLAG_BIT));
 
         /*	single-step the sandboxed read/write in the ncr3 that allows all pages to be executable	*/

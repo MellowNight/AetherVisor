@@ -3,6 +3,7 @@ c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\vmmcall.
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\vmexit.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\prepare_vm.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\utils.obj
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\swapcontext_hook.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\npt.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\npt_hook.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\paging_utils.obj

@@ -106,6 +106,9 @@
     <ClInclude Include="db_exception.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="swapcontext_hook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -155,6 +158,9 @@
     </ClCompile>
     <ClCompile Include="db_exception.cpp">
       <Filter>Source Files\vmexit handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="swapcontext_hook.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

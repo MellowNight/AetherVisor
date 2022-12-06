@@ -9,23 +9,27 @@ namespace NPTHooks
 	{
 		LIST_ENTRY	list_entry;	
 
-		PMDL mdl;		/*	mdl used for locking hooked pages	*/
+		PMDL mdl;						/*	mdl used for locking hooked pages	*/
+	
 		uint8_t* guest_physical_page;	/*	guest physical address of the hooked page	*/
+		
 		void* hooked_page;				/*	guest virtual address of the hooked page	*/
 
 		PT_ENTRY_64* hookless_npte;		/*	nested PTE of page without hooks			*/
 		PT_ENTRY_64* hooked_pte;		/*	guest PTE of the copy page with hooks		*/
 		PT_ENTRY_64* guest_pte;			/*	guest PTE of the original page				*/
+		
 		int original_nx;				/*	original NX value of the guest PTE			*/
 	
-		uintptr_t process_cr3;		/*	process where this hook resides in			*/
+		uintptr_t process_cr3;			/*	process where this hook resides in			*/
 
-		int64_t tag;	/*	identify this hook		*/
-		bool active;	/*	is this hook active?	*/
+		int64_t tag;					/*	identify this hook		*/
+	
+		bool active;					/*	is this hook active?	*/
 
 		uintptr_t noexecute_ncr3;
 
-		void Init()
+		NptHook()
 		{
 			CR3 cr3;
 			cr3.Flags = __readcr3();
@@ -37,7 +41,7 @@ namespace NPTHooks
 	
 
 	extern	int	hook_count;
-	extern	NptHook* npt_hook_array;
+	extern	NptHook* npt_hook_list;
 
 	NptHook* SetNptHook(
 		VcpuData* vmcb_data, 
@@ -59,3 +63,7 @@ namespace NPTHooks
 
 	void Init();
 };
+
+#define EASY_NPT_HOOK( shellcode_type, name, function_address ) \
+	name = shellcode_type{ (uintptr_t)function_address, (uintptr_t)name##_hook }; \
+	svm_vmmcall(VMMCALL_ID::set_npt_hook, function_address, name.hook_code, name.hook_size, NCR3_DIRECTORIES::noexecute, NULL);

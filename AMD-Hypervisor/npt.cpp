@@ -16,7 +16,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 
 	int insn_len = 10;
 
-	/*	handle cases where an instruction is split across 2 pages	*/
+	/*	handle cases where an instruction is split across 2 pages (using single step is better here)	*/
 
 	if (PAGE_ALIGN(guest_rip + insn_len) != PAGE_ALIGN(guest_rip))
 	{
@@ -97,10 +97,6 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 		{
 			/*	map in the missing memory (primary and hook NCR3 only)	*/
 
-			int num_bytes = vcpu_data->guest_vmcb.control_area.NumOfBytesFetched;
-
-			auto insn_bytes = vcpu_data->guest_vmcb.control_area.GuestInstructionBytes;
-
 			auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
 
 			auto pte = AssignNPTEntry((PML4E_64*)pml4_base, faulting_physical.QuadPart, PTEAccess{ true, true, true });
@@ -114,8 +110,6 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GeneralRegisters* guest_register
 		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
 			/*  move out of sandbox context and set RIP to the instrumentation function  */
-
-			// DbgPrint("faulting_physical.QuadPart 0x%p \n", faulting_physical.QuadPart);
 
 			auto is_system_page = (vcpu_data->guest_vmcb.save_state_area.Cr3 == __readcr3()) ? true : false;
 

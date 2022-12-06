@@ -71,16 +71,6 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
             vcpu_data->guest_vmcb.save_state_area.Rip = vcpu_data->guest_vmcb.control_area.NRip;
             break;
         }
-        case VMEXIT::WRITE_CR3:
-        {	         
-            __debugbreak();
-            DbgPrint("WRITE_CR3 intercept! trbase: %p \n", vcpu_data->guest_vmcb.save_state_area.TrBase);
-
-            /*  if TR base matches, then start branch tracer    */
-            //  branch_tracer.Start(vcpu_data);
-
-            break;
-        }
         case 0x55: // CET shadow stack exception
         {
             InjectException(vcpu_data, 0x55, TRUE, 0);

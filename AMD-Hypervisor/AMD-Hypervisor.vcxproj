@@ -195,6 +195,7 @@
     <ClInclude Include="npt.h" />
     <ClInclude Include="portable_executable.h" />
     <ClInclude Include="shellcode.h" />
+    <ClInclude Include="swapcontext_hook.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="prepare_vm.h" />
     <ClInclude Include="vmexit.h" />
@@ -212,6 +213,7 @@
     <ClCompile Include="paging_utils.cpp" />
     <ClCompile Include="npt_hook.cpp" />
     <ClCompile Include="npt.cpp" />
+    <ClCompile Include="swapcontext_hook.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="prepare_vm.cpp" />
     <ClCompile Include="vmexit.cpp" />

@@ -56,6 +56,8 @@ extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 extern "C" void __stdcall execute_handler_wrap();
 extern "C" void __stdcall rw_handler_wrap();
 
+#define PAGE_SIZE 0x1000
+
 namespace ForteVisor
 {
     enum NCR3_DIRECTORIES

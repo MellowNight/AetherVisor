@@ -4,5 +4,5 @@
 
 namespace NPTHooks
 {
-	void PageSynchronizationPatch();
+	void CleanupNptHooksOnExit();
 };

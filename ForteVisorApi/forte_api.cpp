@@ -18,7 +18,7 @@ namespace ForteVisor
 
         svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, log_buffer, log_size);
 
-        /*  throw #DB to capture task register  */
+        /*  place breakpoint to capture ETHREAD  */
 
         DR7 dr7;
         dr7.Flags = __readdr(7);
@@ -28,7 +28,7 @@ namespace ForteVisor
         dr7.ReadWrite0 = 0;
 
         __writedr(7, dr7.Flags);
-    }    
+    }
 
     void SandboxMemAccessHandler(GeneralRegisters* registers, void* o_guest_rip)
     {
@@ -61,6 +61,8 @@ namespace ForteVisor
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag)
     {
+        Utils::TriggerCOWAndPageIn((uint8_t*)offset);
+
         svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, noexecute_cr3_id, tag);
 
         return 0;
@@ -68,9 +70,19 @@ namespace ForteVisor
 
     int SandboxPage(uintptr_t address, uintptr_t tag)
     {
+        Utils::TriggerCOWAndPageIn((uint8_t*)offset);
+
         svm_vmmcall(VMMCALL_ID::sandbox_page, address, tag);
 
         return 0;
+    }
+
+    void SandboxRegion(uintptr_t base, uintptr_t size)
+    {
+        for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
+        {
+            ForteVisor::SandboxPage((uintptr_t)offset, NULL);
+        }
     }
 
     int RemoveNptHook(int32_t tag)

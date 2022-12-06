@@ -9,7 +9,7 @@
 namespace NPTHooks
 {
 	int hook_count;
-	NptHook* npt_hook_array;
+	NptHook* npt_hook_list;
 
 	void Init()
 	{
@@ -17,11 +17,11 @@ namespace NPTHooks
 
 		int max_hooks = 6000;
 		
-		npt_hook_array = (NptHook*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHook) * max_hooks, 'hook');
+		npt_hook_list = (NptHook*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHook) * max_hooks, 'hook');
 
 		for (int i = 0; i < max_hooks; ++i)
 		{
-			npt_hook_array[i].Init();
+			npt_hook_list[i] = NptHook{};
 		}
 
 		hook_count = 0;
@@ -31,9 +31,9 @@ namespace NPTHooks
 	{
 		for (int i = 0; i < hook_count; ++i)
 		{
-			if (HookCallback(&npt_hook_array[i], callback_data))
+			if (HookCallback(&npt_hook_list[i], callback_data))
 			{
-				return &npt_hook_array[i];
+				return &npt_hook_list[i];
 			}
 		}
 		return 0;
@@ -62,7 +62,7 @@ namespace NPTHooks
 
 		bool reused_hook = false;
 
-		auto hook_entry = &npt_hook_array[hook_count];
+		auto hook_entry = &npt_hook_list[hook_count];
 
 		if ((uintptr_t)address < 0x7FFFFFFFFFF)
 		{

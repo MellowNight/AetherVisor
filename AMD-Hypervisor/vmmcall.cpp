@@ -5,41 +5,34 @@
 
 /*  HandleVmmcall only handles the vmmcall for 1 core.
     It is the guest's responsibility to set thread affinity.
+
+    Parameters are passed in the order of rdx, r8, r9, r12, r11
 */
-void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* EndVM)
+void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* guest_ctx, bool* EndVM)
 {
-    auto id = GuestRegisters->rcx;
+    auto id = guest_ctx->rcx;
 
     switch (id)
     {
-    case VMMCALL_ID::set_tr_write_intercept:
-    {            
-        DbgPrint("VMMCALL_ID::set_tr_write_intercept! \n");
-
-        vcpu_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << INTERCEPT_WRITECR3_SHIFT);
-        break;
-    }
     case VMMCALL_ID::start_branch_trace:
-    {
-        if (!branch_tracer.initialized)
-        {
-            branch_tracer = BranchTracer{ GuestRegisters->rdx, (void*)GuestRegisters->r8, (int)GuestRegisters->r9 };
-        }
+    {	
+        BranchTracer::Init(vcpu_data, guest_ctx->rdx);
 
         break;
     }
     case VMMCALL_ID::deny_sandbox_reads:
     {
-        Sandbox::DenyMemoryAccess(vcpu_data, (void*)GuestRegisters->rdx);
+        Sandbox::DenyMemoryAccess(vcpu_data, (void*)guest_ctx->rdx);
+
         break;
     }
     case VMMCALL_ID::register_sandbox:
     {
-        auto handler_id = GuestRegisters->rdx;
+        auto handler_id = guest_ctx->rdx;
 
         if (handler_id == Sandbox::readwrite_handler || handler_id == Sandbox::execute_handler)
         {
-            Sandbox::sandbox_hooks[handler_id] = (void*)GuestRegisters->r8;
+            Sandbox::sandbox_hooks[handler_id] = (void*)guest_ctx->r8;
         }
         else
         {
@@ -51,7 +44,7 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* 
     }
     case VMMCALL_ID::sandbox_page:
     {
-        Sandbox::AddPageToSandbox(vcpu_data, (void*)GuestRegisters->rdx, GuestRegisters->r8);
+        Sandbox::AddPageToSandbox(vcpu_data, (void*)guest_ctx->rdx, guest_ctx->r8);
 
         break;
     }
@@ -62,15 +55,15 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* 
         __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
 
         NPTHooks::ForEachHook(
-            [](NPTHooks::NptHook* hook_entry, void* data)-> bool {
-
+            [](NPTHooks::NptHook* hook_entry, void* data) -> bool 
+            {
                 if (hook_entry->tag == (uintptr_t)data)
                 {
                     NPTHooks::UnsetHook(hook_entry);
                 }
                 return true;
             },
-            (void*)GuestRegisters->rdx
+            (void*)guest_ctx->rdx
         );
 
         __writecr3(vmroot_cr3);
@@ -79,14 +72,8 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters, bool* 
     }
     case VMMCALL_ID::set_npt_hook:
     {			
-        NPTHooks::SetNptHook(
-            vcpu_data, 
-            (void*)GuestRegisters->rdx, 
-            (uint8_t*)GuestRegisters->r8,
-            GuestRegisters->r9, 
-            GuestRegisters->r12, 
-            GuestRegisters->r11
-        );
+        NPTHooks::SetNptHook(vcpu_data, (void*)guest_ctx->rdx, (uint8_t*)guest_ctx->r8, 
+            guest_ctx->r9, guest_ctx->r12, guest_ctx->r11);
 
         break;
     }
