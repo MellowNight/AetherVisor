@@ -3,7 +3,6 @@
 #include <Windows.h>
 #include <math.h>
 #include <intrin.h>
-#include "ia32.h"
 
 enum VMMCALL_ID : uintptr_t
 {
@@ -37,16 +36,26 @@ struct GeneralRegisters
     uintptr_t  rax;
 };
 
-struct BasicBlock
-{
-    uintptr_t start;
-    uintptr_t end;
-};
+#define PAGE_SIZE 0x1000
 
-struct LogBuffer
+union BranchLog
 {
-    BasicBlock*	cur_block;
-    BasicBlock	records[1];
+    BranchLog(int log_size)
+    {
+        capacity = log_size;
+        buffer_idx = 0;
+        buffer = (uintptr_t*)&buffer;
+    }
+
+    struct
+    {
+        int capacity;
+        int buffer_idx;
+
+        uintptr_t* buffer;
+    };
+
+    uint8_t space[PAGE_SIZE];
 };
 
 extern "C" void (*sandbox_execute_handler)(GeneralRegisters * registers, void* return_address, void* o_guest_rip);
@@ -56,9 +65,7 @@ extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 extern "C" void __stdcall execute_handler_wrap();
 extern "C" void __stdcall rw_handler_wrap();
 
-#define PAGE_SIZE 0x1000
-
-namespace ForteVisor
+namespace BVM
 {
     enum NCR3_DIRECTORIES
     {
@@ -83,13 +90,13 @@ namespace ForteVisor
 
     int SandboxPage(uintptr_t address, uintptr_t tag);
 
+    void SandboxRegion(uintptr_t base, uintptr_t size);
+
     void DenySandboxMemAccess(void* page_addr);
 
     void RegisterSandboxHandler(SandboxHookId handler_id, void* address);
 
     int RemoveNptHook(int32_t tag);
-
-    int ForEachCore(void(*callback)(void* params), void* params = NULL);
 
     int DisableHv();
 };

@@ -273,7 +273,6 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	intercept_vector4.intercept_vmrun = 1;
 
 	core_data->guest_vmcb.control_area.InterceptVec4 = intercept_vector4.as_int32;
-	core_data->guest_vmcb.control_area.InterceptCrWrite |= (1 << 3);
 
 	InterceptVector2 intercept_vector2 = { 0 };
 

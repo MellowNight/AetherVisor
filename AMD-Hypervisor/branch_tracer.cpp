@@ -17,68 +17,63 @@ namespace BranchTracer
 
 	bool is_kernel;
 
-	void Init(VcpuData* vcpu_data, uintptr_t start_addr)
+	PMDL mdl;
+
+	BranchLog* log_buffer;
+
+	void Init(VcpuData* vcpu_data, uintptr_t start_addr, uintptr_t out_buffer)
 	{
-		if (initialized)
-		{
-			return;
-		}		
-		
+		initialized = true;
+
 		SegmentAttribute attribute{ attribute.as_uint16 = vcpu_data->guest_vmcb.save_state_area.SsAttrib };
 
 		is_kernel = (attribute.fields.dpl == 0) ? true : false;
 
-		initialized = true;
+		log_buffer = (BranchLog*)out_buffer;
+
+		if (is_kernel)
+		{
+			mdl = PageUtils::LockPages((void*)log_buffer, IoReadAccess, KernelMode, log_buffer->capacity);
+		}
+		else
+		{
+			mdl = PageUtils::LockPages((void*)log_buffer, IoReadAccess, UserMode, log_buffer->capacity);
+		}
+
 		start_address = start_addr;
-
-		int cpuinfo[4];
-
-		__cpuid(cpuinfo, CPUID::ext_perfmon_and_debug);
-
-		if (!(cpuinfo[0] & (1 << 1)))
-		{
-			DbgPrint("CPUID::ext_perfmon_and_debug::EAX %p does not support Last Branch Record Stack! \n", cpuinfo[0]);
-
-			initialized = false;
-
-			return;
-		}
-
-		__cpuid(cpuinfo, CPUID::svm_features);
-
-		if (!(cpuinfo[3] & (1 << 26)))
-		{
-			DbgPrint("CPUID::svm_features::EDX %p does not support Last Branch Record Virtualization! \n", cpuinfo[0]);
-
-			initialized = false;
-
-			return;
-		}
 	}
 
-	void Start(VcpuData* vcpu_data)
+	void Resume(VcpuData* vcpu_data)
 	{
 		active = true;
 
 		/*	BTF, trap flag, LBR stack, & LBR virtualization enable	*/
 
-		// vcpu_data->guest_vmcb.save_state_area.DbgCtl |= (1 << IA32_DEBUGCTL_BTF_BIT);
-		// vcpu_data->guest_vmcb.save_state_area.Rflags |= RFLAGS_TRAP_FLAG_BIT;
-		vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
-		vcpu_data->guest_vmcb.control_area.LbrVirtualizationEnable |= (1 << 1);
+		vcpu_data->guest_vmcb.save_state_area.DbgCtl |= (1 << IA32_DEBUGCTL_BTF_BIT);
+		vcpu_data->guest_vmcb.save_state_area.Rflags |= RFLAGS_TRAP_FLAG_BIT;
+	//	vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
+	//	vcpu_data->guest_vmcb.control_area.LbrVirtualizationEnable |= (1 << 1);
+	}
 
-		/*	suppress recording of branches that change permission level	*/
+	void Resume()
+	{
+		/*	BTF and trap flag set	*/
 
-		SegmentAttribute attribute{ attribute.as_uint16 = vcpu_data->guest_vmcb.save_state_area.SsAttrib };
+		active = true;
 
-		if (is_kernel)
-		{
-			vcpu_data->guest_vmcb.save_state_area.LBR_SELECT &= ~((uint64_t)(1 << 1));
-		}
-		else
-		{
-			vcpu_data->guest_vmcb.save_state_area.LBR_SELECT &= ~((uint64_t)(1 << 0));
-		}
+		IA32_DEBUGCTL_REGISTER debugctl;
+
+		debugctl.Flags = __readmsr(IA32_DEBUGCTL);
+		debugctl.Btf = 1;
+
+		__writemsr(IA32_DEBUGCTL, debugctl.Flags);
+
+		RFLAGS flags;
+
+		flags.Flags = __readeflags();
+		flags.TrapFlag = 1;
+
+		__writeeflags(flags.Flags);
 	}
 
 	void BranchTracer::Stop(VcpuData* vcpu_data)
@@ -87,8 +82,8 @@ namespace BranchTracer
 
 		/*	BTF, LBR stack, and trap flag disable	*/
 
-		vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
-		vcpu_data->guest_vmcb.save_state_area.DbgCtl |= (1 << IA32_DEBUGCTL_BTF_BIT);
+	//	vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
+		vcpu_data->guest_vmcb.save_state_area.DbgCtl &= (~((uint64_t)1 << IA32_DEBUGCTL_BTF_BIT));
 		vcpu_data->guest_vmcb.save_state_area.Rflags &= (~((uint64_t)1 << RFLAGS_TRAP_FLAG_BIT));
 	}
 }

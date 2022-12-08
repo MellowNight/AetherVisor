@@ -21,7 +21,7 @@ enum NCR3_DIRECTORIES
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
-namespace ForteVisor
+namespace BVM
 {
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, int32_t tag);
 

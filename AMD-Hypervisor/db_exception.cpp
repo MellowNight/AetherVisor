@@ -17,11 +17,14 @@ void HandleDebugException(VcpuData* vcpu_data, GeneralRegisters* guest_ctx)
     {
         /*  capture the ID of the target thread */
 
-        DbgPrint("vcpu_data->guest_vmcb.save_state_area.gsbase  = %p \n", vcpu_data->guest_vmcb.save_state_area.GsBase);
+        DbgPrint(
+            "vcpu_data->guest_vmcb.save_state_area.gsbase  = %p \n",
+            vcpu_data->guest_vmcb.save_state_area.GsBase);
       
         auto pcrb = (PETHREAD*)((_KPCR*)vcpu_data->guest_vmcb.save_state_area.GsBase)->CurrentPrcb;
         
-        DbgPrint("((_KPCR*)vcpu_data->guest_vmcb.save_state_area.GsBase)->CurrentPrcb = %p \n",
+        DbgPrint(
+            "((_KPCR*)vcpu_data->guest_vmcb.save_state_area.GsBase)->CurrentPrcb = %p \n",
             pcrb);       
 
         auto thread_id = PsGetThreadId(*(pcrb + 1));
@@ -33,7 +36,11 @@ void HandleDebugException(VcpuData* vcpu_data, GeneralRegisters* guest_ctx)
         return;
     }
 
-    if (dr6.SingleInstruction == 1) 
+    if (BranchTracer::active == true)
+    {
+        BranchTracer::log_buffer->Log(guest_rip);
+    }
+    else if (dr6.SingleInstruction == 1) 
     {
         vcpu_data->guest_vmcb.save_state_area.Rflags &= (~((uint64_t)1 << RFLAGS_TRAP_FLAG_BIT));
 

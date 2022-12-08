@@ -2,7 +2,7 @@
 #include "forte_api_kernel.h"
 #include <intrin.h>
 
-namespace ForteVisor
+namespace BVM
 {
     int RemoveNptHook(int32_t tag)
     {

@@ -1,22 +1,45 @@
 #include "pch.h"
 #include "forte_api.h"
+#include "ia32.h"
 
 void (*sandbox_execute_handler)(GeneralRegisters* registers, void* return_address, void* o_guest_rip) = NULL;
 void (*sandbox_mem_access_handler)(GeneralRegisters* registers, void* o_guest_rip) = NULL;
 
 /*  parameter order: rcx, rdx, r8, r9, r12, r11  */
 
-namespace ForteVisor
+namespace BVM
 {
-    LogBuffer* log_buffer;
+    BranchLog* log_buffer;
+
+    void WriteToReadOnly(void* address, uint8_t* bytes, size_t len)
+    {
+        DWORD old_prot;
+        VirtualProtect((LPVOID)address, len, PAGE_EXECUTE_READWRITE, &old_prot);
+        memcpy((void*)address, (void*)bytes, len);
+        VirtualProtect((LPVOID)address, len, old_prot, 0);
+    }
+
+    void TriggerCOWAndPageIn(void* address)
+    {
+        uint8_t buffer;
+
+        /*	1. page in	*/
+
+        buffer = *(uint8_t*)address;
+
+        /*	2. trigger COW	*/
+
+        WriteToReadOnly(address, (uint8_t*)"\xC3", 1);
+        WriteToReadOnly(address, &buffer, 1);
+    }
 
     void TraceFunction(uint8_t* start_addr)
     {
         auto log_size = 0x1000;
 
-        log_buffer = (LogBuffer*)VirtualAlloc(NULL, log_size, MEM_COMMIT, PAGE_READWRITE);
+        log_buffer = new BranchLog{ log_size };
 
-        svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, log_buffer, log_size);
+        svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, log_buffer);
 
         /*  place breakpoint to capture ETHREAD  */
 
@@ -28,6 +51,8 @@ namespace ForteVisor
         dr7.ReadWrite0 = 0;
 
         __writedr(7, dr7.Flags);
+
+        __writedr(0, (uintptr_t)start_addr);
     }
 
     void SandboxMemAccessHandler(GeneralRegisters* registers, void* o_guest_rip)
@@ -61,7 +86,7 @@ namespace ForteVisor
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag)
     {
-        Utils::TriggerCOWAndPageIn((uint8_t*)offset);
+        TriggerCOWAndPageIn((uint8_t*)address);
 
         svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, noexecute_cr3_id, tag);
 
@@ -70,7 +95,7 @@ namespace ForteVisor
 
     int SandboxPage(uintptr_t address, uintptr_t tag)
     {
-        Utils::TriggerCOWAndPageIn((uint8_t*)offset);
+        TriggerCOWAndPageIn((uint8_t*)address);
 
         svm_vmmcall(VMMCALL_ID::sandbox_page, address, tag);
 
@@ -81,7 +106,7 @@ namespace ForteVisor
     {
         for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
         {
-            ForteVisor::SandboxPage((uintptr_t)offset, NULL);
+            BVM::SandboxPage((uintptr_t)offset, NULL);
         }
     }
 
@@ -115,7 +140,7 @@ namespace ForteVisor
         ForEachCore(
             [](void* params) -> void {
                 svm_vmmcall(VMMCALL_ID::disable_hv);
-            }
+            }, NULL
         );
         return 0;
     }

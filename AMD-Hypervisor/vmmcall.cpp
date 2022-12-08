@@ -15,8 +15,10 @@ void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* guest_ctx, bool* EndVM
     switch (id)
     {
     case VMMCALL_ID::start_branch_trace:
-    {	
-        BranchTracer::Init(vcpu_data, guest_ctx->rdx);
+    {				
+        DbgPrint("VMMCALL_ID::start_branch_trace \n");
+
+        BranchTracer::Init(vcpu_data, guest_ctx->rdx, guest_ctx->r8);
 
         break;
     }

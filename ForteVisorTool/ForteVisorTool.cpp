@@ -19,7 +19,7 @@ int main()
 	WriteToReadOnly(MessageBoxA, (uint8_t*)"\xC3", 1);
 	WriteToReadOnly(MessageBoxA, &original_byte, 1);
 
-	ForteVisor::SetNptHook((uintptr_t)MessageBoxA, (uint8_t*)"\xC3", 1, 'test');
+	BVM::SetNptHook((uintptr_t)MessageBoxA, (uint8_t*)"\xC3", 1, 'test');
 
 	MessageBoxA(NULL, "123", "12323", MB_OK);
 

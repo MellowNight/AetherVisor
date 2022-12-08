@@ -10,13 +10,19 @@ namespace SwapContextHook
 
 	__int64 __fastcall  ki_swap_context_hook(__int64 a1, PETHREAD ethread, __int64 a3)
 	{
-		return static_cast<decltype(&ki_swap_context_hook)>(ki_swap_context.original_bytes)(a1, ethread, a3);
+		auto result = static_cast<decltype(&ki_swap_context_hook)>(ki_swap_context.original_bytes)(a1, ethread, a3);
+
+		DbgPrint("PsGetThreadId(ethread) %i \n", PsGetThreadId(ethread));
 
 		if (BranchTracer::initialized && PsGetThreadId(ethread) == BranchTracer::thread_id)
 		{
-			// Lock branch tracer thread and traced function thread to differeent cores using thread affinity
-			// PsCreateSystemThread()
+			DbgPrint("Switching to the traced thread! BranchTracer::thread_id %i \n", BranchTracer::thread_id);
+			// Lock branch tracer thread and traced function thread to differeent cores using thread affinity	
+
+			BranchTracer::Resume();
 		}
+
+		return result;
 	}
 
 	void Init()
