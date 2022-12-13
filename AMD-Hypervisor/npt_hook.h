@@ -66,4 +66,4 @@ namespace NPTHooks
 
 #define EASY_NPT_HOOK( shellcode_type, name, function_address ) \
 	name = shellcode_type{ (uintptr_t)function_address, (uintptr_t)name##_hook }; \
-	svm_vmmcall(VMMCALL_ID::set_npt_hook, function_address, name.hook_code, name.hook_size, NCR3_DIRECTORIES::noexecute, NULL);
+	svm_vmmcall(VMMCALL_ID::set_npt_hook, function_address, name.hook_code, name.hook_size, NCR3_DIRECTORIES::primary, NULL);

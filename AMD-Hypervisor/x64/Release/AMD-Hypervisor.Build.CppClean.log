@@ -16,6 +16,7 @@ c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\hypervis
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\disassembly.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\db_exception.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\branch_tracer.obj
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\bp_exception.obj
 c:\users\user123\documents\github\fortevisor\x64\release\amd-hypervisor.sys
 c:\users\user123\documents\github\fortevisor\x64\release\amd-hypervisor.pdb
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\instructions.obj

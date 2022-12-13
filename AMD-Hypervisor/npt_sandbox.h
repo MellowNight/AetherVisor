@@ -36,7 +36,7 @@ namespace Sandbox
 	void InstructionInstrumentation(
 		VcpuData* vcpu_data,
 		uintptr_t guest_rip,
-		GeneralRegisters* guest_regs,
+		GuestRegisters* guest_regs,
 		SandboxHookId handler,
 		bool is_kernel
 	);

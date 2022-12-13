@@ -26,7 +26,7 @@ void* AllocateNewTable(
 
 void HandleNestedPageFault(
 	VcpuData* VpData,
-	GeneralRegisters* GuestContext
+	GuestRegisters* GuestContext
 );
 
 enum NCR3_DIRECTORIES

@@ -16,7 +16,7 @@ enum VMMCALL_ID : uintptr_t
     start_branch_trace = 0x11111119,
 };
 
-struct GeneralRegisters
+struct GuestRegisters
 {
     uintptr_t  r15;
     uintptr_t  r14;
@@ -58,8 +58,8 @@ union BranchLog
     uint8_t space[PAGE_SIZE];
 };
 
-extern "C" void (*sandbox_execute_handler)(GeneralRegisters * registers, void* return_address, void* o_guest_rip);
-extern "C" void (*sandbox_mem_access_handler)(GeneralRegisters* registers, void* o_guest_rip);
+extern "C" void (*sandbox_execute_handler)(GuestRegisters * registers, void* return_address, void* o_guest_rip);
+extern "C" void (*sandbox_mem_access_handler)(GuestRegisters* registers, void* o_guest_rip);
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 extern "C" void __stdcall execute_handler_wrap();
@@ -81,12 +81,12 @@ namespace BVM
         execute_handler = 1,
     };
 
-    extern "C"  void SandboxMemAccessHandler(GeneralRegisters* registers, void* o_guest_rip);
-    extern "C"  void SandboxExecuteHandler(GeneralRegisters * registers, void* return_address, void* o_guest_rip);
+    extern "C"  void SandboxMemAccessHandler(GuestRegisters* registers, void* o_guest_rip);
+    extern "C"  void SandboxExecuteHandler(GuestRegisters * registers, void* return_address, void* o_guest_rip);
 
     void TraceFunction(uint8_t* start_addr);
 
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag);
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id, uintptr_t tag);
 
     int SandboxPage(uintptr_t address, uintptr_t tag);
 

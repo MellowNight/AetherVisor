@@ -1,48 +1,27 @@
-#include "db_exception.h"
+#include "vmexit.h"
 #include "npt_sandbox.h"
 #include "branch_tracer.h"
 
-void HandleDebugException(VcpuData* vcpu_data, GeneralRegisters* guest_ctx)
+void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 {
-    auto vmroot_cr3 = __readcr3();
-
-    __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
-
     auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
     DR6 dr6;
     dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6;
 
-    if (BranchTracer::initialized && guest_rip == BranchTracer::start_address)
+    if (dr6.SingleInstruction == 1) 
     {
-        /*  capture the ID of the target thread */
+        if (BranchTracer::active == true && IA32_DEBUGCTL_BTF(vcpu_data->guest_vmcb.save_state_area.DbgCtl))
+        {
+            DbgPrint("branch address = %p \n", guest_rip);
 
-        DbgPrint(
-            "vcpu_data->guest_vmcb.save_state_area.gsbase  = %p \n",
-            vcpu_data->guest_vmcb.save_state_area.GsBase);
-      
-        auto pcrb = (PETHREAD*)((_KPCR*)vcpu_data->guest_vmcb.save_state_area.GsBase)->CurrentPrcb;
-        
-        DbgPrint(
-            "((_KPCR*)vcpu_data->guest_vmcb.save_state_area.GsBase)->CurrentPrcb = %p \n",
-            pcrb);       
+            BranchTracer::log_buffer->Log(guest_rip);
 
-        auto thread_id = PsGetThreadId(*(pcrb + 1));
-        
-        DbgPrint("current ETHREAD ID = %p \n", thread_id);
+            return;
+        }
 
-        BranchTracer::thread_id = thread_id;
-
-        return;
-    }
-
-    if (BranchTracer::active == true)
-    {
-        BranchTracer::log_buffer->Log(guest_rip);
-    }
-    else if (dr6.SingleInstruction == 1) 
-    {
         vcpu_data->guest_vmcb.save_state_area.Rflags &= (~((uint64_t)1 << RFLAGS_TRAP_FLAG_BIT));
+        vcpu_data->guest_vmcb.save_state_area.DbgCtl |= (1 << IA32_DEBUGCTL_BTF_BIT);
 
         /*	single-step the sandboxed read/write in the ncr3 that allows all pages to be executable	*/
 
@@ -57,6 +36,4 @@ void HandleDebugException(VcpuData* vcpu_data, GeneralRegisters* guest_ctx)
     {
         InjectException(vcpu_data, EXCEPTION_VECTOR::Debug, FALSE, 0);
     }
-
-    __writecr3(vmroot_cr3);
 }

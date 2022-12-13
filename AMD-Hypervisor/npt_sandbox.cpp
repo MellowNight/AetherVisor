@@ -24,7 +24,7 @@ namespace Sandbox
 		sandbox_page_count = 0;
 	}
 
-	void InstructionInstrumentation(VcpuData* vcpu_data, uintptr_t guest_rip, GeneralRegisters* guest_regs, SandboxHookId handler, bool is_kernel)
+	void InstructionInstrumentation(VcpuData* vcpu_data, uintptr_t guest_rip, GuestRegisters* guest_regs, SandboxHookId handler, bool is_kernel)
 	{
 		auto vmroot_cr3 = __readcr3();
 

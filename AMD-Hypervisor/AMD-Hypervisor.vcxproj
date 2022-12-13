@@ -179,7 +179,6 @@
   <ItemGroup>
     <ClInclude Include="amd_defs.h" />
     <ClInclude Include="branch_tracer.h" />
-    <ClInclude Include="db_exception.h" />
     <ClInclude Include="disassembly.h" />
     <ClInclude Include="hypervisor.h" />
     <ClInclude Include="ia32.h" />
@@ -201,6 +200,7 @@
     <ClInclude Include="vmexit.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bp_exception.cpp" />
     <ClCompile Include="branch_tracer.cpp" />
     <ClCompile Include="db_exception.cpp" />
     <ClCompile Include="disassembly.cpp" />

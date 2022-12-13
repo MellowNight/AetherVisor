@@ -75,6 +75,7 @@ bool VirtualizeAllProcessors()
 		}
 	}
 
+	// SwapContextHook::Init();
 	NPTHooks::CleanupNptHooksOnExit();
 }
 
@@ -87,7 +88,6 @@ int Initialize()
 
 	Sandbox::Init();
 	NPTHooks::Init();
-	SwapContextHook::Init();
 
 	return 0;
 }

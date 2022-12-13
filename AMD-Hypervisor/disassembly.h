@@ -26,7 +26,7 @@ namespace Disasm
 
 	void MyRegContextToZydisRegContext(
 		VcpuData* vcpu_data, 
-		GeneralRegisters* guest_regs, 
+		GuestRegisters* guest_regs, 
 		ZydisRegisterContext* context
 	);
 

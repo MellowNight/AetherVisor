@@ -226,9 +226,8 @@ struct SegmentAttribute
     };
 };
 
-#define INTERCEPT_WRITECR3_SHIFT 19
 
-struct GeneralRegisters
+struct GuestRegisters
 {
     UINT64  r15;
     UINT64  r14;

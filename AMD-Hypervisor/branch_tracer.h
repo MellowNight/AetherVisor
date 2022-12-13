@@ -4,14 +4,15 @@
 #include "portable_executable.h"
 #include "vmexit.h"
 #include "utils.h"
+#include "npt_hook.h"
 
 namespace BranchTracer
 {
 	void Init(VcpuData* vcpu_data, uintptr_t start_addr, uintptr_t log_buffer, int log_buffer_size);
 
-	void Resume(VcpuData* vcpu_data);
+	void Start(VcpuData* vcpu_data);
 	void Stop(VcpuData* vcpu_data);
-	void Resume();
+	void Start();
 
 	void Init(VcpuData* vcpu_data, uintptr_t start_addr, uintptr_t out_buffer);
 
@@ -20,6 +21,7 @@ namespace BranchTracer
 
 	extern uintptr_t start_address;
 	extern HANDLE thread_id;
+	extern NPTHooks::NptHook* capture_thread_bp;	/*	stealth breakpoint to capture the thread executing a function	*/
 
 	struct BranchLog
 	{

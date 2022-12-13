@@ -2,8 +2,8 @@
 #include "forte_api.h"
 #include "ia32.h"
 
-void (*sandbox_execute_handler)(GeneralRegisters* registers, void* return_address, void* o_guest_rip) = NULL;
-void (*sandbox_mem_access_handler)(GeneralRegisters* registers, void* o_guest_rip) = NULL;
+void (*sandbox_execute_handler)(GuestRegisters* registers, void* return_address, void* o_guest_rip) = NULL;
+void (*sandbox_mem_access_handler)(GuestRegisters* registers, void* o_guest_rip) = NULL;
 
 /*  parameter order: rcx, rdx, r8, r9, r12, r11  */
 
@@ -39,28 +39,17 @@ namespace BVM
 
         log_buffer = new BranchLog{ log_size };
 
+        SetNptHook((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox, NULL);
+
         svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, log_buffer);
-
-        /*  place breakpoint to capture ETHREAD  */
-
-        DR7 dr7;
-        dr7.Flags = __readdr(7);
-
-        dr7.GlobalBreakpoint0 = 1;
-        dr7.Length0 = 0;
-        dr7.ReadWrite0 = 0;
-
-        __writedr(7, dr7.Flags);
-
-        __writedr(0, (uintptr_t)start_addr);
     }
 
-    void SandboxMemAccessHandler(GeneralRegisters* registers, void* o_guest_rip)
+    void SandboxMemAccessHandler(GuestRegisters* registers, void* o_guest_rip)
     {
         sandbox_mem_access_handler(registers, o_guest_rip);
     }
 
-    void SandboxExecuteHandler(GeneralRegisters* registers, void* return_address, void* o_guest_rip)
+    void SandboxExecuteHandler(GuestRegisters* registers, void* return_address, void* o_guest_rip)
     {
         sandbox_execute_handler(registers, return_address, o_guest_rip);
     }

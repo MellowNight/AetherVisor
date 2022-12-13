@@ -8,7 +8,7 @@
 
     Parameters are passed in the order of rdx, r8, r9, r12, r11
 */
-void HandleVmmcall(VcpuData* vcpu_data, GeneralRegisters* guest_ctx, bool* EndVM)
+void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
 {
     auto id = guest_ctx->rcx;
 

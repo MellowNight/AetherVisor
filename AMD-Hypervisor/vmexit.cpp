@@ -1,6 +1,5 @@
 #include "vmexit.h"
 #include "npt_sandbox.h"
-#include "db_exception.h"
 #include "msr.h"
 #include "disassembly.h"
 
@@ -21,7 +20,7 @@ void InjectException(VcpuData* core_data, int vector, bool push_error_code, int 
     core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
 }
 
-extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegisters)
+extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 {
     /*	load host extra state	*/
 
@@ -33,12 +32,13 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
     {
         case VMEXIT::MSR: 
         {
-            HandleMsrExit(vcpu_data, GuestRegisters);
+            HandleMsrExit(vcpu_data, guest_ctx);
             break;
         }
         case VMEXIT::DB:
-        {
-            HandleDebugException(vcpu_data, GuestRegisters);
+        {  
+            HandleDebugException(vcpu_data, guest_ctx);
+
             break;
         }
         case VMEXIT::VMRUN: 
@@ -48,21 +48,28 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
         }
         case VMEXIT::VMMCALL: 
         {            
-            HandleVmmcall(vcpu_data, GuestRegisters, &end_hypervisor);
+            HandleVmmcall(vcpu_data, guest_ctx, &end_hypervisor);
+            break;
+        }
+        case VMEXIT::BP:
+        {     
+            HandleBreakpoint(vcpu_data, guest_ctx);
+
             break;
         }
         case VMEXIT::NPF:
-        {
-            HandleNestedPageFault(vcpu_data, GuestRegisters);
+        {        
+            HandleNestedPageFault(vcpu_data, guest_ctx);
+
             break;
         }
         case VMEXIT::INVALID: 
         {
-            SegmentAttribute CsAttrib;
+            SegmentAttribute cs_attrib;
 
-            CsAttrib.as_uint16 = vcpu_data->guest_vmcb.save_state_area.CsAttrib;
+            cs_attrib.as_uint16 = vcpu_data->guest_vmcb.save_state_area.CsAttrib;
 
-            IsCoreReadyForVmrun(&vcpu_data->guest_vmcb, CsAttrib);
+            IsCoreReadyForVmrun(&vcpu_data->guest_vmcb, cs_attrib);
 
             break;
         }
@@ -116,8 +123,8 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GeneralRegisters* GuestRegiste
         __writemsr(MSR::EFER, msr.flags);
         __writeeflags(vcpu_data->guest_vmcb.save_state_area.Rflags);
 
-        GuestRegisters->rcx = vcpu_data->guest_vmcb.save_state_area.Rsp;
-        GuestRegisters->rbx = vcpu_data->guest_vmcb.control_area.NRip;
+        guest_ctx->rcx = vcpu_data->guest_vmcb.save_state_area.Rsp;
+        guest_ctx->rbx = vcpu_data->guest_vmcb.control_area.NRip;
 
         Logger::Get()->Log("ending hypervisor... \n");
     }
