@@ -30,7 +30,7 @@ namespace Sandbox
 
 		if (!is_kernel)
 		{
-			__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+			__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
 		}
 
 		ZydisDecodedOperand operands[5] = { 0 };
@@ -114,7 +114,7 @@ namespace Sandbox
 
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
+		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3.Flags);
 
 		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
@@ -155,7 +155,7 @@ namespace Sandbox
 
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
+		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3.Flags);
 
 		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 

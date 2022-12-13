@@ -54,16 +54,17 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
     {
         auto vmroot_cr3 = __readcr3();
 
-        __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+        __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
 
         NPTHooks::ForEachHook(
-            [](NPTHooks::NptHook* hook_entry, void* data) -> bool 
-            {
-                if (hook_entry->tag == (uintptr_t)data)
+            [](auto hook_entry, auto data)-> auto {
+
+                if (hook_entry->address == data)
                 {
-                    NPTHooks::UnsetHook(hook_entry);
+                    UnsetHook(hook_entry);
                 }
-                return true;
+
+                return false;
             },
             (void*)guest_ctx->rdx
         );
@@ -75,7 +76,7 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
     case VMMCALL_ID::set_npt_hook:
     {			
         NPTHooks::SetNptHook(vcpu_data, (void*)guest_ctx->rdx, (uint8_t*)guest_ctx->r8, 
-            guest_ctx->r9, guest_ctx->r12, guest_ctx->r11);
+            guest_ctx->r9, guest_ctx->r12);
 
         break;
     }

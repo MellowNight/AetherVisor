@@ -3890,9 +3890,9 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(314,6): w
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(357,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(398,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(425,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(89,41): warning C4389: '==': signed/unsigned mismatch
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(106,9): warning C4189: 'pte': local variable is initialized but not referenced
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(240,11): warning C4189: 'Pte': local variable is initialized but not referenced
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(90,41): warning C4389: '==': signed/unsigned mismatch
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(107,9): warning C4189: 'pte': local variable is initialized but not referenced
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(241,11): warning C4189: 'Pte': local variable is initialized but not referenced
   swapcontext_hook.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -5405,9 +5405,7 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(239,10): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(259,10): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall.cpp(49,78): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall.cpp(62,37): warning C4389: '==': signed/unsigned mismatch
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall.cpp(78,53): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall.cpp(78,37): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall.cpp(79,37): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
   Generating Code...
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\utils.cpp(183): warning C4715: 'Utils::GetProcessId': not all control paths return a value
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(80): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value

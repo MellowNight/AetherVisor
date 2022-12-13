@@ -54,11 +54,11 @@ namespace NPTHooks
 
 	/*	IMPORTANT: if you want to set a hook in a globally mapped DLL such as ntdll.dll, you must trigger copy on write first!	*/
 
-	NptHook* SetNptHook(VcpuData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t ncr3_id, int32_t tag)
+	NptHook* SetNptHook(VcpuData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t ncr3_id)
 	{
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
+		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3.Flags);
 
 		bool reused_hook = false;
 
@@ -78,8 +78,8 @@ namespace NPTHooks
 		hook_count += 1;
 
 		hook_entry->active = true;
-		hook_entry->tag = tag;
-		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
+		hook_entry->address = address;
+		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3.Flags;
 		hook_entry->noexecute_ncr3 = Hypervisor::Get()->ncr3_dirs[noexecute];
 
 		/*	get the guest pte and physical address of the hooked page	*/

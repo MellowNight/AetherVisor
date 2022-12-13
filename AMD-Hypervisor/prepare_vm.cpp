@@ -252,7 +252,7 @@ void SetupMSRPM(VcpuData* core_data)
 
 void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 {
-	core_data->guest_vmcb.save_state_area.Rflags = __readeflags();
+	core_data->guest_vmcb.save_state_area.Rflags.Flags = __readeflags();
 
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
@@ -296,10 +296,10 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 ///	cr4.Flags &= ~(1UL << 23);
 	__writecr4(cr4.Flags);
 
-	core_data->guest_vmcb.save_state_area.Cr0 = __readcr0();
+	core_data->guest_vmcb.save_state_area.Cr0.Flags = __readcr0();
 	core_data->guest_vmcb.save_state_area.Cr2 = __readcr2();
-	core_data->guest_vmcb.save_state_area.Cr3 = __readcr3();
-	core_data->guest_vmcb.save_state_area.Cr4 = __readcr4(); 
+	core_data->guest_vmcb.save_state_area.Cr3.Flags = __readcr3();
+	core_data->guest_vmcb.save_state_area.Cr4.Flags = __readcr4();
 
 	core_data->guest_vmcb.save_state_area.Rip = context_record->Rip;
 	core_data->guest_vmcb.save_state_area.Rax = context_record->Rax;

@@ -6,12 +6,11 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 {
     auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
-    DR6 dr6;
-    dr6.Flags = vcpu_data->guest_vmcb.save_state_area.Dr6;
+    DR6 dr6 = vcpu_data->guest_vmcb.save_state_area.Dr6;
 
     if (dr6.SingleInstruction == 1) 
     {
-        if (BranchTracer::active == true && IA32_DEBUGCTL_BTF(vcpu_data->guest_vmcb.save_state_area.DbgCtl))
+        if (BranchTracer::active == true && vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf)
         {
             DbgPrint("branch address = %p \n", guest_rip);
 
@@ -20,8 +19,8 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
             return;
         }
 
-        vcpu_data->guest_vmcb.save_state_area.Rflags &= (~((uint64_t)1 << RFLAGS_TRAP_FLAG_BIT));
-        vcpu_data->guest_vmcb.save_state_area.DbgCtl |= (1 << IA32_DEBUGCTL_BTF_BIT);
+        vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 0;
+        vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = 1;
 
         /*	single-step the sandboxed read/write in the ncr3 that allows all pages to be executable	*/
 

@@ -86,7 +86,7 @@ namespace BVM
 
     void TraceFunction(uint8_t* start_addr);
 
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id, uintptr_t tag);
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id);
 
     int SandboxPage(uintptr_t address, uintptr_t tag);
 
@@ -96,7 +96,7 @@ namespace BVM
 
     void RegisterSandboxHandler(SandboxHookId handler_id, void* address);
 
-    int RemoveNptHook(int32_t tag);
+    int RemoveNptHook(uintptr_t address);
 
     int DisableHv();
 };

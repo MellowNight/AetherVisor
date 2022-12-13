@@ -16,7 +16,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 
 	int insn_len = 10;
 
-	/*	handle cases where an instruction is split across 2 pages (using single step is better here)	*/
+	/*	handle cases where an instruction is split across 2 pages (using single step is better here tbh)	*/
 
 	if (PAGE_ALIGN(guest_rip + insn_len) != PAGE_ALIGN(guest_rip))
 	{
@@ -38,9 +38,10 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 
 			switch_ncr3 = false;
 		}
+		auto guest_cr3 = vcpu_data->guest_vmcb.save_state_area.Cr3.Flags;
 
 		auto page1_physical = faulting_physical.QuadPart;
-		auto page2_physical = PageUtils::GetPte((void*)(guest_rip + insn_len), vcpu_data->guest_vmcb.save_state_area.Cr3)->PageFrameNumber << PAGE_SHIFT;
+		auto page2_physical = PageUtils::GetPte((void*)(guest_rip + insn_len), guest_cr3)->PageFrameNumber << PAGE_SHIFT;
 
 		PageUtils::GetPte((void*)page1_physical, ncr3.QuadPart)->ExecuteDisable = 0;
 		PageUtils::GetPte((void*)page2_physical, ncr3.QuadPart)->ExecuteDisable = 0;
@@ -73,7 +74,7 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 	if (exit_info1.fields.valid == 0)
 	{
 		auto denied_read_page = Sandbox::ForEachHook(
-			[](Sandbox::SandboxPage* hook_entry, void* data) -> bool {
+			[](auto hook_entry, auto data) -> auto {
 
 				if (data == hook_entry->guest_physical && hook_entry->unreadable)
 				{
@@ -92,8 +93,8 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 
 			/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
 
-			vcpu_data->guest_vmcb.save_state_area.Rflags |= RFLAGS_TRAP_FLAG_BIT;
-			vcpu_data->guest_vmcb.save_state_area.DbgCtl &= (~((uint64_t)1 << IA32_DEBUGCTL_BTF_BIT));
+			vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 1;
+			vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = 0;
 
 			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}
@@ -115,7 +116,7 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 		{
 			/*  move out of sandbox context and set RIP to the instrumentation function  */
 
-			auto is_system_page = (vcpu_data->guest_vmcb.save_state_area.Cr3 == __readcr3()) ? true : false;
+			auto is_system_page = (vcpu_data->guest_vmcb.save_state_area.Cr3.Flags == __readcr3()) ? true : false;
 
 			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, Sandbox::execute_handler, is_system_page);
 		}

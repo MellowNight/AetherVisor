@@ -140,12 +140,12 @@ typedef struct VmcbSaveStateArea
     UINT32 Reserved2;                   // +0x0cc
     UINT64 Efer;                        // +0x0d0
     UINT8 Reserved3[0x148 - 0x0d8];     // +0x0d8
-    UINT64 Cr4;                         // +0x148
-    UINT64 Cr3;                         // +0x150
-    UINT64 Cr0;                         // +0x158
-    UINT64 Dr7;                         // +0x160
-    UINT64 Dr6;                         // +0x168
-    UINT64 Rflags;                      // +0x170
+    CR4 Cr4;                         // +0x148
+    CR3 Cr3;                         // +0x150
+    CR0 Cr0;                         // +0x158
+    DR7 Dr7;                         // +0x160
+    DR6 Dr6;                         // +0x168
+    RFLAGS Rflags;                      // +0x170
     UINT64 Rip;                         // +0x178
     UINT8 Reserved4[0x1d8 - 0x180];     // +0x180
     UINT64 Rsp;                         // +0x1d8
@@ -162,7 +162,7 @@ typedef struct VmcbSaveStateArea
     UINT64 Cr2;                         // +0x240
     UINT8 Reserved6[0x268 - 0x248];     // +0x248
     UINT64 GPat;                        // +0x268
-    UINT64 DbgCtl;                      // +0x270
+    IA32_DEBUGCTL_REGISTER DbgCtl;      // +0x270
     UINT64 BrFrom;                      // +0x278
     UINT64 BrTo;                        // +0x280
     UINT64 LastExcepFrom;               // +0x288

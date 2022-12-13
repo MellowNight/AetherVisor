@@ -21,13 +21,11 @@ namespace BranchTracer
 
 	BranchLog* log_buffer;
 
-	NPTHooks::NptHook* capture_thread_bp;
-
 	void Init(VcpuData* vcpu_data, uintptr_t start_addr, uintptr_t out_buffer)
 	{
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+		__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
 
 		initialized = true;
 
@@ -53,14 +51,9 @@ namespace BranchTracer
 
 		/*  place breakpoint to capture ETHREAD  */
 
-		DR7 dr7;
-		dr7.Flags = vcpu_data->guest_vmcb.save_state_area.Dr7;
-
-		dr7.GlobalBreakpoint0 = 1;
-		dr7.Length0 = 0;
-		dr7.ReadWrite0 = 0;
-
-		vcpu_data->guest_vmcb.save_state_area.Dr7 = dr7.Flags;
+		vcpu_data->guest_vmcb.save_state_area.Dr7.GlobalBreakpoint0 = 1;
+		vcpu_data->guest_vmcb.save_state_area.Dr7.Length0 = 0;
+		vcpu_data->guest_vmcb.save_state_area.Dr7.ReadWrite0 = 0;
 
 		__writedr(0, (uintptr_t)start_addr);
 
@@ -86,8 +79,8 @@ namespace BranchTracer
 
 		/*	BTF, trap flag, LBR stack enable	*/
 
-		vcpu_data->guest_vmcb.save_state_area.DbgCtl |= (1 << IA32_DEBUGCTL_BTF_BIT);
-		vcpu_data->guest_vmcb.save_state_area.Rflags |= (1 << RFLAGS_TRAP_FLAG_BIT);
+		vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = 1;
+		vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 1; 
 
 		DbgPrint("2 vcpu_data->guest_vmcb.save_state_area.DbgCtl %p \n", vcpu_data->guest_vmcb.save_state_area.DbgCtl);
 
@@ -122,7 +115,7 @@ namespace BranchTracer
 		/*	BTF, LBR stack, and trap flag disable	*/
 
 	//	vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
-		vcpu_data->guest_vmcb.save_state_area.DbgCtl &= (~((uint64_t)1 << IA32_DEBUGCTL_BTF_BIT));
-		vcpu_data->guest_vmcb.save_state_area.Rflags &= (~((uint64_t)1 << RFLAGS_TRAP_FLAG_BIT));
+		vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = 0;
+		vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 0;
 	}
 }

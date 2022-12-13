@@ -23,8 +23,8 @@ namespace NPTHooks
 	
 		uintptr_t process_cr3;			/*	process where this hook resides in			*/
 
-		int64_t tag;					/*	identify this hook		*/
-	
+		void* address;					/*	virtual address of hook			*/
+
 		bool active;					/*	is this hook active?	*/
 
 		uintptr_t noexecute_ncr3;
@@ -48,8 +48,7 @@ namespace NPTHooks
 		void* address, 
 		uint8_t* patch, 
 		size_t patch_len, 
-		int32_t noexecute_cr3_id,
-		int32_t tag = 0
+		int32_t noexecute_cr3_id
 	);
 
 	NptHook* ForEachHook(

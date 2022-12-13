@@ -8,7 +8,7 @@ namespace Disasm
 		context->values[ZYDIS_REGISTER_RAX] = vcpu_data->guest_vmcb.save_state_area.Rax;
 		context->values[ZYDIS_REGISTER_RSP] = vcpu_data->guest_vmcb.save_state_area.Rsp;
 		context->values[ZYDIS_REGISTER_RIP] = vcpu_data->guest_vmcb.save_state_area.Rip;
-		context->values[ZYDIS_REGISTER_RFLAGS] = vcpu_data->guest_vmcb.save_state_area.Rflags;
+		context->values[ZYDIS_REGISTER_RFLAGS] = vcpu_data->guest_vmcb.save_state_area.Rflags.Flags;
 		context->values[ZYDIS_REGISTER_RCX] = guest_regs->rcx;
 		context->values[ZYDIS_REGISTER_RDX] = guest_regs->rdx;
 		context->values[ZYDIS_REGISTER_RBX] = guest_regs->rbx;

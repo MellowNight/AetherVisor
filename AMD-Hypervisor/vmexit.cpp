@@ -109,7 +109,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
             8. return and jump back
         */
         
-        __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3);
+        __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
         __svm_vmload(vcpu_data->guest_vmcb_physicaladdr);
 
         __svm_stgi();
@@ -121,7 +121,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
         msr.svme = 0;
 
         __writemsr(MSR::EFER, msr.flags);
-        __writeeflags(vcpu_data->guest_vmcb.save_state_area.Rflags);
+        __writeeflags(vcpu_data->guest_vmcb.save_state_area.Rflags.Flags);
 
         guest_ctx->rcx = vcpu_data->guest_vmcb.save_state_area.Rsp;
         guest_ctx->rbx = vcpu_data->guest_vmcb.control_area.NRip;

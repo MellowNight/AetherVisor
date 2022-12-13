@@ -21,7 +21,6 @@ namespace BranchTracer
 
 	extern uintptr_t start_address;
 	extern HANDLE thread_id;
-	extern NPTHooks::NptHook* capture_thread_bp;	/*	stealth breakpoint to capture the thread executing a function	*/
 
 	struct BranchLog
 	{

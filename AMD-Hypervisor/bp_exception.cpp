@@ -8,23 +8,24 @@ void HandleBreakpoint(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
     DbgPrint("vcpu_data->guest_vmcb.save_state_area.Rip = %p \n", guest_rip);
 
-    if (BranchTracer::initialized && guest_rip == BranchTracer::start_address&& !BranchTracer::thread_id)
+    if (BranchTracer::initialized && guest_rip == BranchTracer::start_address && !BranchTracer::thread_id)
     {
-        vcpu_data->guest_vmcb.save_state_area.Rip -= 1;
+        NPTHooks::ForEachHook(
+            [](auto hook_entry, auto data)-> auto {
 
-        NPTHooks::UnsetHook(BranchTracer::capture_thread_bp);
+                if (hook_entry->address == data)
+                {
+                    UnsetHook(hook_entry);
+                }
+
+                return false;
+            },
+            (void*)guest_rip
+        );
 
         /*  capture the ID of the target thread */
 
-        auto pcrb = (PETHREAD*)((_KPCR*)__readmsr(0xC0000101))->CurrentPrcb;
-
-        DbgPrint("((_KPCR*)GsBase)->CurrentPrcb = %p \n", pcrb);
-
-        auto thread_id = PsGetThreadId(*(pcrb + 1));
-
-        BranchTracer::thread_id = thread_id;
-
-        DbgPrint(" BranchTracer::thread_id = %p PsGetCurrentThreadId = %p \n", BranchTracer::thread_id, PsGetCurrentThreadId());
+        BranchTracer::thread_id = PsGetCurrentThreadId();;
 
         int processor_id = KeGetCurrentProcessorNumber();
 

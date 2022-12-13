@@ -39,7 +39,7 @@ namespace BVM
 
         log_buffer = new BranchLog{ log_size };
 
-        SetNptHook((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox, NULL);
+        SetNptHook((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox);
 
         svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, log_buffer);
     }
@@ -73,11 +73,11 @@ namespace BVM
         svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, page_addr);
     }
 
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, uintptr_t tag)
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id)
     {
         TriggerCOWAndPageIn((uint8_t*)address);
 
-        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, noexecute_cr3_id, tag);
+        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, ncr3_id);
 
         return 0;
     }
@@ -99,9 +99,9 @@ namespace BVM
         }
     }
 
-    int RemoveNptHook(int32_t tag)
+    int RemoveNptHook(uintptr_t address)
     {
-        svm_vmmcall(VMMCALL_ID::remove_npt_hook, tag);
+        svm_vmmcall(VMMCALL_ID::remove_npt_hook, address);
 
         return 0;
     }
