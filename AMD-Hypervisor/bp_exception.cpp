@@ -25,15 +25,24 @@ void HandleBreakpoint(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
         /*  capture the ID of the target thread */
 
+        BranchTracer::Start(vcpu_data);
+
+        __debugbreak();
+
         BranchTracer::thread_id = PsGetCurrentThreadId();;
+        __debugbreak();
 
         int processor_id = KeGetCurrentProcessorNumber();
+        __debugbreak();
 
         KAFFINITY affinity = Utils::Exponent(2, processor_id);
+        __debugbreak();
 
-        KeSetSystemAffinityThread(affinity);
 
-        BranchTracer::Start(vcpu_data);
+        KeSetSystemAffinityThread(affinity);      
+        
+        __debugbreak();
+
     }
     else
     {
