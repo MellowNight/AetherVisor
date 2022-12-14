@@ -42,6 +42,7 @@ bool VirtualizeAllProcessors()
 		auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
 
 		RtlCaptureContext(reg_context);
+		DbgPrint("[SETUP] amount of active processors %i \n", 4);
 
 		if (Hypervisor::Get()->IsHypervisorPresent(i) == false)
 		{

@@ -62,60 +62,59 @@ namespace BranchTracer
 
 	void Start(VcpuData* vcpu_data)
 	{
-		int cpuinfo[4];
-
-		__cpuid(cpuinfo, CPUID::svm_features);
-
-		if (!(cpuinfo[3] & (1 << 1)))
-		{
-			DbgPrint("CPUID::svm_features::EDX %p does not support Last Branch Record Virtualization! \n", cpuinfo[3]);
-
-			KeBugCheckEx(MANUALLY_INITIATED_CRASH, cpuinfo[3], 0, 0, 0);
-		}
-
 		active = true;
 
-		DbgPrint("1 vcpu_data->guest_vmcb.save_state_area.DbgCtl %p \n", vcpu_data->guest_vmcb.save_state_area.DbgCtl);
+		Resume(vcpu_data);
+	}
 
-		/*	BTF, trap flag, LBR stack enable	*/
 
-		vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = 1;
-		vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 1; 
+	void Resume(VcpuData* vcpu_data)
+	{
+		if (active)
+		{
+			int cpuinfo[4];
 
-		DbgPrint("2 vcpu_data->guest_vmcb.save_state_area.DbgCtl %p \n", vcpu_data->guest_vmcb.save_state_area.DbgCtl);
+			__cpuid(cpuinfo, CPUID::svm_features);
+
+			if (!(cpuinfo[3] & (1 << 1)))
+			{
+				DbgPrint("CPUID::svm_features::EDX %p does not support Last Branch Record Virtualization! \n", cpuinfo[3]);
+
+				KeBugCheckEx(MANUALLY_INITIATED_CRASH, cpuinfo[3], 0, 0, 0);
+			}
+
+			DbgPrint("1 vcpu_data->guest_vmcb.save_state_area.DbgCtl %p \n", vcpu_data->guest_vmcb.save_state_area.DbgCtl);
+
+			/*	BTF, trap flag, LBR stack enable	*/
+
+			vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = 1;
+			vcpu_data->guest_vmcb.save_state_area.Dr7.Flags |= (1 << 9);
+			vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 1;
+
+			DbgPrint("2 vcpu_data->guest_vmcb.save_state_area.DbgCtl %p \n", vcpu_data->guest_vmcb.save_state_area.DbgCtl);
+
+			//	vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
+		}
+	}
+
+	void Pause(VcpuData* vcpu_data)
+	{
+		if (active)
+		{
+			/*	BTF, LBR stack, and trap flag disable	*/
 
 		//	vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
+			vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = 0;
+			vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 0;
+			vcpu_data->guest_vmcb.save_state_area.Dr7.Flags &= ~((int64_t)1 << 9);
+		}
 	}
 
-	void Start()
+	void Stop(VcpuData* vcpu_data)
 	{
-		/*	BTF and trap flag set	*/
+		Pause(vcpu_data);
 
-		active = true;
-
-		IA32_DEBUGCTL_REGISTER debugctl;
-
-		debugctl.Flags = __readmsr(IA32_DEBUGCTL);
-		debugctl.Btf = 1;
-
-		__writemsr(IA32_DEBUGCTL, debugctl.Flags);
-
-		RFLAGS flags;
-
-		flags.Flags = __readeflags();
-		flags.TrapFlag = 1;
-
-		__writeeflags(flags.Flags);
-	}
-
-	void BranchTracer::Stop(VcpuData* vcpu_data)
-	{
 		active = false;
-
-		/*	BTF, LBR stack, and trap flag disable	*/
-
-	//	vcpu_data->guest_vmcb.save_state_area.DBGEXTNCFG |= (1 << 6);
-		vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = 0;
-		vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 0;
 	}
+
 }

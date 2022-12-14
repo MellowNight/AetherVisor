@@ -253,6 +253,8 @@ void SetupMSRPM(VcpuData* core_data)
 void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 {
 	core_data->guest_vmcb.save_state_area.Rflags.Flags = __readeflags();
+	core_data->guest_vmcb.save_state_area.Dr7.Flags = __readdr(7);
+	core_data->guest_vmcb.save_state_area.DbgCtl.Flags = __readmsr(IA32_DEBUGCTL);
 
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;

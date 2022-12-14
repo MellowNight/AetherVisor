@@ -1801,9 +1801,9 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(162,10): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(239,10): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(259,10): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(95,38): warning C4100: 'DriverObject': unreferenced formal parameter
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(102,66): warning C4100: 'RegistryPath': unreferenced formal parameter
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(102,36): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(96,38): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(103,66): warning C4100: 'RegistryPath': unreferenced formal parameter
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(103,36): warning C4100: 'DriverObject': unreferenced formal parameter
   logging.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -3890,9 +3890,14 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(314,6): w
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(357,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(398,6): warning C4201: nonstandard extension used: nameless struct/union
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(425,6): warning C4201: nonstandard extension used: nameless struct/union
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(90,41): warning C4389: '==': signed/unsigned mismatch
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(107,9): warning C4189: 'pte': local variable is initialized but not referenced
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(241,11): warning C4189: 'Pte': local variable is initialized but not referenced
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(89,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(136,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(162,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(239,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(259,10): warning C4201: nonstandard extension used: nameless struct/union
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(91,41): warning C4389: '==': signed/unsigned mismatch
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(109,9): warning C4189: 'pte': local variable is initialized but not referenced
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\npt.cpp(243,11): warning C4189: 'Pte': local variable is initialized but not referenced
   swapcontext_hook.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -4800,11 +4805,11 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(425,6): w
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(221,52): warning C4242: '=': conversion from 'int' to 'uint8_t', possible loss of data
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(240,63): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(250,36): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(273,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(274,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(281,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(282,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(382,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(275,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(276,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(283,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(284,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(384,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
   vmexit.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -5408,7 +5413,7 @@ C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall.cpp(49,78): 
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\vmmcall.cpp(79,37): warning C4244: 'argument': conversion from 'UINT64' to 'int32_t', possible loss of data
   Generating Code...
 C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\utils.cpp(183): warning C4715: 'Utils::GetProcessId': not all control paths return a value
-C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(80): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
+C:\Users\user123\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(81): warning C4715: 'VirtualizeAllProcessors': not all control paths return a value
 Zydis.lib(Decoder.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Decoder.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
 Zydis.lib(Utils.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Utils.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info
 Zydis.lib(Register.obj) : warning LNK4099: PDB 'Zydis.pdb' was not found with 'Zydis.lib(Register.obj)' or at 'C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\Zydis.pdb'; linking object as if no debug info

@@ -12,7 +12,11 @@ namespace BranchTracer
 
 	void Start(VcpuData* vcpu_data);
 	void Stop(VcpuData* vcpu_data);
-	void Start();
+	
+
+	void Pause(VcpuData* vcpu_data);
+	void Resume(VcpuData* vcpu_data);
+
 
 	void Init(VcpuData* vcpu_data, uintptr_t start_addr, uintptr_t out_buffer);
 

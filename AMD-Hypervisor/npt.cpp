@@ -3,6 +3,7 @@
 #include "logging.h"
 #include "hypervisor.h"
 #include "paging_utils.h"
+#include "branch_tracer.h"
 
 #pragma optimize( "", off )
 
@@ -93,8 +94,9 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 
 			/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
 
+			BranchTracer::Pause(vcpu_data);
+
 			vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 1;
-			vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = 0;
 
 			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}

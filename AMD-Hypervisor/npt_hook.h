@@ -16,6 +16,7 @@ namespace NPTHooks
 		void* hooked_page;				/*	guest virtual address of the hooked page	*/
 
 		PT_ENTRY_64* hookless_npte;		/*	nested PTE of page without hooks			*/
+		PT_ENTRY_64* hooked_npte;		/*	nested PTE of page without hooks			*/
 		PT_ENTRY_64* hooked_pte;		/*	guest PTE of the copy page with hooks		*/
 		PT_ENTRY_64* guest_pte;			/*	guest PTE of the original page				*/
 		
@@ -25,9 +26,7 @@ namespace NPTHooks
 
 		void* address;					/*	virtual address of hook			*/
 
-		bool active;					/*	is this hook active?	*/
-
-		uintptr_t noexecute_ncr3;
+		int32_t ncr3_id;				/*	NCR3 directory that this hook resides in	*/
 
 		NptHook()
 		{

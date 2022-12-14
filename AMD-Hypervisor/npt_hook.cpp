@@ -42,8 +42,8 @@ namespace NPTHooks
 	void UnsetHook(NptHook* hook_entry)
 	{
 		hook_entry->hookless_npte->ExecuteDisable = 0;
+		hook_entry->hooked_npte->ExecuteDisable = 1;
 		hook_entry->process_cr3 = 0;
-		hook_entry->active = false;
 		hook_entry->guest_pte->ExecuteDisable = hook_entry->original_nx;
 
 		PageUtils::UnlockPages(hook_entry->mdl);
@@ -77,10 +77,9 @@ namespace NPTHooks
 
 		hook_count += 1;
 
-		hook_entry->active = true;
+		hook_entry->ncr3_id = ncr3_id;
 		hook_entry->address = address;
 		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3.Flags;
-		hook_entry->noexecute_ncr3 = Hypervisor::Get()->ncr3_dirs[noexecute];
 
 		/*	get the guest pte and physical address of the hooked page	*/
 
@@ -109,16 +108,16 @@ namespace NPTHooks
 
 		/*	get the nested pte of the guest physical address in the 2nd NCR3, and map it to our hook page	*/
 
-		auto hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[noexecute]);
+		hook_entry->hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[noexecute]);
 
 		if (address != patch && patch_len != PAGE_SIZE)
 		{
-			hooked_npte->PageFrameNumber = hook_entry->hooked_pte->PageFrameNumber;
+			hook_entry->hooked_npte->PageFrameNumber = hook_entry->hooked_pte->PageFrameNumber;
 		}
 
-		hooked_npte->ExecuteDisable = 0;
+		hook_entry->hooked_npte->ExecuteDisable = 0;
 		
-		auto hooked_copy = PageUtils::VirtualAddrFromPfn(hooked_npte->PageFrameNumber);
+		auto hooked_copy = PageUtils::VirtualAddrFromPfn(hook_entry->hooked_npte->PageFrameNumber);
 
 		auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
 
