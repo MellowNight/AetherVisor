@@ -12,7 +12,6 @@ namespace BranchTracer
 
 	void Start(VcpuData* vcpu_data);
 	void Stop(VcpuData* vcpu_data);
-	
 
 	void Pause(VcpuData* vcpu_data);
 	void Resume(VcpuData* vcpu_data);
@@ -22,6 +21,9 @@ namespace BranchTracer
 
 	extern bool active;	
 	extern bool initialized;
+
+	extern uintptr_t range_base;
+	extern uintptr_t range_size;
 
 	extern uintptr_t start_address;
 	extern HANDLE thread_id;

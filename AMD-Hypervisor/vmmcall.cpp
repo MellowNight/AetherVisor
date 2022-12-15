@@ -18,7 +18,7 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
     {				
         DbgPrint("VMMCALL_ID::start_branch_trace \n");
 
-        BranchTracer::Init(vcpu_data, guest_ctx->rdx, guest_ctx->r8);
+        BranchTracer::Init(vcpu_data, guest_ctx->rdx, guest_ctx->r8, guest_ctx->r9, guest_ctx->r12);
 
         break;
     }

@@ -12,6 +12,8 @@ namespace BranchTracer
 	bool initialized;
 
 	uintptr_t start_address;
+	uintptr_t range_base;
+	uintptr_t range_size;
 
 	HANDLE thread_id;
 
@@ -21,7 +23,7 @@ namespace BranchTracer
 
 	BranchLog* log_buffer;
 
-	void Init(VcpuData* vcpu_data, uintptr_t start_addr, uintptr_t out_buffer)
+	void Init(VcpuData* vcpu_data, uintptr_t start_addr, uintptr_t out_buffer, uintptr_t trace_range_base, uintptr_t trace_range_size)
 	{
 		auto vmroot_cr3 = __readcr3();
 
@@ -29,11 +31,12 @@ namespace BranchTracer
 
 		initialized = true;
 
+		log_buffer = (BranchLog*)out_buffer;
+		
+
 		SegmentAttribute attribute{ attribute.as_uint16 = vcpu_data->guest_vmcb.save_state_area.SsAttrib };
 
 		is_kernel = (attribute.fields.dpl == 0) ? true : false;
-
-		log_buffer = (BranchLog*)out_buffer;
 
 		DbgPrint("log_buffer  = %p \n", log_buffer);
 
@@ -45,6 +48,7 @@ namespace BranchTracer
 		{
 			mdl = PageUtils::LockPages((void*)log_buffer, IoReadAccess, UserMode, log_buffer->capacity);
 		}
+
 		DbgPrint("log_buffer  = %p \n", log_buffer);
 
 		start_address = start_addr;

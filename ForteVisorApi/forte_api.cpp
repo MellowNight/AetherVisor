@@ -33,7 +33,7 @@ namespace BVM
         WriteToReadOnly(address, &buffer, 1);
     }
 
-    void TraceFunction(uint8_t* start_addr)
+    void TraceFunction(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size)
     {
         auto log_size = 0x1000;
 
@@ -41,7 +41,7 @@ namespace BVM
 
         SetNptHook((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox);
 
-        svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, log_buffer);
+        svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, log_buffer, range_base, range_size);
     }
 
     void SandboxMemAccessHandler(GuestRegisters* registers, void* o_guest_rip)

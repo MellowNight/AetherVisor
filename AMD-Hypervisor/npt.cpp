@@ -116,12 +116,14 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 	{
 		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
-			/*  move out of sandbox context and set RIP to the instrumentation function  */
+			/*  call out of sandbox context and set RIP to the instrumentation function  */
 
 			auto is_system_page = (vcpu_data->guest_vmcb.save_state_area.Cr3.Flags == __readcr3()) ? true : false;
 
 			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, Sandbox::execute_handler, is_system_page);
 		}
+
+		BranchTracer::Resume(vcpu_data);
 
 		auto sandbox_npte = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
