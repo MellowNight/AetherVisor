@@ -33,7 +33,7 @@ namespace Sandbox
 
 	extern int	sandbox_page_count;
 
-	void InstructionInstrumentation(
+	void InstrumentationHook(
 		VcpuData* vcpu_data,
 		uintptr_t guest_rip,
 		GuestRegisters* guest_regs,

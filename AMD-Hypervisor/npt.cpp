@@ -92,7 +92,10 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 		{
 			DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
 
-			/*	single-step the read/write in the ncr3 that allows all pages to be executable	*/
+			/*	
+				Single-step the read/write in the ncr3 that allows all pages to be executable.
+				Single-stepping mode => single-step on every instruction 
+			*/
 
 			BranchTracer::Pause(vcpu_data);
 
@@ -114,16 +117,19 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 
 	if (exit_info1.fields.execute == 1)
 	{
+		/*  Resume the branch tracer after an NCR3 switch, if the tracer is active.
+            Single-stepping mode => only #DB on branches 
+        */
+		BranchTracer::Resume(vcpu_data);
+
 		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
-			/*  call out of sandbox context and set RIP to the instrumentation function  */
+			/*  call out of sandbox context and set RIP to the execute instrumentation hook  */
 
 			auto is_system_page = (vcpu_data->guest_vmcb.save_state_area.Cr3.Flags == __readcr3()) ? true : false;
 
 			Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_registers, Sandbox::execute_handler, is_system_page);
 		}
-
-		BranchTracer::Resume(vcpu_data);
 
 		auto sandbox_npte = PageUtils::GetPte((void*)faulting_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
 

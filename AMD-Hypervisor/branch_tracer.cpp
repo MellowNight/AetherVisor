@@ -32,7 +32,6 @@ namespace BranchTracer
 		initialized = true;
 
 		log_buffer = (BranchLog*)out_buffer;
-		
 
 		SegmentAttribute attribute{ attribute.as_uint16 = vcpu_data->guest_vmcb.save_state_area.SsAttrib };
 

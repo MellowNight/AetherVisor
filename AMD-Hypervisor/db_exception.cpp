@@ -7,17 +7,25 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
     auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
     DR6 dr6 = vcpu_data->guest_vmcb.save_state_area.Dr6;
-
-  //  DbgPrint("vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf = %p \n", vcpu_data->guest_vmcb.save_state_area.DbgCtl.Btf);
-
+    
     if (dr6.SingleInstruction == 1) 
     {
         if (BranchTracer::active == true && (vcpu_data->guest_vmcb.save_state_area.Dr7.Flags & (1 << 9)))
         {
+            if (guest_rip > BranchTracer::range_base && guest_rip < BranchTracer::range_size + BranchTracer::range_base)
+            {
+                /*  Pause branch tracer after a branch outside of the specified range is executed.
+                    Single-stepping mode => completely disabled 
+                */
+
+                BranchTracer::Pause(vcpu_data);
+            }
+
             auto vmroot_cr3 = __readcr3();
+
             __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
 
-            DbgPrint("branch address = %p \n", guest_rip);
+            DbgPrint("LastBranchToIp LastBranchFromIp = %p \n", guest_rip);
 
             BranchTracer::log_buffer->Log(guest_rip);
 
@@ -26,7 +34,9 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
             return;
         }
 
-        /*	single-step the sandboxed read/write in the ncr3 that allows all pages to be executable	*/
+        /*  Transfer RIP to the read instruction instrumentation hook.
+        	Single-stepping mode => completely disabled 
+        */
 
         if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
         {
