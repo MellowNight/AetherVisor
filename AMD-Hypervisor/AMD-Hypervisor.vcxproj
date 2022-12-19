@@ -183,6 +183,7 @@
     <ClInclude Include="hypervisor.h" />
     <ClInclude Include="ia32.h" />
     <ClInclude Include="includes.h" />
+    <ClInclude Include="instrumentation_hook.h" />
     <ClInclude Include="kernel_exports.h" />
     <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
@@ -205,6 +206,7 @@
     <ClCompile Include="db_exception.cpp" />
     <ClCompile Include="disassembly.cpp" />
     <ClCompile Include="hypervisor.cpp" />
+    <ClCompile Include="instrumentation_hook.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="msr.cpp" />

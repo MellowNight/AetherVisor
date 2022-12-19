@@ -1,6 +1,7 @@
 #include "vmexit.h"
 #include "npt_sandbox.h"
 #include "branch_tracer.h"
+#include "instrumentation_hook.h"
 
 void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 {
@@ -10,9 +11,10 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
     
     if (dr6.SingleInstruction == 1) 
     {
-        if (BranchTracer::active == true && (vcpu_data->guest_vmcb.save_state_area.Dr7.Flags & (1 << 9)))
+        if (BranchTracer::active == true && (vcpu_data->guest_vmcb.save_state_area.Dr7.Flags & ((uint64_t)1 << 9)) && 
+            vcpu_data->guest_vmcb.save_state_area.Cr3.Flags == BranchTracer::process_cr3.Flags)
         {
-            if (guest_rip > BranchTracer::range_base && guest_rip < BranchTracer::range_size + BranchTracer::range_base)
+            if (guest_rip < BranchTracer::range_base || guest_rip > (BranchTracer::range_size + BranchTracer::range_base))
             {
                 /*  Pause branch tracer after a branch outside of the specified range is executed.
                     Single-stepping mode => completely disabled 
@@ -25,17 +27,24 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
             __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
 
-            DbgPrint("LastBranchToIp LastBranchFromIp = %p \n", guest_rip);
+            DbgPrint("LastBranchFromIP %p guest_rip = %p \n", vcpu_data->guest_vmcb.save_state_area.BrFrom, guest_rip);
 
-            BranchTracer::log_buffer->Log(guest_rip);
+            BranchTracer::log_buffer->Log(vcpu_data, guest_rip, vcpu_data->guest_vmcb.save_state_area.BrFrom);
 
             __writecr3(vmroot_cr3);
+
+            if (guest_rip == BranchTracer::stop_address)
+            {
+                BranchTracer::Stop(vcpu_data);
+
+                Instrumentation::InvokeHook(vcpu_data, Instrumentation::branch_trace_finished, false);
+            }
 
             return;
         }
 
-        /*  Transfer RIP to the read instruction instrumentation hook.
-        	Single-stepping mode => completely disabled 
+        /*  Transfer RIP to the instrumentation hook for read instructions.
+            Single-stepping mode => completely disabled
         */
 
         if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
@@ -44,7 +53,7 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
             DbgPrint("Finished single stepping %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
 
-            Sandbox::InstructionInstrumentation(vcpu_data, guest_rip, guest_ctx, Sandbox::readwrite_handler, false);
+            Instrumentation::InvokeHook(vcpu_data, Instrumentation::sandbox_readwrite, false);
         }
     }
     else      

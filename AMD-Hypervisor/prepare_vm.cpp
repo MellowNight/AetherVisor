@@ -264,6 +264,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
 	core_data->guest_vmcb.control_area.NpEnable = (1UL << 0);
 	core_data->guest_vmcb.control_area.LbrVirtualizationEnable |= (1UL << 0);
+	core_data->guest_vmcb.control_area.LbrVirtualizationEnable |= (1UL << 0);
 
 	DescriptorTableRegister	gdtr, idtr;
 
@@ -279,12 +280,10 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 
 	InterceptVector2 intercept_vector2 = { 0 };
 
-	// intercept_vector2.intercept_pf = 1;
 	intercept_vector2.intercept_bp = 1;
 	intercept_vector2.intercept_db = 1;
-//	intercept_vector2.intercept_db2 = 1;
 
-	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32; // ~(core_data->guest_vmcb.control_area.InterceptException & 0);
+	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32; 
 
 	/*	intercept MSR access	*/
 	

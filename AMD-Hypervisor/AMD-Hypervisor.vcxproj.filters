@@ -106,6 +106,9 @@
     <ClInclude Include="swapcontext_hook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="instrumentation_hook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -161,6 +164,9 @@
     </ClCompile>
     <ClCompile Include="bp_exception.cpp">
       <Filter>Source Files\vmexit handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="instrumentation_hook.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -31,6 +31,7 @@ struct TaskStateSegment
 };
 
 /*  from osdev wiki */
+
 struct InterruptDescriptor64 
 {
    uint16_t offset_1;        // offset bits 0..15
@@ -43,6 +44,7 @@ struct InterruptDescriptor64
 };
 
 /*  the vmcb structures are typed out by Satoshi Tanda @tandasat    */
+
 #pragma pack(1)
 struct VmcbControlArea
 {
@@ -87,8 +89,7 @@ struct VmcbControlArea
 };
 #pragma pack()
 
-static_assert(sizeof(VmcbControlArea) == 0x400,
-    "Vmcbcontrol_area Size Mismatch");
+static_assert(sizeof(VmcbControlArea) == 0x400, "Vmcbcontrol_area Size Mismatch");
 
 //
 // See "VMCB Layout, State Save Area"

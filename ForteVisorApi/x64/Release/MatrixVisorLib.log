@@ -2,6 +2,7 @@
   Assembling vmmcall.asm...
   pch.cpp
   forte_api.cpp
-C:\Users\user123\Documents\GitHub\ForteVisor\ForteVisorApi\forte_api.cpp(115,32): warning C4018: '<': signed/unsigned mismatch
-C:\Users\user123\Documents\GitHub\ForteVisor\ForteVisorApi\forte_api.cpp(119,55): warning C4244: 'argument': conversion from 'double' to 'DWORD_PTR', possible loss of data
+  utils.cpp
+C:\Users\user123\Documents\GitHub\ForteVisor\ForteVisorApi\utils.cpp(12,32): warning C4018: '<': signed/unsigned mismatch
+C:\Users\user123\Documents\GitHub\ForteVisor\ForteVisorApi\utils.cpp(16,55): warning C4244: 'argument': conversion from 'double' to 'DWORD_PTR', possible loss of data
   MatrixVisorLib.vcxproj -> C:\Users\user123\Documents\GitHub\ForteVisor\x64\Release\ForteVisorApi.lib

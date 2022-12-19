@@ -1,5 +1,7 @@
-extern SandboxMemAccessHandler : proc
-extern SandboxExecuteHandler : proc
+extern sandbox_execute_handler : qword
+extern sandbox_mem_access_handler : qword
+extern branch_log_full_handler : qword
+extern branch_trace_finish_handler : qword
 
 .code
 
@@ -51,14 +53,13 @@ execute_handler_wrap proc frame
     mov rdx, [rsp + 8 * 16 + 8]       ; pass the return address
     mov r8, [rsp + 8 * 16]    ; pass the original guest RIP
     
-    call SandboxExecuteHandler
+    call sandbox_execute_handler
 
     POPAQ
 
     ret
 	
 execute_handler_wrap endp
-
 
 rw_handler_wrap proc frame
 	
@@ -69,12 +70,40 @@ rw_handler_wrap proc frame
     mov rcx, rsp                ; pass the registers
     mov rdx, [rsp + 8 * 16]     ; pass the original guest RIP
     
-    call SandboxMemAccessHandler
+    call sandbox_mem_access_handler
 
     POPAQ
 
     ret
 	
 rw_handler_wrap endp
+
+branch_log_full_handler_wrap proc frame
+	
+    .endprolog
+
+    PUSHAQ
+    
+    call branch_log_full_handler
+
+    POPAQ
+
+    ret
+	
+branch_log_full_handler_wrap endp
+
+branch_trace_finish_handler_wrap proc frame
+	
+    .endprolog
+
+    PUSHAQ
+    
+    call branch_trace_finish_handler
+
+    POPAQ
+
+    ret
+	
+branch_trace_finish_handler_wrap endp
 
 end

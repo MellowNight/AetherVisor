@@ -5,19 +5,23 @@
 #include "vmexit.h"
 #include "utils.h"
 #include "npt_hook.h"
+#include "instrumentation_hook.h"
 
 namespace BranchTracer
 {
-	void Init(VcpuData* vcpu_data, uintptr_t start_addr, uintptr_t log_buffer, int log_buffer_size);
-
 	void Start(VcpuData* vcpu_data);
 	void Stop(VcpuData* vcpu_data);
 
 	void Pause(VcpuData* vcpu_data);
 	void Resume(VcpuData* vcpu_data);
 
+	void Init(VcpuData* vcpu_data, 
+		uintptr_t start_addr, uintptr_t stop_addr, 
+		uintptr_t out_buffer, uintptr_t trace_range_base,
+		uintptr_t trace_range_size
+	);
 
-	void Init(VcpuData* vcpu_data, uintptr_t start_addr, uintptr_t out_buffer);
+	extern CR3 process_cr3;
 
 	extern bool active;	
 	extern bool initialized;
@@ -25,29 +29,50 @@ namespace BranchTracer
 	extern uintptr_t range_base;
 	extern uintptr_t range_size;
 
+	extern uintptr_t stop_address;
 	extern uintptr_t start_address;
+
 	extern HANDLE thread_id;
 
-	struct BranchLog
+	union BranchLog
 	{
-		int capacity;
-		int buffer_idx;
-
-		uintptr_t* buffer;
-
-		void Log(uintptr_t entry)
+		struct LogEntry
 		{
-			if (buffer_idx < (capacity / sizeof(uintptr_t)))
-			{
-				buffer[buffer_idx] = entry;
-				buffer_idx += 1;
-			}
-			else
-			{
-				/*	overwrite starting from the beginning...	*/
+			uintptr_t branch_address;
+			uintptr_t branch_target;
+		};
 
-				buffer_idx = 0;
+		struct
+		{
+			int capacity;
+			int buffer_idx;
+			LogEntry* buffer;
+		} info;
+
+		LogEntry log_entries[PAGE_SIZE / sizeof(LogEntry)];
+
+		void Log(VcpuData* vcpu_data, uintptr_t branch_address, uintptr_t target)
+		{
+			if (info.capacity - info.buffer_idx <= 5)
+			{
+				/*	notify to the guest that the branch tracing buffer is almost full	*/
+
+				if (Instrumentation::InvokeHook(vcpu_data, Instrumentation::branch_log_full, false) == FALSE)
+				{
+				}
+				else
+				{
+					/*	overwrite the buffer starting from the beginning...	*/
+
+					info.buffer_idx = 0;
+
+					return;
+				}
 			}
+
+			info.buffer[info.buffer_idx].branch_target = target;
+			info.buffer[info.buffer_idx].branch_address = branch_address;
+			info.buffer_idx += 1;
 		}
 	};
 

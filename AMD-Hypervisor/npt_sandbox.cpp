@@ -24,69 +24,6 @@ namespace Sandbox
 		sandbox_page_count = 0;
 	}
 
-	void InstructionInstrumentation(VcpuData* vcpu_data, uintptr_t guest_rip, GuestRegisters* guest_regs, SandboxHookId handler, bool is_kernel)
-	{
-		auto vmroot_cr3 = __readcr3();
-
-		if (!is_kernel)
-		{
-			__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
-		}
-
-		ZydisDecodedOperand operands[5] = { 0 };
-
-		auto instruction = Disasm::Disassemble((uint8_t*)guest_rip, operands);
-
-
-		/*	handle calls/jmps (execute_target is wrong here)	*/
-
-		//auto execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
-
-		//DbgPrint("\n execute_target %p \n", execute_target);
-		DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
-
-		if (!is_kernel)
-		{
-			if ((guest_rip && (guest_rip < 0x7FFFFFFFFFFF)) || handler == readwrite_handler)
-			{
-				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[handler];
-
-				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
-			}
-			else
-			{
-				DbgPrint("ADDRESS SPACE MISMATCH \n");
-			}
-		}
-		else
-		{
-			if ((guest_rip && (guest_rip > 0x7FFFFFFFFFFF)) || handler == readwrite_handler)
-			{
-				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)Sandbox::sandbox_hooks[handler];
-
-				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
-			}
-			else
-			{
-				DbgPrint("ADDRESS SPACE MISMATCH \n");
-			}
-		}
-
-		vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
-
-		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
-		vcpu_data->guest_vmcb.control_area.TlbControl = 1;
-
-		if (!is_kernel)
-		{
-			__writecr3(vmroot_cr3);
-		}
-
-		return;
-	}
-
 	SandboxPage* ForEachHook(bool(HookCallback)(SandboxPage* hook_entry, void* data), void* callback_data)
 	{
 		for (int i = 0; i < sandbox_page_count; ++i)

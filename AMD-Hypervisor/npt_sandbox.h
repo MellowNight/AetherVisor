@@ -21,25 +21,9 @@ namespace Sandbox
 		bool unreadable;	/*	is this page an unreadable page?	*/
 	};
 
-	enum SandboxHookId
-	{
-		readwrite_handler = 0,
-		execute_handler = 1,
-	};
-
-	extern void* sandbox_hooks[2];
-
 	extern SandboxPage*	sandbox_page_array;
 
 	extern int	sandbox_page_count;
-
-	void InstrumentationHook(
-		VcpuData* vcpu_data,
-		uintptr_t guest_rip,
-		GuestRegisters* guest_regs,
-		SandboxHookId handler,
-		bool is_kernel
-	);
 
 	SandboxPage* AddPageToSandbox(
 		VcpuData* vmcb_data, 

@@ -12,6 +12,7 @@ c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\npthook_
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\msr.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\logging.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\main.obj
+c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\instrumentation_hook.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\hypervisor.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\disassembly.obj
 c:\users\user123\documents\github\fortevisor\amd-hypervisor\x64\release\db_exception.obj

@@ -2,6 +2,7 @@
 #include "npt_sandbox.h"
 #include "branch_tracer.h"
 #include "npt_hook.h"
+#include "instrumentation_hook.h"
 
 /*  HandleVmmcall only handles the vmmcall for 1 core.
     It is the guest's responsibility to set thread affinity.
@@ -18,7 +19,7 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
     {				
         DbgPrint("VMMCALL_ID::start_branch_trace \n");
 
-        BranchTracer::Init(vcpu_data, guest_ctx->rdx, guest_ctx->r8, guest_ctx->r9, guest_ctx->r12);
+        BranchTracer::Init(vcpu_data, guest_ctx->rdx, guest_ctx->r8, guest_ctx->r9, guest_ctx->r12, guest_ctx->r11);
 
         break;
     }
@@ -28,13 +29,13 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
 
         break;
     }
-    case VMMCALL_ID::register_sandbox:
+    case VMMCALL_ID::register_instrumentation_hook:
     {
         auto handler_id = guest_ctx->rdx;
 
-        if (handler_id == Sandbox::readwrite_handler || handler_id == Sandbox::execute_handler)
+        if (handler_id < Instrumentation::max_id)
         {
-            Sandbox::sandbox_hooks[handler_id] = (void*)guest_ctx->r8;
+            Instrumentation::callbacks[handler_id] = (void*)guest_ctx->r8;
         }
         else
         {

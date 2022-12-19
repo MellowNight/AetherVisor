@@ -12,8 +12,6 @@ void HandleBreakpoint(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
     if (BranchTracer::initialized && guest_rip == BranchTracer::start_address && !BranchTracer::thread_id)
     {
-        DbgPrint("vcpu_data->guest_vmcb.save_state_area.Rip = %p \n", guest_rip);
-
         NPTHooks::ForEachHook(
             [](auto hook_entry, auto data)-> auto {
 
@@ -29,20 +27,14 @@ void HandleBreakpoint(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
             (void*)guest_rip
         );
 
-        /*  capture the ID of the target thread */
-
-        BranchTracer::Start(vcpu_data);
-
-        BranchTracer::thread_id = PsGetCurrentThreadId();
-
-        int processor_id = KeGetCurrentProcessorNumber();
-
-        KAFFINITY affinity = Utils::Exponent(2, processor_id);
-
-        KeSetSystemAffinityThread(affinity);
+        /*  clean TLB after removing the NPT hook   */
 
         vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
         vcpu_data->guest_vmcb.control_area.TlbControl = 1;
+
+        /*  capture the ID of the target thread & start the tracer  */
+
+        BranchTracer::Start(vcpu_data);
     }
     else
     {
