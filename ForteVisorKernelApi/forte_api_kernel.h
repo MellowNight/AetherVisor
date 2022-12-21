@@ -4,28 +4,112 @@
 
 enum VMMCALL_ID : uintptr_t
 {
-    set_mpk_hook = 0x22FFAA1166,
-    disable_hv = 0xFFAA221166,
-    set_npt_hook = 0x6611AAFF22,
-    remove_npt_hook = 0x1166AAFF22,
-    is_hv_present = 0xEEFF,
-    remap_page_ncr3_specific = 0x8236FF,
+    disable_hv = 0x11111111,
+    set_npt_hook = 0x11111112,
+    remove_npt_hook = 0x11111113,
+    is_hv_present = 0x11111114,
+    sandbox_page = 0x11111116,
+    register_instrumentation_hook = 0x11111117,
+    deny_sandbox_reads = 0x11111118,
+    start_branch_trace = 0x11111119,
 };
 
-enum NCR3_DIRECTORIES
+#define PAGE_SIZE 0x1000
+
+struct GuestRegisters
 {
-    primary,
-    noexecute,
-    sandbox,
+    uintptr_t  r15;
+    uintptr_t  r14;
+    uintptr_t  r13;
+    uintptr_t  r12;
+    uintptr_t  r11;
+    uintptr_t  r10;
+    uintptr_t  r9;
+    uintptr_t  r8;
+    uintptr_t  rdi;
+    uintptr_t  rsi;
+    uintptr_t  rbp;
+    uintptr_t  rsp;
+    uintptr_t  rbx;
+    uintptr_t  rdx;
+    uintptr_t  rcx;
+    uintptr_t  rax;
 };
+
+union BranchLog
+{
+    struct LogEntry
+    {
+        uintptr_t branch_address;
+        uintptr_t branch_target;
+    };
+
+    struct
+    {
+        int capacity;
+        int buffer_idx;
+        LogEntry* buffer;
+    } info;
+
+    LogEntry log_entries[PAGE_SIZE / sizeof(LogEntry)];
+
+    BranchLog()
+    {
+        info.capacity = ((PAGE_SIZE - sizeof(info)) / sizeof(LogEntry));
+        info.buffer_idx = 0;
+        info.buffer = &log_entries[1];
+    }
+};
+
+extern "C" void (*sandbox_execute_handler)(GuestRegisters * registers, void* return_address, void* o_guest_rip);
+extern "C" void __stdcall execute_handler_wrap();
+
+extern "C" void (*sandbox_mem_access_handler)(GuestRegisters * registers, void* o_guest_rip);
+extern "C" void __stdcall rw_handler_wrap();
+
+extern "C" void (*branch_log_full_handler)();
+extern "C" void __stdcall branch_log_full_handler_wrap();
+
+extern "C" void (*branch_trace_finish_handler)();
+extern "C" void __stdcall branch_trace_finish_handler_wrap();
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
+
 namespace BVM
 {
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, int32_t tag);
+    extern BranchLog* log_buffer;
 
-    int ForEachCore(void(*callback)(void* params), void* params = NULL);
+    enum NCR3_DIRECTORIES
+    {
+        primary,
+        noexecute,
+        sandbox,
+        sandbox_single_step
+    };
+
+    enum HookId
+    {
+        sandbox_readwrite = 0,
+        sandbox_execute = 1,
+        branch_log_full = 2,
+        branch_trace_finished = 3,
+        max_id
+    };
+
+    void TraceFunction(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size);
+
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id);
+
+    int SandboxPage(uintptr_t address, uintptr_t tag);
+
+    void SandboxRegion(uintptr_t base, uintptr_t size);
+
+    void DenySandboxMemAccess(void* page_addr);
+
+    void InstrumentationHook(HookId handler_id, void* address);
+
+    int RemoveNptHook(uintptr_t address);
 
     int DisableHv();
 };

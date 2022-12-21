@@ -63,8 +63,6 @@ union BranchLog
     }
 };
 
-static_assert(sizeof(BranchLog) == PAGE_SIZE, "Vmcbcontrol_area Size Mismatch");
-
 extern "C" void (*sandbox_execute_handler)(GuestRegisters * registers, void* return_address, void* o_guest_rip);
 extern "C" void __stdcall execute_handler_wrap();
 

@@ -45,7 +45,7 @@ namespace Sandbox
 		sandbox_page_count -= 1;
 	}
 
-	void DenyMemoryAccess(VcpuData* vmcb_data, void* address)
+	void DenyMemoryAccess(VcpuData* vmcb_data, void* address, bool read_only)
 	{
 		/*	set nPTE->present = 0	*/
 
@@ -72,7 +72,17 @@ namespace Sandbox
 
 		auto sandbox_npte = PageUtils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
-		sandbox_npte->Present = 0;
+		if (read_only)
+		{
+			sandbox_npte->Present = 0;
+		}
+		else
+		{
+			/*	write only	*/
+
+			sandbox_npte->Present = 1;
+			sandbox_npte->Write = 0;
+		}
 
 		/*	DenyMemoryAccess epilogue	*/
 
@@ -80,6 +90,7 @@ namespace Sandbox
 
 		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
 	}
+
 
 	/*
 		IMPORTANT: if you want to set a hook in a globally mapped DLL such as ntdll.dll, you must trigger copy on write first!	

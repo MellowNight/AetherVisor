@@ -25,7 +25,7 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
     }
     case VMMCALL_ID::deny_sandbox_reads:
     {
-        Sandbox::DenyMemoryAccess(vcpu_data, (void*)guest_ctx->rdx);
+        Sandbox::DenyMemoryAccess(vcpu_data, (void*)guest_ctx->rdx, guest_ctx->r8);
 
         break;
     }

@@ -1,55 +1,106 @@
 #include "pch.h"
-#include "forte_api_kernel.h"
 #include <intrin.h>
+#include "utils.h"
+
+void (*sandbox_execute_handler)(GuestRegisters* registers, void* return_address, void* o_guest_rip) = NULL;
+void (*sandbox_mem_access_handler)(GuestRegisters* registers, void* o_guest_rip) = NULL;
+void (*branch_log_full_handler)() = NULL;
+void (*branch_trace_finish_handler)() = NULL;
+
+/*  parameter order: rcx, rdx, r8, r9, r12, r11  */
 
 namespace BVM
 {
-    int RemoveNptHook(int32_t tag)
+    BranchLog* log_buffer;
+
+    void TraceFunction(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size)
     {
-        svm_vmmcall(VMMCALL_ID::remove_npt_hook, tag);
-        return 0;
+        log_buffer = (BranchLog*)ExAllocatePool(NonPagedPool, sizeof(BranchLog));
+        
+        *log_buffer = BranchLog{};
+
+        SetNptHook((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox);
+
+        svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, NULL, log_buffer, range_base, range_size);
     }
 
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t noexecute_cr3_id, int32_t tag)
+    void InstrumentationHook(HookId handler_id, void* address)
     {
-        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, noexecute_cr3_id, tag);
-
-        return 0;
-    }
-
-    int Exponent(int base, int power)
-    {
-        int start = 1;
-        for (int i = 0; i < power; ++i)
+        switch (handler_id)
         {
-            start *= base;
+            case sandbox_readwrite:
+            {
+                sandbox_mem_access_handler = static_cast<decltype(sandbox_mem_access_handler)>(address);
+                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, rw_handler_wrap);
+                break;
+            }
+            case sandbox_execute:
+            {
+                sandbox_execute_handler = static_cast<decltype(sandbox_execute_handler)>(address);
+                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, execute_handler_wrap);
+                break;
+            }
+            case branch_log_full:
+            {
+                branch_log_full_handler = static_cast<decltype(branch_log_full_handler)>(address);
+                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, branch_log_full_handler_wrap);
+                break;
+            }
+            case branch_trace_finished:
+            {
+                branch_trace_finish_handler = static_cast<decltype(branch_trace_finish_handler)>(address);
+                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, branch_trace_finish_handler_wrap);
+                break;
+            }
         }
-
-        return start;
     }
 
-    int ForEachCore(void(*callback)(void* params), void* params)
+    void DenySandboxMemAccess(void* page_addr)
     {
-	    auto core_count = KeQueryActiveProcessorCount(0);
+        svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, page_addr);
+    }
 
-        for (int idx = 0; idx < core_count; ++idx)
-        {
-            KAFFINITY affinity = Exponent(2, idx);
 
-            KeSetSystemAffinityThread(affinity);
-            
-            callback(params);
-        }
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id)
+    {
+        Util::PageIn((uint8_t*)address);
+
+        svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, ncr3_id);
 
         return 0;
     }
 
+    int SandboxPage(uintptr_t address, uintptr_t tag)
+    {
+        Util::PageIn((uint8_t*)address);
+
+        svm_vmmcall(VMMCALL_ID::sandbox_page, address, tag);
+
+        return 0;
+    }
+
+    void SandboxRegion(uintptr_t base, uintptr_t size)
+    {
+        for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
+        {
+            BVM::SandboxPage((uintptr_t)offset, NULL);
+        }
+    }
+
+    int RemoveNptHook(uintptr_t address)
+    {
+        svm_vmmcall(VMMCALL_ID::remove_npt_hook, address);
+
+        return 0;
+    }
+
+  
     int DisableHv()
     {
-        ForEachCore(
-            [](void* param) -> void {
+        Util::ForEachCore(
+            [](void* params) -> void {
                 svm_vmmcall(VMMCALL_ID::disable_hv);
-            }
+            }, NULL
         );
         return 0;
     }

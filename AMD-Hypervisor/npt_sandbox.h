@@ -31,10 +31,7 @@ namespace Sandbox
 		int32_t tag = 0
 	);
 
-	void DenyMemoryAccess(
-		VcpuData* vmcb_data, 
-		void* address
-	);
+	void DenyMemoryAccess(VcpuData* vmcb_data, void* address, bool read_only);
 
 	SandboxPage* ForEachHook(
 		bool(HookCallback)(SandboxPage* hook_entry, void* data), 
