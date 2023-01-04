@@ -19,7 +19,7 @@ namespace Instrumentation
 
 		// auto execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
 
-		DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
+	//	DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
 
 		if (!is_kernel)
 		{
@@ -32,7 +32,6 @@ namespace Instrumentation
 			}
 			else
 			{
-				DbgPrint("ADDRESS SPACE MISMATCH \n");
 				__writecr3(vmroot_cr3);
 
 				return FALSE;
@@ -49,7 +48,6 @@ namespace Instrumentation
 			}
 			else
 			{
-				DbgPrint("ADDRESS SPACE MISMATCH \n");
 				__writecr3(vmroot_cr3);				
 				
 				return FALSE;

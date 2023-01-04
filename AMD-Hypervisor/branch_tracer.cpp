@@ -126,7 +126,7 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-			DbgPrint("BranchTracer::Pause guest_rip = %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
+			//DbgPrint("BranchTracer::Pause guest_rip = %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
 
 			/*	BTF, LBR, and trap flag disable	*/
 

@@ -27,7 +27,7 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
             __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
 
-            DbgPrint("LastBranchFromIP %p guest_rip = %p \n", vcpu_data->guest_vmcb.save_state_area.BrFrom, guest_rip);
+            // DbgPrint("LastBranchFromIP %p guest_rip = %p \n", vcpu_data->guest_vmcb.save_state_area.BrFrom, guest_rip);
 
             BranchTracer::log_buffer->Log(vcpu_data, guest_rip, vcpu_data->guest_vmcb.save_state_area.BrFrom);
 
@@ -51,7 +51,7 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
         {
             BranchTracer::Pause(vcpu_data);
 
-            DbgPrint("Finished single stepping %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
+       //     DbgPrint("Finished single stepping %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
 
             Instrumentation::InvokeHook(vcpu_data, Instrumentation::sandbox_readwrite, false);
         }
