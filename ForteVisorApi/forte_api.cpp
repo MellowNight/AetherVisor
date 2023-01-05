@@ -59,14 +59,28 @@ namespace BVM
         svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, page_addr);
     }
 
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id)
+#pragma optimize( "", off )
+
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id, bool global_page)
     {
-        Util::TriggerCOWAndPageIn((uint8_t*)address);
+        int a;
+
+        if (global_page)
+        {
+            Util::TriggerCOWAndPageIn((uint8_t*)address);
+        }
+        else
+        {
+            /*  page in */
+
+            memcpy(&a, (void*)address, sizeof(int));
+        }
 
         svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, ncr3_id);
 
-        return 0;
+        return a;
     }
+#pragma optimize( "", on )
 
     int SandboxPage(uintptr_t address, uintptr_t tag)
     {

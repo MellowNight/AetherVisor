@@ -53,7 +53,7 @@ namespace BranchTracer
 
 		void Log(VcpuData* vcpu_data, uintptr_t branch_address, uintptr_t target)
 		{
-			if ((info.capacity - info.buffer_idx) <= 5)
+			if (info.capacity - info.buffer_idx <= 5)
 			{
 				/*	notify to the guest that the branch tracing buffer is almost full	*/
 

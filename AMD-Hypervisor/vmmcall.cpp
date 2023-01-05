@@ -25,7 +25,7 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
     }
     case VMMCALL_ID::deny_sandbox_reads:
     {
-        Sandbox::DenyMemoryAccess(vcpu_data, (void*)guest_ctx->rdx);
+        Sandbox::DenyMemoryAccess(vcpu_data, (void*)guest_ctx->rdx, guest_ctx->r8);
 
         break;
     }
@@ -57,11 +57,14 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
 
         __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
 
+        DbgPrint("VMMCALL_ID::remove_npt_hook called! \n");
+
         NPTHooks::ForEachHook(
             [](auto hook_entry, auto data)-> auto {
 
                 if (hook_entry->address == data)
                 {
+                    DbgPrint("unsetting NPT hook at %p \n", hook_entry->address);
                     UnsetHook(hook_entry);
                 }
 

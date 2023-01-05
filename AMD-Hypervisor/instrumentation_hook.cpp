@@ -15,43 +15,24 @@ namespace Instrumentation
 
 		auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
 
-		/*	handle calls/jmps (execute_target is wrong here)	*/
+		DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
 
-		// auto execute_target = Disasm::GetMemoryAccessTarget(instruction, operands, (uintptr_t)guest_rip, &context);
+		int callback_permission = ((uintptr_t)callbacks[handler] > 0x7FFFFFFFFFFF) ? 3 : 0;
+		int rip_permission = (guest_rip > 0x7FFFFFFFFFFF) ? 3 : 0;
 
-	//	DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
-
-		if (!is_kernel)
+		if (callback_permission == rip_permission || handler == sandbox_readwrite)
 		{
-			if ((guest_rip && (guest_rip < 0x7FFFFFFFFFFF)) || handler == sandbox_readwrite)
-			{
-				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)callbacks[handler];
+			vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)callbacks[handler];
 
-				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
-			}
-			else
-			{
-				__writecr3(vmroot_cr3);
-
-				return FALSE;
-			}
+			vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
+			*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
 		}
 		else
 		{
-			if ((guest_rip && (guest_rip > 0x7FFFFFFFFFFF)) || handler == sandbox_readwrite)
-			{
-				vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)callbacks[handler];
+			DbgPrint("ADDRESS SPACE MISMATCH \n");
+			__writecr3(vmroot_cr3);
 
-				vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-				*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
-			}
-			else
-			{
-				__writecr3(vmroot_cr3);				
-				
-				return FALSE;
-			}
+			return FALSE;
 		}
 
 		vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];

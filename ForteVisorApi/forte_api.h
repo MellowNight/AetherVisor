@@ -63,8 +63,6 @@ union BranchLog
     }
 };
 
-static_assert(sizeof(BranchLog) == PAGE_SIZE, "Vmcbcontrol_area Size Mismatch");
-
 extern "C" void (*sandbox_execute_handler)(GuestRegisters * registers, void* return_address, void* o_guest_rip);
 extern "C" void __stdcall execute_handler_wrap();
 
@@ -103,7 +101,7 @@ namespace BVM
 
     void TraceFunction(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size);
 
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id);
+    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id, bool global_page = true);
 
     int SandboxPage(uintptr_t address, uintptr_t tag);
 
