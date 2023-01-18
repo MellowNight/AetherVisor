@@ -4,7 +4,7 @@
 enum CPUID
 {
     vendor_and_max_standard_fn_number = 0x0,
-    processor_feature_identifier = 0x1,
+    feature_identifier = 0x80000001,
     ext_perfmon_and_debug = 0x80000022,
     svm_features = 0x8000000A,
 };
