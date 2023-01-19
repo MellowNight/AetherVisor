@@ -11,7 +11,8 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
     
     if (dr6.SingleInstruction == 1) 
     {
-        if (BranchTracer::active == true && (vcpu_data->guest_vmcb.save_state_area.Dr7.Flags & ((uint64_t)1 << 9)) && 
+        if (BranchTracer::active == true && 
+            (vcpu_data->guest_vmcb.save_state_area.Dr7.Flags & ((uint64_t)1 << 9)) && 
             vcpu_data->guest_vmcb.save_state_area.Cr3.Flags == BranchTracer::process_cr3.Flags)
         {
             if (guest_rip < BranchTracer::range_base || guest_rip > (BranchTracer::range_size + BranchTracer::range_base))

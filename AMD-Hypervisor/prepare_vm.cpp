@@ -252,10 +252,6 @@ void SetupMSRPM(VcpuData* core_data)
 
 void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 {
-	core_data->guest_vmcb.save_state_area.Rflags.Flags = __readeflags();
-	core_data->guest_vmcb.save_state_area.Dr7.Flags = __readdr(7);
-	core_data->guest_vmcb.save_state_area.DbgCtl.Flags = __readmsr(IA32_DEBUGCTL);
-
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
 
@@ -322,6 +318,10 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.DsSelector = context_record->SegDs;
 	core_data->guest_vmcb.save_state_area.EsSelector = context_record->SegEs;
 	core_data->guest_vmcb.save_state_area.SsSelector = context_record->SegSs;
+
+	core_data->guest_vmcb.save_state_area.Rflags.Flags = __readeflags();
+	core_data->guest_vmcb.save_state_area.Dr7.Flags = __readdr(7);
+	core_data->guest_vmcb.save_state_area.DbgCtl.Flags = __readmsr(IA32_DEBUGCTL);
 
 	core_data->guest_vmcb.save_state_area.CsAttrib = GetSegmentAttributes(context_record->SegCs, gdtr.base).as_uint16;
 	core_data->guest_vmcb.save_state_area.DsAttrib = GetSegmentAttributes(context_record->SegDs, gdtr.base).as_uint16;
