@@ -103,7 +103,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
             2. disable IF
             3. enable GIF
             4. disable SVME
-            5. restore EFLAGS and re enable IF
+            5. restore guest value of EFLAGS
             6. set RBX to RIP
             7. set RCX to RSP
             8. return and jump back
