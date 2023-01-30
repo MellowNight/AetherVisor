@@ -103,12 +103,12 @@ NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
 NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
 	HANDLE init_thread;
-
-	PsCreateSystemThread(&init_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)Initialize, NULL);
+	Initialize();
+	// PsCreateSystemThread(&init_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)Initialize, NULL);
 
 	HANDLE hv_startup_thread;
-
-	PsCreateSystemThread(&hv_startup_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)VirtualizeAllProcessors, NULL);
+	VirtualizeAllProcessors();
+	// PsCreateSystemThread(&hv_startup_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)VirtualizeAllProcessors, NULL);
 
 	return STATUS_SUCCESS;
 }

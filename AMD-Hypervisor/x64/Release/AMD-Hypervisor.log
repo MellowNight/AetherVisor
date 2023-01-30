@@ -2101,6 +2101,8 @@ C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\kernel_structures.h(25
 C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(96,38): warning C4100: 'DriverObject': unreferenced formal parameter
 C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(103,66): warning C4100: 'RegistryPath': unreferenced formal parameter
 C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(103,36): warning C4100: 'DriverObject': unreferenced formal parameter
+C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(109,9): warning C4101: 'hv_startup_thread': unreferenced local variable
+C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\main.cpp(105,9): warning C4101: 'init_thread': unreferenced local variable
   logging.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\vcruntime.h(111,1): warning C4005: '_CRT_STRINGIZE': macro redefinition
@@ -5102,10 +5104,10 @@ C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\amd_defs.h(426,6): war
 C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(221,52): warning C4242: '=': conversion from 'int' to 'uint8_t', possible loss of data
 C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(240,63): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
 C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(250,36): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(276,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(277,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(283,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
-C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(284,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(272,40): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(273,38): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(279,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
+C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(280,35): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 C:\Users\hualu\Documents\GitHub\ForteVisor\AMD-Hypervisor\prepare_vm.cpp(383,18): warning C4463: overflow; assigning 1 to bit-field that can only hold values from -1 to 0
   vmexit.cpp
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\vcruntime.h(61,26): warning C4083: expected ')'; found identifier '_VCRUNTIME_DISABLED_WARNINGS'
