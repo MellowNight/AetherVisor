@@ -9,20 +9,20 @@ In the writeup, I mentioned multiple potential bugs that I wrote band-aid soluti
 
 ## Features
 ### Syscall hooks via MSR_LSTAR
-**function definition**
+```function definition``` - 
 
 
 ### NPT inline hooks
-**function definition**
+```function definition``` - 
 
 ### Branch tracing
-**function definition**
+```function definition``` - 
 
 ### Sandboxing and Read/Write/Execute instrumentation
-**SandboxPage(VMMCALL_ID, ...) - **
+```SandboxPage(VMMCALL_ID, ...)``` - 
 
 ### vmmcall interface
-**svm_vmmcall(VMMCALL_ID, ...) - **
+```svm_vmmcall(VMMCALL_ID, ...)``` -
 
 ## Components ##
 
