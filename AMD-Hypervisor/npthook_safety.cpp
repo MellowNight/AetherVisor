@@ -2,7 +2,7 @@
 #include "portable_executable.h"
 #include "vmexit.h"
 
-namespace NPTHooks
+namespace NptHooks
 {
 	Hooks::JmpRipCode MmCleanProcessAddressSpace;
 
@@ -26,7 +26,7 @@ namespace NPTHooks
 		return static_cast<decltype(&MmCleanProcessAddressSpace_hook)>(MmCleanProcessAddressSpace.original_bytes)(a1, a2);
 	}
 
-	void CleanupNptHooksOnExit()
+	void CleanupOnProcessExit()
 	{
 		/*	Hook NtTerminateProcess and remove NPT hooks inside terminating processes, 
 			to prevent physical memory mapping inconsistencies	

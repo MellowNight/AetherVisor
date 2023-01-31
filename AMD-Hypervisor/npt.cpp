@@ -11,7 +11,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 {
 	PHYSICAL_ADDRESS ncr3;
 
-	ncr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3;
+	ncr3.QuadPart = vcpu_data->guest_vmcb.control_area.ncr3;
 
 	bool switch_ncr3 = true;
 
@@ -39,7 +39,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 
 			switch_ncr3 = false;
 		}
-		auto guest_cr3 = vcpu_data->guest_vmcb.save_state_area.Cr3.Flags;
+		auto guest_cr3 = vcpu_data->guest_vmcb.save_state_area.cr3.Flags;
 
 		auto page1_physical = faulting_physical.QuadPart;
 		auto page2_physical = PageUtils::GetPte((void*)(guest_rip + insn_len), guest_cr3)->PageFrameNumber << PAGE_SHIFT;
@@ -61,16 +61,16 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 	exit_info1.as_uint64 = vcpu_data->guest_vmcb.control_area.ExitInfo1;
 
 	PHYSICAL_ADDRESS ncr3;
-	ncr3.QuadPart = vcpu_data->guest_vmcb.control_area.NCr3;
+	ncr3.QuadPart = vcpu_data->guest_vmcb.control_area.ncr3;
 
-	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
+	auto guest_rip = vcpu_data->guest_vmcb.save_state_area.rip;
 
 	/*	clean ncr3 cache	*/
 
 	vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
 	vcpu_data->guest_vmcb.control_area.TlbControl = 1;
 
-	Logger::Get()->LogJunk("[#NPF HANDLER] 	guest physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.Rip);
+	Logger::Get()->LogJunk("[#NPF HANDLER] 	guest physical %p, guest RIP virtual %p \n", faulting_physical.QuadPart, vcpu_data->guest_vmcb.save_state_area.rip);
 
 	if (exit_info1.fields.valid == 0)
 	{
@@ -99,9 +99,9 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 
 			BranchTracer::Pause(vcpu_data);
 
-			vcpu_data->guest_vmcb.save_state_area.Rflags.TrapFlag = 1;
+			vcpu_data->guest_vmcb.save_state_area.rflags.TrapFlag = 1;
 
-			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
+			vcpu_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}
 		else
 		{
@@ -125,11 +125,11 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 			BranchTracer::Resume(vcpu_data);
 		}
 
-		if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
+		if (vcpu_data->guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
 			/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
-			auto is_system_page = (vcpu_data->guest_vmcb.save_state_area.Cr3.Flags == __readcr3()) ? true : false;
+			auto is_system_page = (vcpu_data->guest_vmcb.save_state_area.cr3.Flags == __readcr3()) ? true : false;
 
 			Instrumentation::InvokeHook(vcpu_data, Instrumentation::sandbox_execute, is_system_page);
 		}
@@ -142,7 +142,7 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 
 			// DbgPrint("0x%p is a sandbox page! \n", faulting_physical.QuadPart);
 
-			vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
+			vcpu_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
 
 			return;
 		}
@@ -159,11 +159,11 @@ void HandleNestedPageFault(VcpuData* vcpu_data, GuestRegisters* guest_registers)
 			{
 				/*  move into hooked page and switch to ncr3 with hooks mapped  */
 
-				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[noexecute];
+				vcpu_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[noexecute];
 			}
 			else
 			{
-				vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
+				vcpu_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
 			}
 		}
 	}
@@ -214,7 +214,7 @@ int GetPhysicalMemoryRanges()
 
 PTE_64*	AssignNPTEntry(PML4E_64* n_Pml4, uintptr_t PhysicalAddr, PTEAccess flags)
 {
-	ADDRESS_TRANSLATION_HELPER	Helper;
+	AddressTranslationHelper	Helper;
 
 	Helper.AsUInt64 = PhysicalAddr;
 
@@ -290,11 +290,11 @@ uintptr_t BuildNestedPagingTables(uintptr_t* ncr3, PTEAccess flags)
 		}
 	}
 
-	MsrApicBar apic_bar;
+	ApicBarMsr apic_bar;
 
-	apic_bar.Flags = __readmsr(MSR::APIC_BAR);
+	apic_bar.Flags = __readmsr(MSR::apic_bar);
 
-	AssignNPTEntry(npml4_virtual, apic_bar.ApicBase << PAGE_SHIFT, flags);
+	AssignNPTEntry(npml4_virtual, apic_bar.apic_base << PAGE_SHIFT, flags);
 
 	return *ncr3;
 }

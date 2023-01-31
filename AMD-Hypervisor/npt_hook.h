@@ -3,7 +3,7 @@
 #include "npt.h"
 #include "paging_utils.h"
 
-namespace NPTHooks
+namespace NptHooks
 {
 	struct NptHook
 	{

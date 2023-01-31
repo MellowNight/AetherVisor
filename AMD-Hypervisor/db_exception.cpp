@@ -5,7 +5,7 @@
 
 void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 {
-    auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
+    auto guest_rip = vcpu_data->guest_vmcb.save_state_area.rip;
 
     DR6 dr6 = vcpu_data->guest_vmcb.save_state_area.Dr6;
     
@@ -13,7 +13,7 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
     {
         if (BranchTracer::active == true && 
             (vcpu_data->guest_vmcb.save_state_area.Dr7.Flags & ((uint64_t)1 << 9)) && 
-            vcpu_data->guest_vmcb.save_state_area.Cr3.Flags == BranchTracer::process_cr3.Flags)
+            vcpu_data->guest_vmcb.save_state_area.cr3.Flags == BranchTracer::process_cr3.Flags)
         {
             if (guest_rip < BranchTracer::range_base || guest_rip > (BranchTracer::range_size + BranchTracer::range_base))
             {
@@ -26,11 +26,11 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
             auto vmroot_cr3 = __readcr3();
 
-            __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
+            __writecr3(vcpu_data->guest_vmcb.save_state_area.cr3.Flags);
 
-            DbgPrint("LastBranchFromIP %p guest_rip = %p \n", vcpu_data->guest_vmcb.save_state_area.BrFrom, guest_rip);
+            DbgPrint("LastBranchFromIP %p guest_rip = %p \n", vcpu_data->guest_vmcb.save_state_area.br_from, guest_rip);
 
-            BranchTracer::log_buffer->Log(vcpu_data, guest_rip, vcpu_data->guest_vmcb.save_state_area.BrFrom);
+            BranchTracer::log_buffer->Log(vcpu_data, guest_rip, vcpu_data->guest_vmcb.save_state_area.br_from);
 
             __writecr3(vmroot_cr3);
 
@@ -48,11 +48,11 @@ void HandleDebugException(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
             Single-stepping mode => completely disabled
         */
 
-        if (vcpu_data->guest_vmcb.control_area.NCr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
+        if (vcpu_data->guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
         {
             BranchTracer::Pause(vcpu_data);
 
-            DbgPrint("Finished single stepping %p \n", vcpu_data->guest_vmcb.save_state_area.Rip);
+            DbgPrint("Finished single stepping %p \n", vcpu_data->guest_vmcb.save_state_area.rip);
 
             Instrumentation::InvokeHook(vcpu_data, Instrumentation::sandbox_readwrite, false);
         }

@@ -6,7 +6,7 @@
 #include "vmexit.h"
 #include "utils.h"
 
-namespace NPTHooks
+namespace NptHooks
 {
 	int hook_count;
 	NptHook* npt_hook_list;
@@ -58,7 +58,7 @@ namespace NPTHooks
 	{
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3.Flags);
+		__writecr3(vmcb_data->guest_vmcb.save_state_area.cr3.Flags);
 
 		bool reused_hook = false;
 
@@ -79,7 +79,7 @@ namespace NPTHooks
 
 		hook_entry->ncr3_id = ncr3_id;
 		hook_entry->address = address;
-		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3.Flags;
+		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.cr3.Flags;
 
 		/*	get the guest pte and physical address of the hooked page	*/
 

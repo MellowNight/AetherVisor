@@ -67,7 +67,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
         {
             SegmentAttribute cs_attrib;
 
-            cs_attrib.as_uint16 = vcpu_data->guest_vmcb.save_state_area.CsAttrib;
+            cs_attrib.as_uint16 = vcpu_data->guest_vmcb.save_state_area.cs_attrib;
 
             IsCoreReadyForVmrun(&vcpu_data->guest_vmcb, cs_attrib);
 
@@ -75,7 +75,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
         }
         case VMEXIT::VMEXIT_MWAIT_CONDITIONAL:
         {
-            vcpu_data->guest_vmcb.save_state_area.Rip = vcpu_data->guest_vmcb.control_area.NRip;
+            vcpu_data->guest_vmcb.save_state_area.rip = vcpu_data->guest_vmcb.control_area.nrip;
             break;
         }
         case 0x55: // CET shadow stack exception
@@ -85,9 +85,9 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
         }
         default:
         {            
-            DbgPrint("unknown intercept at %p! code: %p \n", vcpu_data->guest_vmcb.save_state_area.Rip, vcpu_data->guest_vmcb.control_area.ExitCode);
+            DbgPrint("unknown intercept at %p! code: %p \n", vcpu_data->guest_vmcb.save_state_area.rip, vcpu_data->guest_vmcb.control_area.ExitCode);
 
-            KeBugCheckEx(MANUALLY_INITIATED_CRASH, vcpu_data->guest_vmcb.control_area.ExitCode, vcpu_data->guest_vmcb.control_area.ExitInfo1, vcpu_data->guest_vmcb.control_area.ExitInfo2, vcpu_data->guest_vmcb.save_state_area.Rip);
+            KeBugCheckEx(MANUALLY_INITIATED_CRASH, vcpu_data->guest_vmcb.control_area.ExitCode, vcpu_data->guest_vmcb.control_area.ExitInfo1, vcpu_data->guest_vmcb.control_area.ExitInfo2, vcpu_data->guest_vmcb.save_state_area.rip);
 
             break;
         }
@@ -109,7 +109,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
             8. return and jump back
         */
         
-        __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
+        __writecr3(vcpu_data->guest_vmcb.save_state_area.cr3.Flags);
         __svm_vmload(vcpu_data->guest_vmcb_physicaladdr);
 
         __svm_stgi();
@@ -117,14 +117,14 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
         MsrEfer msr;
 
-        msr.flags = __readmsr(MSR::EFER);
+        msr.flags = __readmsr(MSR::efer);
         msr.svme = 0;
 
-        __writemsr(MSR::EFER, msr.flags);
-        __writeeflags(vcpu_data->guest_vmcb.save_state_area.Rflags.Flags);
+        __writemsr(MSR::efer, msr.flags);
+        __writeeflags(vcpu_data->guest_vmcb.save_state_area.rflags.Flags);
 
         guest_ctx->rcx = vcpu_data->guest_vmcb.save_state_area.Rsp;
-        guest_ctx->rbx = vcpu_data->guest_vmcb.control_area.NRip;
+        guest_ctx->rbx = vcpu_data->guest_vmcb.control_area.nrip;
 
         Logger::Get()->Log("ending hypervisor... \n");
     }

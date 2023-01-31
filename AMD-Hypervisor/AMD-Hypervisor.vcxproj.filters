@@ -26,9 +26,6 @@
     <Filter Include="Source Files\nt kernel">
       <UniqueIdentifier>{baec2ef4-2551-4ec2-987e-584bf913a91c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\amd-v structs">
-      <UniqueIdentifier>{7f3c90e1-2152-4e57-94cf-f79e18650663}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\setup">
       <UniqueIdentifier>{27e87246-2b31-485d-9fb0-02a425e70619}</UniqueIdentifier>
     </Filter>
@@ -40,6 +37,9 @@
     </Filter>
     <Filter Include="Source Files\vmexit handlers">
       <UniqueIdentifier>{705f43ca-c9b5-4e54-987c-7db80def48b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CPU structs">
+      <UniqueIdentifier>{7f3c90e1-2152-4e57-94cf-f79e18650663}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -68,10 +68,10 @@
       <Filter>Source Files\setup</Filter>
     </ClInclude>
     <ClInclude Include="ia32.h">
-      <Filter>Source Files\amd-v structs</Filter>
+      <Filter>Source Files\CPU structs</Filter>
     </ClInclude>
-    <ClInclude Include="amd_defs.h">
-      <Filter>Source Files\amd-v structs</Filter>
+    <ClInclude Include="svm.h">
+      <Filter>Source Files\CPU structs</Filter>
     </ClInclude>
     <ClInclude Include="paging_utils.h">
       <Filter>Source Files</Filter>
@@ -108,6 +108,9 @@
     </ClInclude>
     <ClInclude Include="instrumentation_hook.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="amd.h">
+      <Filter>Source Files\CPU structs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -158,9 +161,6 @@
     </ClCompile>
     <ClCompile Include="db_exception.cpp">
       <Filter>Source Files\vmexit handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="swapcontext_hook.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="bp_exception.cpp">
       <Filter>Source Files\vmexit handlers</Filter>

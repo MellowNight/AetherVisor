@@ -177,7 +177,8 @@
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="amd_defs.h" />
+    <ClInclude Include="amd.h" />
+    <ClInclude Include="svm.h" />
     <ClInclude Include="branch_tracer.h" />
     <ClInclude Include="disassembly.h" />
     <ClInclude Include="hypervisor.h" />
@@ -215,7 +216,6 @@
     <ClCompile Include="paging_utils.cpp" />
     <ClCompile Include="npt_hook.cpp" />
     <ClCompile Include="npt.cpp" />
-    <ClCompile Include="swapcontext_hook.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="prepare_vm.cpp" />
     <ClCompile Include="vmexit.cpp" />

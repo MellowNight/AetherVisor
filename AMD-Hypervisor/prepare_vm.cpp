@@ -13,8 +13,8 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 
 	}
 
-	MsrEfer efer_msr = { 0 };
-	efer_msr.flags = __readmsr(MSR::EFER);
+	EferMsr efer_msr = { 0 };
+	efer_msr.flags = __readmsr(MSR::efer);
 
 	if (efer_msr.svme == (uint32_t)0)
 	{
@@ -166,65 +166,6 @@ SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_b
 	return attribute;
 }
 
-void SetupTssIst()
-{	
-	DescriptorTableRegister	gdtr;
-	_sgdt(&gdtr);
-
-	SEGMENT_SELECTOR selector;
-	selector.Flags = __readtr();
-
-	auto seg_descriptor = *(SEGMENT_DESCRIPTOR_64*)(gdtr.base + (selector.Index * 8));
-
-	auto base = (uintptr_t)(
-		seg_descriptor.BaseAddressLow +
-		(seg_descriptor.BaseAddressMiddle << SEGMENT__BASE_ADDRESS_MIDDLE_BIT) +
-		(seg_descriptor.BaseAddressHigh << SEGMENT__BASE_ADDRESS_HIGH_BIT)
-	);
-
-	if (!seg_descriptor.DescriptorType)
-	{
-		base += ((uint64_t)seg_descriptor.BaseAddressUpper << 32);
-	}
-
-	auto tss_base = (TaskStateSegment*)base;
-
-	/*	Find free IST entry for page fault	*/
-
-	int idx = 0;
-
-	for (idx = 0; idx < 7; ++idx)
-	{
-		DbgPrint("idx %d \n", idx);
-
-		if (!tss_base->ist[idx])
-		{
-			break;
-		}
-	}
-
-	auto pf_stack = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE * 16, 'abcd');
-
-	tss_base->ist[idx] = (uint8_t*)pf_stack + PAGE_SIZE * 16;
-
-	DescriptorTableRegister	idtr;
-
-	__sidt(&idtr);
-
-	DbgPrint("IDT base %p \n", idtr.base);
-	DbgPrint("page fault stack %p \n", pf_stack);
-	DbgPrint("&((InterruptDescriptor64*)idtr.base)[0xE] %p \n", &((InterruptDescriptor64*)idtr.base)[0xE]);
-
-
-	auto irql = Utils::DisableWP();
-
-	((InterruptDescriptor64*)idtr.base)[0xE].ist = idx; 
-
-	Utils::EnableWP(irql);
-
-	__debugbreak();
-}
-
 void SetupMSRPM(VcpuData* core_data)
 {
 	size_t bits_per_msr = 16000 / 8000;
@@ -243,7 +184,7 @@ void SetupMSRPM(VcpuData* core_data)
 
 	auto section2_offset = (0x800 * bits_per_byte);
 
-	auto efer_offset = section2_offset + (bits_per_msr * (MSR::EFER - 0xC0000000));
+	auto efer_offset = section2_offset + (bits_per_msr * (MSR::efer - 0xC0000000));
 
 	/*	intercept EFER read and write	*/
 
@@ -257,10 +198,9 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 
 	core_data->self = core_data;
 
-	core_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
-	core_data->guest_vmcb.control_area.NpEnable = (1UL << 0);
-	core_data->guest_vmcb.control_area.LbrVirtualizationEnable |= (1UL << 0);
-	core_data->guest_vmcb.control_area.LbrVirtualizationEnable |= (1UL << 0);
+	core_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
+	core_data->guest_vmcb.control_area.np_enable = (1UL << 0);
+	core_data->guest_vmcb.control_area.lbr_virtualization_enable |= (1UL << 0);
 
 	DescriptorTableRegister	gdtr, idtr;
 
@@ -272,61 +212,55 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	intercept_vector4.intercept_vmmcall = 1;
 	intercept_vector4.intercept_vmrun = 1;
 
-	core_data->guest_vmcb.control_area.InterceptVec4 = intercept_vector4.as_int32;
+	core_data->guest_vmcb.control_area.intercept_vec4 = intercept_vector4.as_int32;
 
 	InterceptVector2 intercept_vector2 = { 0 };
 
 	intercept_vector2.intercept_bp = 1;
 	intercept_vector2.intercept_db = 1;
 
-	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32; 
+	core_data->guest_vmcb.control_area.intercept_exception = intercept_vector2.as_int32; 
 
 	/*	intercept MSR access	*/
 	
-	core_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << 28);
+	core_data->guest_vmcb.control_area.intercept_vec3 |= (1UL << 28);
 
-	core_data->guest_vmcb.control_area.GuestAsid = 1;
-
-	/*	disable the fucking CET	*/
-	CR4 cr4;
-	cr4.Flags = __readcr4();
-///	cr4.Flags &= ~(1UL << 23);
-	__writecr4(cr4.Flags);
+	core_data->guest_vmcb.control_area.guest_asid = 1;
 
 	core_data->guest_vmcb.save_state_area.Cr0.Flags = __readcr0();
 	core_data->guest_vmcb.save_state_area.Cr2 = __readcr2();
-	core_data->guest_vmcb.save_state_area.Cr3.Flags = __readcr3();
-	core_data->guest_vmcb.save_state_area.Cr4.Flags = __readcr4();
+	core_data->guest_vmcb.save_state_area.cr3.Flags = __readcr3();
+	core_data->guest_vmcb.save_state_area.cr4.Flags = __readcr4();
 
-	core_data->guest_vmcb.save_state_area.Rip = context_record->Rip;
-	core_data->guest_vmcb.save_state_area.Rax = context_record->Rax;
+	core_data->guest_vmcb.save_state_area.rip = context_record->Rip;
+	core_data->guest_vmcb.save_state_area.rax = context_record->Rax;
 	core_data->guest_vmcb.save_state_area.Rsp = context_record->Rsp;
-	core_data->guest_vmcb.save_state_area.Efer = __readmsr(MSR::EFER);
-	core_data->guest_vmcb.save_state_area.GPat = __readmsr(MSR::PAT);
+	core_data->guest_vmcb.save_state_area.Efer = __readmsr(MSR::efer);
+	core_data->guest_vmcb.save_state_area.GPat = __readmsr(MSR::pat);
 
-	core_data->guest_vmcb.save_state_area.GdtrLimit = gdtr.limit;
-	core_data->guest_vmcb.save_state_area.GdtrBase = gdtr.base;
-	core_data->guest_vmcb.save_state_area.IdtrLimit = idtr.limit;
-	core_data->guest_vmcb.save_state_area.IdtrBase = idtr.base;
+	core_data->guest_vmcb.save_state_area.gdtr_limit = gdtr.limit;
+	core_data->guest_vmcb.save_state_area.gdtr_base = gdtr.base;
+	core_data->guest_vmcb.save_state_area.idtr_limit = idtr.limit;
+	core_data->guest_vmcb.save_state_area.idtr_base = idtr.base;
 
-	core_data->guest_vmcb.save_state_area.CsLimit = GetSegmentLimit(context_record->SegCs);
-	core_data->guest_vmcb.save_state_area.DsLimit = GetSegmentLimit(context_record->SegDs);
-	core_data->guest_vmcb.save_state_area.EsLimit = GetSegmentLimit(context_record->SegEs);
-	core_data->guest_vmcb.save_state_area.SsLimit = GetSegmentLimit(context_record->SegSs);
+	core_data->guest_vmcb.save_state_area.cs_limit = GetSegmentLimit(context_record->SegCs);
+	core_data->guest_vmcb.save_state_area.ds_limit = GetSegmentLimit(context_record->SegDs);
+	core_data->guest_vmcb.save_state_area.es_limit = GetSegmentLimit(context_record->SegEs);
+	core_data->guest_vmcb.save_state_area.ss_limit = GetSegmentLimit(context_record->SegSs);
 
-	core_data->guest_vmcb.save_state_area.CsSelector = context_record->SegCs;
-	core_data->guest_vmcb.save_state_area.DsSelector = context_record->SegDs;
-	core_data->guest_vmcb.save_state_area.EsSelector = context_record->SegEs;
-	core_data->guest_vmcb.save_state_area.SsSelector = context_record->SegSs;
+	core_data->guest_vmcb.save_state_area.cs_selector = context_record->SegCs;
+	core_data->guest_vmcb.save_state_area.ds_selector = context_record->SegDs;
+	core_data->guest_vmcb.save_state_area.es_selector = context_record->SegEs;
+	core_data->guest_vmcb.save_state_area.ss_selector = context_record->SegSs;
 
-	core_data->guest_vmcb.save_state_area.Rflags.Flags = __readeflags();
+	core_data->guest_vmcb.save_state_area.rflags.Flags = __readeflags();
 	core_data->guest_vmcb.save_state_area.Dr7.Flags = __readdr(7);
-	core_data->guest_vmcb.save_state_area.DbgCtl.Flags = __readmsr(IA32_DEBUGCTL);
+	core_data->guest_vmcb.save_state_area.dbg_ctl.Flags = __readmsr(IA32_DEBUGCTL);
 
-	core_data->guest_vmcb.save_state_area.CsAttrib = GetSegmentAttributes(context_record->SegCs, gdtr.base).as_uint16;
-	core_data->guest_vmcb.save_state_area.DsAttrib = GetSegmentAttributes(context_record->SegDs, gdtr.base).as_uint16;
-	core_data->guest_vmcb.save_state_area.EsAttrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).as_uint16;
-	core_data->guest_vmcb.save_state_area.SsAttrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).as_uint16;
+	core_data->guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base).as_uint16;
+	core_data->guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base).as_uint16;
+	core_data->guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).as_uint16;
+	core_data->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).as_uint16;
 
 	SetupMSRPM(core_data);
 
@@ -334,7 +268,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	
 	__svm_vmsave(core_data->guest_vmcb_physicaladdr);
 
-	__writemsr(VM_HSAVE_PA, MmGetPhysicalAddress(&core_data->host_save_area).QuadPart);
+	__writemsr(vm_hsave_pa, MmGetPhysicalAddress(&core_data->host_save_area).QuadPart);
 
 	__svm_vmsave(core_data->host_vmcb_physicaladdr);
 }
@@ -355,6 +289,7 @@ bool IsSvmSupported()
 	char vendor_name[13];
 
 	__cpuid(vendor_name_result, CPUID::vendor_and_max_standard_fn_number);
+
 	memcpy(vendor_name, &vendor_name_result[1], sizeof(int));
 	memcpy(vendor_name + 4, &vendor_name_result[3], sizeof(int));
 	memcpy(vendor_name + 8, &vendor_name_result[2], sizeof(int));
@@ -375,13 +310,13 @@ bool IsSvmUnlocked()
 {
 	MsrVmcr	msr;
 
-	msr.flags = __readmsr(MSR::VM_CR);
+	msr.flags = __readmsr(MSR::vm_cr);
 
 	if (msr.svm_lock == 0)
 	{
 		msr.svme_disable = 0;
 		msr.svm_lock = 1;
-		__writemsr(MSR::VM_CR, msr.flags);
+		__writemsr(MSR::vm_cr, msr.flags);
 	}
 	else if (msr.svme_disable == 1)
 	{
@@ -393,8 +328,8 @@ bool IsSvmUnlocked()
 
 void EnableSvme()
 {
-	MsrEfer	msr;
-	msr.flags = __readmsr(MSR::EFER);
+	EferMsr	msr;
+	msr.flags = __readmsr(MSR::efer);
 	msr.svme = 1;
-	__writemsr(MSR::EFER, msr.flags);
+	__writemsr(MSR::efer, msr.flags);
 }

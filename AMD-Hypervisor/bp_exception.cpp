@@ -6,13 +6,13 @@ void HandleBreakpoint(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 {
     auto vmroot_cr3 = __readcr3();
 
-    __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
+    __writecr3(vcpu_data->guest_vmcb.save_state_area.cr3.Flags);
 
-    auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
+    auto guest_rip = vcpu_data->guest_vmcb.save_state_area.rip;
 
     if (BranchTracer::initialized && guest_rip == BranchTracer::start_address && !BranchTracer::thread_id)
     {
-        NPTHooks::ForEachHook(
+        NptHooks::ForEachHook(
             [](auto hook_entry, auto data)-> auto {
 
                 if (hook_entry->address == data)
@@ -29,8 +29,8 @@ void HandleBreakpoint(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
         /*  clean TLB after removing the NPT hook   */
 
-        vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
-        vcpu_data->guest_vmcb.control_area.TlbControl = 1;
+        vcpu_data->guest_vmcb.control_area.vmcb_clean &= 0xFFFFFFEF;
+        vcpu_data->guest_vmcb.control_area.tlb_control = 1;
 
         /*  capture the ID of the target thread & start the tracer  */
 

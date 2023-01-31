@@ -55,11 +55,11 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
     {
         auto vmroot_cr3 = __readcr3();
 
-        __writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
+        __writecr3(vcpu_data->guest_vmcb.save_state_area.cr3.Flags);
 
         DbgPrint("VMMCALL_ID::remove_npt_hook called! \n");
 
-        NPTHooks::ForEachHook(
+        NptHooks::ForEachHook(
             [](auto hook_entry, auto data)-> auto {
 
                 if (hook_entry->address == data)
@@ -79,7 +79,7 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
     }
     case VMMCALL_ID::set_npt_hook:
     {			
-        NPTHooks::SetNptHook(vcpu_data, (void*)guest_ctx->rdx, (uint8_t*)guest_ctx->r8, 
+        NptHooks::SetNptHook(vcpu_data, (void*)guest_ctx->rdx, (uint8_t*)guest_ctx->r8, 
             guest_ctx->r9, guest_ctx->r12);
 
         break;
@@ -102,5 +102,5 @@ void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
     }
     }
 
-    vcpu_data->guest_vmcb.save_state_area.Rip = vcpu_data->guest_vmcb.control_area.NRip;
+    vcpu_data->guest_vmcb.save_state_area.rip = vcpu_data->guest_vmcb.control_area.nrip;
 }

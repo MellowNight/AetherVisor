@@ -10,10 +10,10 @@ namespace Instrumentation
 
 		if (!is_kernel)
 		{
-			__writecr3(vcpu_data->guest_vmcb.save_state_area.Cr3.Flags);
+			__writecr3(vcpu_data->guest_vmcb.save_state_area.cr3.Flags);
 		}
 
-		auto guest_rip = vcpu_data->guest_vmcb.save_state_area.Rip;
+		auto guest_rip = vcpu_data->guest_vmcb.save_state_area.rip;
 
 		DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
 
@@ -22,10 +22,10 @@ namespace Instrumentation
 
 		if (callback_permission == rip_permission || handler == sandbox_readwrite)
 		{
-			vcpu_data->guest_vmcb.save_state_area.Rip = (uintptr_t)callbacks[handler];
+			vcpu_data->guest_vmcb.save_state_area.rip = (uintptr_t)callbacks[handler];
 
-			vcpu_data->guest_vmcb.save_state_area.Rsp -= 8;
-			*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.Rsp = guest_rip;
+			vcpu_data->guest_vmcb.save_state_area.rsp -= 8;
+			*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.rsp = guest_rip;
 		}
 		else
 		{
@@ -35,7 +35,7 @@ namespace Instrumentation
 			return FALSE;
 		}
 
-		vcpu_data->guest_vmcb.control_area.NCr3 = Hypervisor::Get()->ncr3_dirs[primary];
+		vcpu_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
 
 		vcpu_data->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
 		vcpu_data->guest_vmcb.control_area.TlbControl = 1;

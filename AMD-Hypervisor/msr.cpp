@@ -9,7 +9,7 @@ void HandleMsrExit(VcpuData* core_data, GuestRegisters* guest_regs)
         /*  PUBG and Fortnite's unimplemented MSR checks    */
 
         InjectException(core_data, EXCEPTION_GP_FAULT, true, 0);
-        core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
+        core_data->guest_vmcb.save_state_area.rip = core_data->guest_vmcb.control_area.nrip;
 
         return;
     }
@@ -18,7 +18,7 @@ void HandleMsrExit(VcpuData* core_data, GuestRegisters* guest_regs)
 
     switch (msr_id)
     {
-    case MSR::EFER:
+    case MSR::efer:
     {
         auto efer = (MsrEfer*)&msr_value.QuadPart;
 
@@ -31,10 +31,10 @@ void HandleMsrExit(VcpuData* core_data, GuestRegisters* guest_regs)
         break;
     }
 
-    core_data->guest_vmcb.save_state_area.Rax = msr_value.LowPart;
+    core_data->guest_vmcb.save_state_area.rax = msr_value.LowPart;
     guest_regs->rdx = msr_value.HighPart;
 
-    core_data->guest_vmcb.save_state_area.Rip = core_data->guest_vmcb.control_area.NRip;
+    core_data->guest_vmcb.save_state_area.rip = core_data->guest_vmcb.control_area.nrip;
 }
 
 

@@ -2,7 +2,7 @@
 #include "npt_hook.h"
 #include "shellcode.h"
 
-namespace NPTHooks
+namespace NptHooks
 {
-	void CleanupNptHooksOnExit();
+	void CleanupOnProcessExit();
 };

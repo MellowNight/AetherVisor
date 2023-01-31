@@ -10,7 +10,7 @@ struct PTEAccess
 };
 
 uintptr_t BuildNestedPagingTables(
-    uintptr_t* NCr3, 
+    uintptr_t* ncr3, 
     PTEAccess flags
 );
 

@@ -38,7 +38,7 @@ namespace PageUtils
     PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, 
         int (*page_table_callback)(PT_ENTRY_64*, void*), void* callback_data)
     {
-        ADDRESS_TRANSLATION_HELPER helper;
+        AddressTranslationHelper helper;
 
         helper.AsUInt64 = (uintptr_t)virtual_address;
 

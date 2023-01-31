@@ -6,7 +6,6 @@
 #include "vmexit.h"
 #include "paging_utils.h"
 #include "npt_sandbox.h"
-#include "swapcontext_hook.h"
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 
@@ -29,55 +28,57 @@ bool VirtualizeAllProcessors()
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], PTEAccess{ true, true, false });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox_single_step], PTEAccess{ true, true, true });
 	
-	for (int i = 0; i < Hypervisor::Get()->core_count; ++i)
-	{
-		KAFFINITY affinity = Utils::Exponent(2, i);
+	Utils::ForEachCore(
+		[](void* params) -> void {
 
-		KeSetSystemAffinityThread(affinity);
+			PROCESSOR_NUMBER processor_num;
 
-		DbgPrint("=============================================================== \n");
-		DbgPrint("[SETUP] amount of active processors %i \n", Hypervisor::Get()->core_count);
-		DbgPrint("[SETUP] Currently running on core %i \n", i);
+			KeGetCurrentProcessorNumberEx(&processor_num);
 
-		auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
+			auto core_num = KeGetProcessorIndexFromNumber(&processor_num);
 
-		RtlCaptureContext(reg_context);
-		DbgPrint("[SETUP] amount of active processors %i \n", 4);
+			DbgPrint("=============================================================== \n");
+			DbgPrint("[SETUP] active processor count %i \n", Hypervisor::Get()->core_count);
+			DbgPrint("[SETUP] Currently running on core %i \n", core_num);
 
-		if (Hypervisor::Get()->IsHypervisorPresent(i) == false)
-		{
-			EnableSvme();
+			auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
 
-			auto vcpu_data = Hypervisor::Get()->vcpu_data;
+			RtlCaptureContext(reg_context);
 
-			vcpu_data[i] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
-
-			ConfigureProcessor(vcpu_data[i], reg_context);
-
-			SegmentAttribute cs_attrib;
-
-			cs_attrib.as_uint16 = vcpu_data[i]->guest_vmcb.save_state_area.CsAttrib;
-
-			if (IsCoreReadyForVmrun(&vcpu_data[i]->guest_vmcb, cs_attrib))
+			if (Hypervisor::Get()->IsHypervisorPresent(core_num) == false)
 			{
-				DbgPrint("address of guest vmcb save state area = %p \n", &vcpu_data[i]->guest_vmcb.save_state_area.Rip);
+				EnableSvme();
 
-				LaunchVm(&vcpu_data[i]->guest_vmcb_physicaladdr);
+				auto vcpu_data = Hypervisor::Get()->vcpu_data;
+
+				vcpu_data[core_num] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
+
+				ConfigureProcessor(vcpu_data[core_num], reg_context);
+
+				SegmentAttribute cs_attrib;
+
+				cs_attrib.as_uint16 = vcpu_data[core_num]->guest_vmcb.save_state_area.cs_attrib;
+
+				if (IsCoreReadyForVmrun(&vcpu_data[core_num]->guest_vmcb, cs_attrib))
+				{
+					DbgPrint("address of guest vmcb save state area = %p \n", &vcpu_data[core_num]->guest_vmcb.save_state_area.rip);
+
+					LaunchVm(&vcpu_data[core_num]->guest_vmcb_physicaladdr);
+				}
+				else
+				{
+					Logger::Get()->Log("[SETUP] A problem occured!! invalid guest state \n");
+					__debugbreak();
+				}
 			}
 			else
 			{
-				Logger::Get()->Log("[SETUP] A problem occured!! invalid guest state \n");
-				__debugbreak();
+				DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 			}
-		}
-		else
-		{
-			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
-		}
-	}
+		}, NULL
+	);
 
-	// SwapContextHook::Init();
-	NPTHooks::CleanupNptHooksOnExit();
+	NptHooks::CleanupOnProcessExit();
 }
 
 
@@ -88,7 +89,7 @@ int Initialize()
 	Disasm::Init();
 
 	Sandbox::Init();
-	NPTHooks::Init();
+	NptHooks::Init();
 
 	return 0;
 }
@@ -103,12 +104,14 @@ NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
 NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
 	HANDLE init_thread;
-	Initialize();
-	// PsCreateSystemThread(&init_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)Initialize, NULL);
+
+	PsCreateSystemThread(
+		&init_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)Initialize, NULL);
 
 	HANDLE hv_startup_thread;
-	VirtualizeAllProcessors();
-	// PsCreateSystemThread(&hv_startup_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)VirtualizeAllProcessors, NULL);
+
+	PsCreateSystemThread(
+		&hv_startup_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)VirtualizeAllProcessors, NULL);
 
 	return STATUS_SUCCESS;
 }

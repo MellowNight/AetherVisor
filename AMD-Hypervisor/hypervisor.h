@@ -1,5 +1,25 @@
 #pragma once
-#include "amd_defs.h"
+#include "svm.h"
+
+struct GuestRegisters
+{
+    UINT64  r15;
+    UINT64  r14;
+    UINT64  r13;
+    UINT64  r12;
+    UINT64  r11;
+    UINT64  r10;
+    UINT64  r9;
+    UINT64  r8;
+    UINT64  rdi;
+    UINT64  rsi;
+    UINT64  rbp;
+    UINT64  rsp;
+    UINT64  rbx;
+    UINT64  rdx;
+    UINT64  rcx;
+    UINT64  rax;
+};
 
 /*
     CoreVmcbData:
