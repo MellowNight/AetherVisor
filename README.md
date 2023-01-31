@@ -29,7 +29,7 @@ Here is an overview of how AetherVisor's features are implemented : https://mell
 
 **aethervisor-api-kernel -** Static library containing vmmcall wrappers, intended for compilation with Windows kernel drivers.
 
-**aethervisor-example -** DLL demonstrating the features of AetherVisor. In AetherVisor-example, I log API calls from Battleye anti-cheat on Unturned, I NPThook the present() function, and 
+**aethervisor-example -** DLL demonstrating the features of AetherVisor against Battleye on Unturned. In this example, I log BEClient's API calls, trace a VMProtected function, and set a hidden hook on IDXGISwapChain::Present().
 
 ## Supported hardware ##
  Intel processors with VT-x and EPT support
