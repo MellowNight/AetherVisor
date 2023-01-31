@@ -26,12 +26,12 @@ In the writeup, I mentioned multiple potential bugs that I wrote band-aid soluti
 
 ## Components ##
 
-**aethervisor-api -** Static library containing wrappers for using vmmcall to interface with AetherVisor.
+**AetherVisor-api -** Static library containing wrappers interfacing with AetherVisor through vmmcall.
 
 
-**aethervisor-api-kernel -** A version of AetherVisor-api for compilation with Windows kernel drivers.
+**AetherVisor-api-kernel -** A version of AetherVisor-api for compilation with Windows kernel drivers.
 
-**aethervisor-example -** DLL demonstrating the features of AetherVisor against Battleye on Unturned. In this example, I log BEClient's API calls, trace a VMProtected function, and set a hidden hook on IDXGISwapChain::Present().
+**AetherVisor-example -** DLL demonstrating the features of AetherVisor against Battleye on Unturned. In this example, I log BEClient's API calls, trace a VMProtected function, and set a hidden hook on IDXGISwapChain::Present().
 
 ## Supported hardware ##
  Intel processors with VT-x and EPT support
