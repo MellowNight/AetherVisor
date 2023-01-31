@@ -5,7 +5,7 @@ AetherVisor is a minimalistic type-2 AMD hypervisor that provides a memory hacki
 
 Here's how AetherVisor's features are implemented: https://mellownight.github.io/2023/01/19/AetherVisor.html. 
 
-In the writeup, I mentioned multiple potential bugs that I wrote band-aid solutions for. If you experience any of these bugs, feel free to open an issue and propose a fix.
+In the writeup, I mentioned multiple potential bugs that I fixed with band-aid solutions. If you experience any of these bugs, feel free to open an issue and/or propose a better fix.
 
 ## Features
 ### Syscall hooks via MSR_LSTAR
