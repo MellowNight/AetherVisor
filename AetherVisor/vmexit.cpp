@@ -20,46 +20,46 @@ void InjectException(VcpuData* core_data, int vector, bool push_error, int error
     core_data->guest_vmcb.control_area.event_inject = event_inject.fields;
 }
 
-extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegs* guest_ctx)
+extern "C" bool HandleVmexit(VcpuData* vcpu, GuestRegs* guest_ctx)
 {
     /*	load host extra state	*/
 
-    __svm_vmload(vcpu_data->host_vmcb_physicaladdr);
+    __svm_vmload(vcpu->host_vmcb_physicaladdr);
 
     bool end_hypervisor = false;		
 
-    switch (vcpu_data->guest_vmcb.control_area.exit_code)
+    switch (vcpu->guest_vmcb.control_area.exit_code)
     {
         case VMEXIT::MSR: 
         {
-            MsrExitHandler(vcpu_data, guest_ctx);
+            MsrExitHandler(vcpu, guest_ctx);
             break;
         }
         case VMEXIT::DB:
         {  
-            DebugExceptionHandler(vcpu_data, guest_ctx);
+            DebugExceptionHandler(vcpu, guest_ctx);
 
             break;
         }
         case VMEXIT::VMRUN: 
         {
-            InjectException(vcpu_data, EXCEPTION_GP_FAULT, false, 0);
+            InjectException(vcpu, EXCEPTION_GP_FAULT, false, 0);
             break;
         }
         case VMEXIT::VMMCALL: 
         {            
-            VmmcallHandler(vcpu_data, guest_ctx, &end_hypervisor);
+            VmmcallHandler(vcpu, guest_ctx, &end_hypervisor);
             break;
         }
         case VMEXIT::BP:
         {     
-            BreakpointHandler(vcpu_data, guest_ctx);
+            BreakpointHandler(vcpu, guest_ctx);
 
             break;
         }
         case VMEXIT::NPF:
         {        
-            NestedPageFaultHandler(vcpu_data, guest_ctx);
+            NestedPageFaultHandler(vcpu, guest_ctx);
 
             break;
         }
@@ -67,16 +67,16 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegs* guest_ctx)
         {
             SegmentAttribute cs_attrib;
 
-            cs_attrib.as_uint16 = vcpu_data->guest_vmcb.save_state_area.cs_attrib;
+            cs_attrib.as_uint16 = vcpu->guest_vmcb.save_state_area.cs_attrib;
 
-            IsCoreReadyForVmrun(&vcpu_data->guest_vmcb, cs_attrib);
+            IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
 
             break;
         }
         default:
         {            
             KeBugCheckEx(MANUALLY_INITIATED_CRASH, 
-                vcpu_data->guest_vmcb.control_area.exit_code, vcpu_data->guest_vmcb.control_area.exit_info1, vcpu_data->guest_vmcb.control_area.exit_info2, vcpu_data->guest_vmcb.save_state_area.rip);
+                vcpu->guest_vmcb.control_area.exit_code, vcpu->guest_vmcb.control_area.exit_info1, vcpu->guest_vmcb.control_area.exit_info2, vcpu->guest_vmcb.save_state_area.rip);
 
             break;
         }
@@ -85,10 +85,10 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegs* guest_ctx)
     if (end_hypervisor) 
     {
         // 1. Load guest CR3 context
-        __writecr3(vcpu_data->guest_vmcb.save_state_area.cr3.Flags);
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
 
         // 2. Load guest hidden context
-        __svm_vmload(vcpu_data->guest_vmcb_physicaladdr);
+        __svm_vmload(vcpu->guest_vmcb_physicaladdr);
 
         // 3. Enable global interrupt flag
         __svm_stgi();
@@ -105,11 +105,11 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegs* guest_ctx)
         __writemsr(MSR::efer, msr.flags);
 
         // 6. load the guest value of EFLAGS
-        __writeeflags(vcpu_data->guest_vmcb.save_state_area.rflags.Flags);
+        __writeeflags(vcpu->guest_vmcb.save_state_area.rflags.Flags);
 
         // 7. restore these values later
-        guest_ctx->rcx = vcpu_data->guest_vmcb.save_state_area.rsp;
-        guest_ctx->rbx = vcpu_data->guest_vmcb.control_area.nrip;
+        guest_ctx->rcx = vcpu->guest_vmcb.save_state_area.rsp;
+        guest_ctx->rbx = vcpu->guest_vmcb.control_area.nrip;
 
         Logger::Get()->Log("ending hypervisor... \n");
     }

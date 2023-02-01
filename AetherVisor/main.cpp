@@ -49,21 +49,21 @@ bool VirtualizeAllProcessors()
 			{
 				EnableSvme();
 
-				auto vcpu_data = Hypervisor::Get()->vcpu_data;
+				auto vcpu = Hypervisor::Get()->vcpu;
 
-				vcpu_data[core_num] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
+				vcpu[core_num] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
 
-				ConfigureProcessor(vcpu_data[core_num], reg_context);
+				ConfigureProcessor(vcpu[core_num], reg_context);
 
 				SegmentAttribute cs_attrib;
 
-				cs_attrib.as_uint16 = vcpu_data[core_num]->guest_vmcb.save_state_area.cs_attrib;
+				cs_attrib.as_uint16 = vcpu[core_num]->guest_vmcb.save_state_area.cs_attrib;
 
-				if (IsCoreReadyForVmrun(&vcpu_data[core_num]->guest_vmcb, cs_attrib))
+				if (IsCoreReadyForVmrun(&vcpu[core_num]->guest_vmcb, cs_attrib))
 				{
-					DbgPrint("address of guest vmcb save state area = %p \n", &vcpu_data[core_num]->guest_vmcb.save_state_area.rip);
+					DbgPrint("address of guest vmcb save state area = %p \n", &vcpu[core_num]->guest_vmcb.save_state_area.rip);
 
-					LaunchVm(&vcpu_data[core_num]->guest_vmcb_physicaladdr);
+					LaunchVm(&vcpu[core_num]->guest_vmcb_physicaladdr);
 				}
 				else
 				{

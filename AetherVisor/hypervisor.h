@@ -56,7 +56,7 @@ private:
 
         for (int i = 0; i < 32; ++i)
         {
-            vcpu_data[i] = NULL;
+            vcpu[i] = NULL;
         }
     }
 public:
@@ -65,7 +65,7 @@ public:
 
     PHYSICAL_MEMORY_RANGE phys_mem_range[12];
 
-    VcpuData* vcpu_data[32];
+    VcpuData* vcpu[32];
 
     int core_count;
 

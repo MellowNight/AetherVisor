@@ -16,6 +16,6 @@ namespace Instrumentation
 
 	extern void* callbacks[max_id];
 
-    bool InvokeHook(VcpuData* vcpu_data, HOOK_ID handler, bool is_kernel);
+    bool InvokeHook(VcpuData* vcpu, HOOK_ID handler, bool is_kernel);
 };
 

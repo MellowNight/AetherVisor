@@ -9,7 +9,7 @@
 
     Parameters are passed in the order of rdx, r8, r9, r12, r11
 */
-void VmmcallHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx, bool* EndVM)
+void VmmcallHandler(VcpuData* vcpu, GuestRegs* guest_ctx, bool* EndVM)
 {
     auto id = guest_ctx->rcx;
 
@@ -19,13 +19,13 @@ void VmmcallHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx, bool* EndVM)
     {				
         DbgPrint("VMMCALL_ID::start_branch_trace \n");
 
-        BranchTracer::Init(vcpu_data, guest_ctx->rdx, guest_ctx->r8, guest_ctx->r9, guest_ctx->r12, guest_ctx->r11);
+        BranchTracer::Init(vcpu, guest_ctx->rdx, guest_ctx->r8, guest_ctx->r9, guest_ctx->r12, guest_ctx->r11);
 
         break;
     }
     case VMMCALL_ID::deny_sandbox_reads:
     {
-        Sandbox::DenyMemoryAccess(vcpu_data, (void*)guest_ctx->rdx, guest_ctx->r8);
+        Sandbox::DenyMemoryAccess(vcpu, (void*)guest_ctx->rdx, guest_ctx->r8);
 
         break;
     }
@@ -47,7 +47,7 @@ void VmmcallHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx, bool* EndVM)
     }
     case VMMCALL_ID::sandbox_page:
     {
-        Sandbox::AddPageToSandbox(vcpu_data, (void*)guest_ctx->rdx, guest_ctx->r8);
+        Sandbox::AddPageToSandbox(vcpu, (void*)guest_ctx->rdx, guest_ctx->r8);
 
         break;
     }
@@ -55,7 +55,7 @@ void VmmcallHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx, bool* EndVM)
     {
         auto vmroot_cr3 = __readcr3();
 
-        __writecr3(vcpu_data->guest_vmcb.save_state_area.cr3.Flags);
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
 
         DbgPrint("VMMCALL_ID::remove_npt_hook called! \n");
 
@@ -79,7 +79,7 @@ void VmmcallHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx, bool* EndVM)
     }
     case VMMCALL_ID::set_npt_hook:
     {			
-        NptHooks::SetNptHook(vcpu_data, (void*)guest_ctx->rdx, (uint8_t*)guest_ctx->r8, 
+        NptHooks::SetNptHook(vcpu, (void*)guest_ctx->rdx, (uint8_t*)guest_ctx->r8, 
             guest_ctx->r9, guest_ctx->r12);
 
         break;
@@ -97,10 +97,10 @@ void VmmcallHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx, bool* EndVM)
     }
     default:
     {
-        InjectException(vcpu_data, EXCEPTION_INVALID_OPCODE, false, 0);
+        InjectException(vcpu, EXCEPTION_INVALID_OPCODE, false, 0);
         return;
     }
     }
 
-    vcpu_data->guest_vmcb.save_state_area.rip = vcpu_data->guest_vmcb.control_area.nrip;
+    vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
 }

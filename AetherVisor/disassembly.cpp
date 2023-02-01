@@ -3,12 +3,12 @@
 
 namespace Disasm
 {
-	void MyRegContextToZydisRegContext(VcpuData* vcpu_data, GuestRegs* guest_regs, ZydisRegisterContext* context)
+	void MyRegContextToZydisRegContext(VcpuData* vcpu, GuestRegs* guest_regs, ZydisRegisterContext* context)
 	{
-		context->values[ZYDIS_REGISTER_RAX] = vcpu_data->guest_vmcb.save_state_area.rax;
-		context->values[ZYDIS_REGISTER_RSP] = vcpu_data->guest_vmcb.save_state_area.rsp;
-		context->values[ZYDIS_REGISTER_RIP] = vcpu_data->guest_vmcb.save_state_area.rip;
-		context->values[ZYDIS_REGISTER_RFLAGS] = vcpu_data->guest_vmcb.save_state_area.rflags.Flags;
+		context->values[ZYDIS_REGISTER_RAX] = vcpu->guest_vmcb.save_state_area.rax;
+		context->values[ZYDIS_REGISTER_RSP] = vcpu->guest_vmcb.save_state_area.rsp;
+		context->values[ZYDIS_REGISTER_RIP] = vcpu->guest_vmcb.save_state_area.rip;
+		context->values[ZYDIS_REGISTER_RFLAGS] = vcpu->guest_vmcb.save_state_area.rflags.Flags;
 		context->values[ZYDIS_REGISTER_RCX] = guest_regs->rcx;
 		context->values[ZYDIS_REGISTER_RDX] = guest_regs->rdx;
 		context->values[ZYDIS_REGISTER_RBX] = guest_regs->rbx;

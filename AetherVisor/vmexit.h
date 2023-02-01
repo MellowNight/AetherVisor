@@ -47,6 +47,6 @@ void VmmcallHandler(
     bool* EndVM
 );
 
-void BreakpointHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx);
+void BreakpointHandler(VcpuData* vcpu, GuestRegs* guest_ctx);
 
-void DebugExceptionHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx);
+void DebugExceptionHandler(VcpuData* vcpu, GuestRegs* guest_ctx);

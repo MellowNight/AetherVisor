@@ -4,13 +4,13 @@ namespace Instrumentation
 {
 	void* callbacks[4];
 
-	bool InvokeHook(VcpuData* vcpu_data, HOOK_ID handler, bool is_kernel)
+	bool InvokeHook(VcpuData* vcpu, HOOK_ID handler, bool is_kernel)
 	{
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vcpu_data->guest_vmcb.save_state_area.cr3.Flags);
+		__writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
 
-		auto guest_rip = vcpu_data->guest_vmcb.save_state_area.rip;
+		auto guest_rip = vcpu->guest_vmcb.save_state_area.rip;
 
 		DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
 
@@ -20,11 +20,11 @@ namespace Instrumentation
 
 		if (callback_privilege == rip_privilege || handler == sandbox_readwrite)
 		{
-			vcpu_data->guest_vmcb.save_state_area.rip = (uintptr_t)callbacks[handler];
+			vcpu->guest_vmcb.save_state_area.rip = (uintptr_t)callbacks[handler];
 
-			vcpu_data->guest_vmcb.save_state_area.rsp -= 8;
+			vcpu->guest_vmcb.save_state_area.rsp -= 8;
 
-			*(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.rsp = guest_rip;
+			*(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp = guest_rip;
 		}
 		else
 		{
@@ -34,10 +34,10 @@ namespace Instrumentation
 			return FALSE;
 		}
 
-		vcpu_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
+		vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
 
-		vcpu_data->guest_vmcb.control_area.vmcb_clean &= 0xFFFFFFEF;
-		vcpu_data->guest_vmcb.control_area.tlb_control = 1;
+		vcpu->guest_vmcb.control_area.vmcb_clean &= 0xFFFFFFEF;
+		vcpu->guest_vmcb.control_area.tlb_control = 1;
 
 		__writecr3(vmroot_cr3);
 

@@ -17,5 +17,5 @@ bool Hypervisor::IsCoreVirtualized(int32_t core_number)
 {
 	/*	I switched from vmmcall to a simple pointer check to avoid #UD	*/
 
-	return hypervisor->vcpu_data[core_number] != NULL ? true : false;
+	return hypervisor->vcpu[core_number] != NULL ? true : false;
 }

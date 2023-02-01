@@ -3,6 +3,6 @@
 
 namespace SyscallHook
 {
-    bool EmulateSyscall(GuestRegs Regs);
-    bool EmulateSysret(GuestRegs Regs);
+    bool EmulateSyscall(VcpuData* vcpu, GuestRegs Regs);
+    bool EmulateSysret(VcpuData* vcpu, GuestRegs Regs);
 };

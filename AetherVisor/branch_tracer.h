@@ -9,13 +9,13 @@
 
 namespace BranchTracer
 {
-	void Start(VcpuData* vcpu_data);
-	void Stop(VcpuData* vcpu_data);
+	void Start(VcpuData* vcpu);
+	void Stop(VcpuData* vcpu);
 
-	void Pause(VcpuData* vcpu_data);
-	void Resume(VcpuData* vcpu_data);
+	void Pause(VcpuData* vcpu);
+	void Resume(VcpuData* vcpu);
 
-	void Init(VcpuData* vcpu_data, 
+	void Init(VcpuData* vcpu, 
 		uintptr_t start_addr, uintptr_t stop_addr, 
 		uintptr_t out_buffer, uintptr_t trace_range_base,
 		uintptr_t trace_range_size
@@ -51,13 +51,13 @@ namespace BranchTracer
 
 		LogEntry log_entries[PAGE_SIZE / sizeof(LogEntry)];
 
-		void Log(VcpuData* vcpu_data, uintptr_t branch_address, uintptr_t target)
+		void Log(VcpuData* vcpu, uintptr_t branch_address, uintptr_t target)
 		{
 			if (info.capacity - info.buffer_idx <= 5)
 			{
 				/*	notify to the guest that the branch tracing buffer is almost full	*/
 
-				if (Instrumentation::InvokeHook(vcpu_data, Instrumentation::branch_log_full, false) == FALSE)
+				if (Instrumentation::InvokeHook(vcpu, Instrumentation::branch_log_full, false) == FALSE)
 				{
 				}
 				else
