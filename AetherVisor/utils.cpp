@@ -5,6 +5,113 @@
 
 namespace Utils
 {
+     void* VirtualAddrFromPfn(uintptr_t pfn)
+    {
+        PHYSICAL_ADDRESS pa; 
+        
+        pa.QuadPart = pfn << PAGE_SHIFT;
+
+        return MmGetVirtualForPhysical(pa);
+    }
+
+    PFN_NUMBER	PfnFromVirtualAddr(uintptr_t va)
+    {
+        return MmGetPhysicalAddress((void*)va).QuadPart >> PAGE_SHIFT;
+    }
+
+    PMDL LockPages(void* virtual_address, LOCK_OPERATION operation, KPROCESSOR_MODE access_mode, int size)
+    {
+        PMDL mdl = IoAllocateMdl(virtual_address, size, FALSE, FALSE, nullptr);
+
+        MmProbeAndLockPages(mdl, KernelMode, operation);
+
+        return mdl;
+    }
+
+    NTSTATUS UnlockPages(PMDL mdl)
+    {
+        MmUnlockPages(mdl);
+        IoFreeMdl(mdl);
+
+        return STATUS_SUCCESS;
+    }
+
+    PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, 
+        int (*page_table_callback)(PT_ENTRY_64*, void*), void* callback_data)
+    {
+        AddressTranslationHelper helper;
+
+        helper.as_int64 = (uintptr_t)virtual_address;
+
+        PHYSICAL_ADDRESS pml4_physical;
+        pml4_physical.QuadPart = pml4_base_pa;
+
+        PML4E_64* pml4;
+        PML4E_64* pml4e;
+
+        pml4 = (PML4E_64*)MmGetVirtualForPhysical(pml4_physical);
+
+        pml4e = &pml4[helper.AsIndex.pml4];
+
+        if (page_table_callback)
+        {
+            page_table_callback((PT_ENTRY_64*)pml4e, callback_data);
+        }
+
+        if (pml4e->Present == FALSE)
+        {
+            return (PT_ENTRY_64*)pml4e;
+        }
+
+        PDPTE_64* pdpt;
+        PDPTE_64* pdpte;
+
+        pdpt = (PDPTE_64*)PageUtils::VirtualAddrFromPfn(pml4e->PageFrameNumber);
+
+        pdpte = &pdpt[helper.AsIndex.pdpt];
+
+        if (page_table_callback)
+        {
+            page_table_callback((PT_ENTRY_64*)pdpte, callback_data);
+        }
+
+        if ((pdpte->Present == FALSE) || (pdpte->LargePage != FALSE))
+        {
+            return (PT_ENTRY_64*)pdpte;
+        }
+
+        PDE_64* pd;
+        PDE_64* pde;
+
+        pd = (PDE_64*)PageUtils::VirtualAddrFromPfn(pdpte->PageFrameNumber);
+
+        pde = &pd[helper.AsIndex.pd];
+
+        if (page_table_callback)
+        {
+            page_table_callback((PT_ENTRY_64*)pde, callback_data);
+        }
+
+        if ((pde->Present == FALSE) || pde->LargePage == TRUE)
+        {
+            return (PT_ENTRY_64*)pde;
+        }
+
+        PTE_64* pt;
+        PTE_64* pte;
+
+        pt = (PTE_64*)PageUtils::VirtualAddrFromPfn(pde->PageFrameNumber);
+
+        pte = &pt[helper.AsIndex.pt];
+
+        if (page_table_callback)
+        {
+            page_table_callback((PT_ENTRY_64*)pte, callback_data);
+        }
+
+        return  (PT_ENTRY_64*)pte;
+    }
+    
     uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const char* pattern, size_t pattern_size, char wildcard)
     {
         for (auto byte = (char*)region_base; byte < (char*)region_base + region_size;
@@ -27,34 +134,6 @@ namespace Utils
         }
 
         return 0;
-    }
-    
-    KIRQL DisableWP()
-    {
-        KIRQL	tempirql = KeRaiseIrqlToDpcLevel();
-
-        ULONG64  cr0 = __readcr0();
-
-        cr0 &= 0xfffffffffffeffff;
-
-        __writecr0(cr0);
-
-        _disable();
-
-        return tempirql;
-    }
-
-    void EnableWP(KIRQL	tempirql)
-    {
-        ULONG64	cr0 = __readcr0();
-
-        cr0 |= 0x10000;
-
-        _enable();
-
-        __writecr0(cr0);
-
-        KeLowerIrql(tempirql);
     }
 
     void* GetKernelModule(uint32_t* out_size, UNICODE_STRING driver_name)

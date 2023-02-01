@@ -13,7 +13,7 @@ bool HandleSplitInstruction(VcpuData* vcpu, uintptr_t guest_rip, PHYSICAL_ADDRES
 
 	bool switch_ncr3 = true;
 
-	int insn_len = 10;
+	int insn_len = Disasm::LengthOfInstructions(guest_rip, );
 
 	/*	handle cases where an instruction is split across 2 pages (using SINGLE STEP is better here tbh)	*/
 

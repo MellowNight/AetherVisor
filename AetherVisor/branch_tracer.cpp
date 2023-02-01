@@ -39,7 +39,7 @@ namespace BranchTracer
 
 		is_system = (vcpu->guest_vmcb.save_state_area.cr3.Flags == __readcr3()) ? true : false;
 
-		DbgPrint("log_buffer  = %p \n", log_buffer);
+		// DbgPrint("log_buffer  = %p \n", log_buffer);
 
 		if (is_system)
 		{
@@ -77,7 +77,7 @@ namespace BranchTracer
 			stop_address = *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp;
 		}
 
-		DbgPrint("BranchTracer::stop_address  = %p \n", stop_address);
+		// DbgPrint("BranchTracer::stop_address  = %p \n", stop_address);
 
 		int processor_id = KeGetCurrentProcessorNumber();
 
@@ -85,7 +85,7 @@ namespace BranchTracer
 
 		KeSetSystemAffinityThread(affinity);
 
-		DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+		// DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
 
 		active = true;
 

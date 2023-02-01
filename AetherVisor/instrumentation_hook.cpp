@@ -28,7 +28,7 @@ namespace Instrumentation
 		}
 		else
 		{
-			DbgPrint("ADDRESS SPACE MISMATCH \n");
+			// DbgPrint("ADDRESS SPACE MISMATCH \n");
 			__writecr3(vmroot_cr3);
 
 			return FALSE;

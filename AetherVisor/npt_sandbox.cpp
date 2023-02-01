@@ -11,13 +11,14 @@ namespace Sandbox
 	void* sandbox_hooks[2] = { NULL, NULL };
 
 	int sandbox_page_count;
+
 	SandboxPage* sandbox_page_array;
+
+	int max_hooks = 6000;
 
 	void Init()
 	{
 		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
-
-		int max_hooks = 6000;
 
 		sandbox_page_array = (SandboxPage*)ExAllocatePoolZero(NonPagedPool, sizeof(SandboxPage) * max_hooks, 'hook');
 
@@ -42,6 +43,9 @@ namespace Sandbox
 
 		PageUtils::UnlockPages(hook_entry->mdl);
 
+		memmove(sandbox_page_array + sandbox_page_count - 1, 
+			sandbox_page_array + sandbox_page_count, max_hooks - sandbox_page_count);
+
 		sandbox_page_count -= 1;
 	}
 
@@ -60,14 +64,9 @@ namespace Sandbox
 
 		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
-		if ((uintptr_t)address < 0x7FFFFFFFFFF)
-		{
-			sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, UserMode);
-		}
-		else
-		{
-			sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
-		}
+		LOCK_OPERATION operation = address < 0x7FFFFFFFFFF ? Usermode : KernelMode;
+
+		sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, operation);
 
 		sandbox_page_count += 1;
 

@@ -1,39 +1,38 @@
 #pragma once
 #include "utils.h"
 
-namespace PageUtils
+class PhysMemAccess
 {
-    void* VirtualAddrFromPfn(
-        uintptr_t pfn
-    );
+    public:
 
-    PFN_NUMBER	PfnFromVirtualAddr(
-        uintptr_t va
-    );
+    struct PageFrame
+    {
+        void*   window;
+        PTE_64* window_pte;
+    };
 
-    PMDL LockPages(
-        void* virtual_address,
-        LOCK_OPERATION operation,
-        KPROCESSOR_MODE access_mode,
-        int size = PAGE_SIZE
-    );
+    PageFrame mapping_window;
 
-    NTSTATUS UnlockPages(
-        PMDL mdl
-    );
+    PhysMemAccess()
+    {
+        CR3 cr3; cr3.Flags = __readcr3();
 
-    /*
-        virtual_addr - virtual address to get pte of
-        pml4_base_pa - base physical address of PML4
-        page_table_callback - callback to call on the PTE, PDPTE, PDE, and PML4E associated
-        with this virtual address
-    */
+        mapping_window.window = ExAllocatePool(NonPagedPool, PAGE_SIZE);
+        mapping_window.window_pte = (PTE_64*)Memory::GetPte(mapping_window.eservedPage, cr3);
+    }
 
-    PT_ENTRY_64* GetPte(
-        void* virtual_address, 
-        uintptr_t pml4_base_pa,
-        int (*page_table_callback)(PT_ENTRY_64*, void*) = NULL, 
-        void* callback_data = NULL
-    );
+    template<class T>
+    T ReadVirtual(void* virtual_addr)
+    {
+        mapping_window.window_pte->PageFrameNumber = Utils::VirtualAddrToPfn(virtual_addr);
+        return *(T*)virtual_addr;
+    }
+    
+    template<class T>
+    void WriteVirtual(T* buffer, size_t size)
+    {
+        mapping_window.window_pte->PageFrameNumber = Utils::VirtualAddrToPfn(virtual_addr);
+        memcpy(mapping_window.window, buffer, size)
+    }
 };
 

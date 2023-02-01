@@ -9,13 +9,14 @@
 namespace NptHooks
 {
 	int hook_count;
+
 	NptHook* npt_hook_list;
+
+	int max_hooks = 6000;
 
 	void Init()
 	{
 		/*	reserve memory for hooks because we can't allocate memory in VM root	*/
-
-		int max_hooks = 6000;
 		
 		npt_hook_list = (NptHook*)ExAllocatePoolZero(NonPagedPool, sizeof(NptHook) * max_hooks, 'hook');
 
@@ -48,8 +49,9 @@ namespace NptHooks
 
 		PageUtils::UnlockPages(hook_entry->mdl);
 
+		memmove(npt_hook_list + hook_count - 1, npt_hook_list + hook_count, max_hooks - hook_count);
+
 		hook_count -= 1;
-		memmove()
 	}
 
 
@@ -65,14 +67,9 @@ namespace NptHooks
 
 		auto hook_entry = &npt_hook_list[hook_count];
 
-		if ((uintptr_t)address < 0x7FFFFFFFFFF)
-		{
-			hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, UserMode);
-		}
-		else
-		{
-			hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
-		}
+		LOCK_OPERATION operation = address < 0x7FFFFFFFFFF ? Usermode : KernelMode;
+
+		hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, operation);
 
 		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 

@@ -146,8 +146,7 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 /*	Copy bits bits 55:52 and 47:40 from segment descriptor	*/
 SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_base)
 {
-	SEGMENT_SELECTOR selector;
-	selector.Flags = segment_selector;
+	SEGMENT_SELECTOR selector; selector.Flags = segment_selector;
 
 	SegmentDescriptor seg_descriptor = ((SegmentDescriptor*)gdt_base)[selector.Index];
 

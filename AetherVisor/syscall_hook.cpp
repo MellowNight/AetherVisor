@@ -62,7 +62,7 @@ namespace SyscallHook
         //
         // Load the CS and SS selectors with values derived from bits 47:32 of IA32_STAR
         //
-        uintptr_t star            = __readmsr(IA32_STAR);
+        uintptr_t star       = __readmsr(IA32_STAR);
         cs.Selector          = (uint16_t)((star >> 32) & ~3); // STAR[47:32] & ~RPL3
         cs.Base              = 0;                               // flat segment
         cs.Limit             = (uint32_t)~0;                      // 4GB limit
