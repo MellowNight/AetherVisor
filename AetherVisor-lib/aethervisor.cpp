@@ -7,6 +7,7 @@ void (*sandbox_execute_handler)(GuestRegs* registers, void* return_address, void
 void (*sandbox_mem_access_handler)(GuestRegs* registers, void* o_guest_rip) = NULL;
 void (*branch_log_full_handler)() = NULL;
 void (*branch_trace_finish_handler)() = NULL;
+void (*syscall_handler)() = NULL;
 
 /*  parameter order: rcx, rdx, r8, r9, r12, r11  */
 

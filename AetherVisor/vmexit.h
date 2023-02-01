@@ -50,3 +50,5 @@ void VmmcallHandler(
 void BreakpointHandler(VcpuData* vcpu, GuestRegs* guest_ctx);
 
 void DebugExceptionHandler(VcpuData* vcpu, GuestRegs* guest_ctx);
+
+bool InvalidOpcodeHandler(VcpuData vcpu, GuestRegs* guest_ctx);

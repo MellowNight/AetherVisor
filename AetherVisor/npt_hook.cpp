@@ -91,7 +91,7 @@ namespace NptHooks
 		hook_entry->guest_pte->Write = 1;
 
 
-		/*	get the nested pte of the guest physical address	*/
+		/*	get the nested pte of the guest physical address, in primary nCR3	*/
 
 		hook_entry->hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[ncr3_id]);
 
@@ -104,9 +104,9 @@ namespace NptHooks
 
 		hook_entry->hookless_npte->ExecuteDisable = 1;
 
-		/*	get the nested pte of the guest physical address in the 2nd NCR3, and map it to our hook page	*/
+		/*	get the nested pte of the guest physical address in the shadow NCR3, and map it to our hook page	*/
 
-		hook_entry->hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[noexecute]);
+		hook_entry->hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[shadow]);
 
 		if (address != patch && patch_len != PAGE_SIZE)
 		{

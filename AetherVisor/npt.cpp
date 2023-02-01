@@ -27,7 +27,7 @@ bool HandleSplitInstruction(VcpuData* vcpu, uintptr_t guest_rip, PHYSICAL_ADDRES
 
 			switch_ncr3 = true;
 
-			ncr3.QuadPart = Hypervisor::Get()->ncr3_dirs[noexecute];
+			ncr3.QuadPart = Hypervisor::Get()->ncr3_dirs[shadow];
 		}
 		else
 		{
@@ -143,7 +143,7 @@ void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
 			return;
 		}
 
-		auto npthooked_page = PageUtils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[noexecute]);
+		auto npthooked_page = PageUtils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[shadow]);
 
 		/*	handle cases where an instruction is split across 2 pages	*/
 
@@ -155,7 +155,7 @@ void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
 			{
 				/*  move into hooked page and switch to ncr3 with hooks mapped  */
 
-				vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[noexecute];
+				vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[shadow];
 			}
 			else
 			{

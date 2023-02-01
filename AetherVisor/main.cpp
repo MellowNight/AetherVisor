@@ -24,7 +24,7 @@ bool VirtualizeAllProcessors()
 	}
 
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[primary], PTEAccess{ true, true, true });
-	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[noexecute], PTEAccess{ true, true, false });
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[shadow], PTEAccess{ true, true, false });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], PTEAccess{ true, true, false });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox_single_step], PTEAccess{ true, true, true });
 	

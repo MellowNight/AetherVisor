@@ -85,7 +85,7 @@ namespace BVM
     enum NCR3_DIRECTORIES
     {
         primary,
-        noexecute,
+        shadow,
         sandbox,
         sandbox_single_step
     };
