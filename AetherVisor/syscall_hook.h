@@ -4,4 +4,5 @@
 namespace SyscallHook
 {
     bool EmulateSyscall(GuestRegs Regs);
+    bool EmulateSysret(GuestRegs Regs);
 };
