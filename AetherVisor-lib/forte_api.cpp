@@ -3,8 +3,8 @@
 #include "ia32.h"
 #include "utils.h"
 
-void (*sandbox_execute_handler)(GuestRegisters* registers, void* return_address, void* o_guest_rip) = NULL;
-void (*sandbox_mem_access_handler)(GuestRegisters* registers, void* o_guest_rip) = NULL;
+void (*sandbox_execute_handler)(GuestRegs* registers, void* return_address, void* o_guest_rip) = NULL;
+void (*sandbox_mem_access_handler)(GuestRegs* registers, void* o_guest_rip) = NULL;
 void (*branch_log_full_handler)() = NULL;
 void (*branch_trace_finish_handler)() = NULL;
 

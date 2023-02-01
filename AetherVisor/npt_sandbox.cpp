@@ -45,9 +45,14 @@ namespace Sandbox
 		sandbox_page_count -= 1;
 	}
 
-	void DenyMemoryAccess(VcpuData* vmcb_data, void* address, bool read_only)
+	/*	Trap on memory accesses to a certain page from within the sandbox. 
+		- allow_reads 1: read only
+		- allow_reads 0: non-present nPTE, no access
+	*/
+
+	void DenyMemoryAccess(VcpuData* vmcb_data, void* address, bool allow_reads)
 	{
-		/*	set nPTE->present = 0	*/
+		/*	attach to the guest process context	*/
 
 		auto vmroot_cr3 = __readcr3();
 
@@ -66,22 +71,24 @@ namespace Sandbox
 
 		sandbox_page_count += 1;
 
-		sandbox_entry->unreadable = true;
+		sandbox_entry->unreadable = !allow_reads;
 
 		sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
 		auto sandbox_npte = PageUtils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
-		if (read_only)
+		if (allow_reads)
 		{
-			sandbox_npte->Present = 0;
-		}
-		else
-		{
-			/*	write only	*/
+			/*	read only, only trap on writes	*/
 
 			sandbox_npte->Present = 1;
 			sandbox_npte->Write = 0;
+		}
+		else
+		{
+			/*	no access, trap on both reads and writes	*/
+
+			sandbox_npte->Present = 0;
 		}
 
 		/*	DenyMemoryAccess epilogue	*/
@@ -121,9 +128,6 @@ namespace Sandbox
 		DbgPrint("AddPageToSandbox() physical_page = %p \n", sandbox_entry->guest_physical);
 
 		sandbox_page_count += 1;
-
-		sandbox_entry->active = true;
-		sandbox_entry->tag = tag;
 
 		/*	disable execute on the nested pte of the guest physical address, in NCR3 1	*/
 

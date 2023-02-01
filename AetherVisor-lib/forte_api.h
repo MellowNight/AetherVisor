@@ -18,7 +18,7 @@ enum VMMCALL_ID : uintptr_t
 
 #define PAGE_SIZE 0x1000
 
-struct GuestRegisters
+struct GuestRegs
 {
     uintptr_t  r15;
     uintptr_t  r14;
@@ -63,10 +63,10 @@ union BranchLog
     }
 };
 
-extern "C" void (*sandbox_execute_handler)(GuestRegisters * registers, void* return_address, void* o_guest_rip);
+extern "C" void (*sandbox_execute_handler)(GuestRegs * registers, void* return_address, void* o_guest_rip);
 extern "C" void __stdcall execute_handler_wrap();
 
-extern "C" void (*sandbox_mem_access_handler)(GuestRegisters * registers, void* o_guest_rip);
+extern "C" void (*sandbox_mem_access_handler)(GuestRegs * registers, void* o_guest_rip);
 extern "C" void __stdcall rw_handler_wrap();
 
 extern "C" void (*branch_log_full_handler)();

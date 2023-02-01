@@ -2,7 +2,7 @@
 #include "npt_sandbox.h"
 #include "branch_tracer.h"
 
-void BreakpointHandler(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
+void BreakpointHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx)
 {
     auto vmroot_cr3 = __readcr3();
 

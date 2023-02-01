@@ -3,7 +3,7 @@
 
 namespace Disasm
 {
-	void MyRegContextToZydisRegContext(VcpuData* vcpu_data, GuestRegisters* guest_regs, ZydisRegisterContext* context)
+	void MyRegContextToZydisRegContext(VcpuData* vcpu_data, GuestRegs* guest_regs, ZydisRegisterContext* context)
 	{
 		context->values[ZYDIS_REGISTER_RAX] = vcpu_data->guest_vmcb.save_state_area.rax;
 		context->values[ZYDIS_REGISTER_RSP] = vcpu_data->guest_vmcb.save_state_area.rsp;

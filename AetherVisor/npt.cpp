@@ -51,7 +51,7 @@ bool HandleSplitInstruction(VcpuData* vcpu_data, uintptr_t guest_rip, PHYSICAL_A
 }
 
 
-void NestedPageFaultHandler(VcpuData* vcpu_data, GuestRegisters* guest_registers)
+void NestedPageFaultHandler(VcpuData* vcpu_data, GuestRegs* guest_registers)
 {
 	PHYSICAL_ADDRESS fault_physical; fault_physical.QuadPart = vcpu_data->guest_vmcb.control_area.exit_info2;
 

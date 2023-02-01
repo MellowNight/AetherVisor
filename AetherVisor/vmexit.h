@@ -43,10 +43,10 @@ extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
 void VmmcallHandler(
     VcpuData* vmcb_data, 
-    GuestRegisters* GuestRegisters, 
+    GuestRegs* GuestRegs, 
     bool* EndVM
 );
 
-void BreakpointHandler(VcpuData* vcpu_data, GuestRegisters* guest_ctx);
+void BreakpointHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx);
 
-void DebugExceptionHandler(VcpuData* vcpu_data, GuestRegisters* guest_ctx);
+void DebugExceptionHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx);

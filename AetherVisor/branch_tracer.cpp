@@ -72,7 +72,7 @@ namespace BranchTracer
 		process_cr3 = vcpu_data->guest_vmcb.save_state_area.cr3;
 		thread_id = PsGetCurrentThreadId();
 
-		if (stop_address == 0)
+		if (stop_address == NULL)
 		{
 			stop_address = *(uintptr_t*)vcpu_data->guest_vmcb.save_state_area.rsp;
 		}

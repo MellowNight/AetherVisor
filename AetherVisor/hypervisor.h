@@ -1,7 +1,7 @@
 #pragma once
 #include "svm.h"
 
-struct GuestRegisters
+struct GuestRegs
 {
     UINT64  r15;
     UINT64  r14;

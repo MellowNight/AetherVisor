@@ -1,6 +1,6 @@
 #include "msr.h"
 
-void MsrExitHandler(VcpuData* core_data, GuestRegisters* guest_regs)
+void MsrExitHandler(VcpuData* core_data, GuestRegs* guest_regs)
 {
     uint32_t msr_id = guest_regs->rcx & (uint32_t)0xFFFFFFFF;
 

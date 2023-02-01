@@ -3,7 +3,7 @@
 #include "branch_tracer.h"
 #include "instrumentation_hook.h"
 
-void DebugExceptionHandler(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
+void DebugFaultHandler(VcpuData* vcpu_data, GuestRegs* guest_ctx)
 {
     auto guest_rip = vcpu_data->guest_vmcb.save_state_area.rip;
 

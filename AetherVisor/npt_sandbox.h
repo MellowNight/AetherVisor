@@ -15,9 +15,6 @@ namespace Sandbox
 
 		void* guest_physical;		/*	guest physical page address	*/
 
-		int64_t	tag;	/*	identify this sandbox page		*/
-		bool active;	/*	is this page actively being sandboxed?	*/
-
 		bool unreadable;	/*	is this page an unreadable page?	*/
 	};
 
@@ -31,7 +28,11 @@ namespace Sandbox
 		int32_t tag = 0
 	);
 
-	void DenyMemoryAccess(VcpuData* vmcb_data, void* address, bool read_only);
+	void DenyMemoryAccess(
+		VcpuData* vmcb_data, 
+		void* address, 
+		bool allow_reads
+	);
 
 	SandboxPage* ForEachHook(
 		bool(HookCallback)(SandboxPage* hook_entry, void* data), 
