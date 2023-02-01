@@ -32,11 +32,11 @@ namespace NptHooks
 			to prevent physical memory mapping inconsistencies	
 		*/
 
-		ULONG nt_size = NULL;
+		uint32_t nt_size = NULL;
 
 		auto ntoskrnl = (uintptr_t)Utils::GetKernelModule(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
 
-		auto pe_hdr = PeHeader(ntoskrnl);
+		auto pe_hdr = PE_HEADER(ntoskrnl);
 
 		auto section = (IMAGE_SECTION_HEADER*)(pe_hdr + 1);
 

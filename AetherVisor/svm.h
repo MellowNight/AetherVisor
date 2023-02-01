@@ -232,13 +232,13 @@ struct DescriptorTableRegister
 static_assert(sizeof(DescriptorTableRegister) == 0xA, "DESCRIPTOR_TABLE_REGISTER Size Mismatch");
 
 /*  15.20 Event Injection   */
-union EventInjection
+union EventInject
 {
     struct
     {
         int vector : 8;
         int type : 3;
-        int push_error_code : 1;
+        int push_error : 1;
         int reserved : 19;
         int valid : 1;
         int error_code : 32;

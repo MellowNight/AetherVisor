@@ -4,12 +4,12 @@
 #include "npt_hook.h"
 #include "instrumentation_hook.h"
 
-/*  HandleVmmcall only handles the vmmcall for 1 core.
+/*  VmmcallHandler only handles the vmmcall for 1 core.
     It is the guest's responsibility to set thread affinity.
 
     Parameters are passed in the order of rdx, r8, r9, r12, r11
 */
-void HandleVmmcall(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
+void VmmcallHandler(VcpuData* vcpu_data, GuestRegisters* guest_ctx, bool* EndVM)
 {
     auto id = guest_ctx->rcx;
 

@@ -3,21 +3,21 @@
 #include "msr.h"
 #include "disassembly.h"
 
-void InjectException(VcpuData* core_data, int vector, bool push_error_code, int error_code)
+void InjectException(VcpuData* core_data, int vector, bool push_error, int error_code)
 {
-    EventInjection event_injection = { 0 };
+    EventInject event_inject = { 0 };
 
-    event_injection.vector = vector;
-    event_injection.type = 3;
-    event_injection.valid = 1;
+    event_inject.vector = vector;
+    event_inject.type = 3;
+    event_inject.valid = 1;
     
-    if (push_error_code)
+    if (push_error)
     {
-        event_injection.push_error_code = 1;
-        event_injection.error_code = error_code;
+        event_inject.push_error = 1;
+        event_inject.error_code = error_code;
     }
 
-    core_data->guest_vmcb.control_area.event_inject = event_injection.fields;
+    core_data->guest_vmcb.control_area.event_inject = event_inject.fields;
 }
 
 extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
@@ -48,7 +48,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
         }
         case VMEXIT::VMMCALL: 
         {            
-            HandleVmmcall(vcpu_data, guest_ctx, &end_hypervisor);
+            VmmcallHandler(vcpu_data, guest_ctx, &end_hypervisor);
             break;
         }
         case VMEXIT::BP:
@@ -71,16 +71,6 @@ extern "C" bool HandleVmexit(VcpuData* vcpu_data, GuestRegisters* guest_ctx)
 
             IsCoreReadyForVmrun(&vcpu_data->guest_vmcb, cs_attrib);
 
-            break;
-        }
-        case VMEXIT::VMEXIT_MWAIT_CONDITIONAL:
-        {
-            vcpu_data->guest_vmcb.save_state_area.rip = vcpu_data->guest_vmcb.control_area.nrip;
-            break;
-        }
-        case 0x55: // CET shadow stack exception
-        {
-            InjectException(vcpu_data, 0x55, TRUE, 0);
             break;
         }
         default:
