@@ -5,38 +5,16 @@
 
 namespace Utils
 {
-	PVOID ModuleFromAddress(
-		IN PEPROCESS pProcess, 
-		uintptr_t address, 
-		wchar_t* out_name
-	);
-
 	int ForEachCore(
 		void(*callback)(void* params), 
 		void* params
 	);
-
-	int Diff(
-		uintptr_t a,
-		uintptr_t b
-	);
-
-	bool IsInsideRange(
-		uintptr_t address, 
-		uintptr_t range_base, 
-		uintptr_t range_size
-	);
-
 
 	PVOID GetKernelModule(OUT PULONG pSize, UNICODE_STRING DriverName);
 
 	int Exponent(
 		int base, 
 		int power
-	);
-
-	HANDLE GetProcessId(
-		const char* process_name
 	);
 
     KIRQL DisableWP();

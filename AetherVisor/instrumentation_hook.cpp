@@ -14,11 +14,11 @@ namespace Instrumentation
 
 		DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
 
-		int callback_privilege = ((uintptr_t)callbacks[handler] > 0x7FFFFFFFFFFF) ? 3 : 0;
+		int callback_cpl = ((uintptr_t)callbacks[handler] > 0x7FFFFFFFFFFF) ? 3 : 0;
 
 		int rip_privilege = (guest_rip > 0x7FFFFFFFFFFF) ? 3 : 0;
 
-		if (callback_privilege == rip_privilege || handler == sandbox_readwrite)
+		if (callback_cpl == rip_privilege || handler == sandbox_readwrite)
 		{
 			vcpu->guest_vmcb.save_state_area.rip = (uintptr_t)callbacks[handler];
 
