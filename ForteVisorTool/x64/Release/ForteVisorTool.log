@@ -1,3 +1,0 @@
-﻿  ForteVisorTool.cpp
-C:\Users\hualu\Documents\GitHub\ForteVisor\ForteVisorTool\ForteVisorTool.cpp(22,2): error C2653: 'BVM': is not a class or namespace name
-C:\Users\hualu\Documents\GitHub\ForteVisor\ForteVisorTool\ForteVisorTool.cpp(22,7): error C3861: 'SetNptHook': identifier not found
