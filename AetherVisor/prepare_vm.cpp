@@ -234,6 +234,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.rip = context_record->Rip;
 	core_data->guest_vmcb.save_state_area.rax = context_record->Rax;
 	core_data->guest_vmcb.save_state_area.rsp = context_record->Rsp;
+
 	core_data->guest_vmcb.save_state_area.efer = __readmsr(MSR::efer);
 	core_data->guest_vmcb.save_state_area.guest_pat = __readmsr(MSR::pat);
 
@@ -246,7 +247,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.ds_limit = GetSegmentLimit(context_record->SegDs);
 	core_data->guest_vmcb.save_state_area.es_limit = GetSegmentLimit(context_record->SegEs);
 	core_data->guest_vmcb.save_state_area.ss_limit = GetSegmentLimit(context_record->SegSs);
-
+	
 	core_data->guest_vmcb.save_state_area.cs_selector = context_record->SegCs;
 	core_data->guest_vmcb.save_state_area.ds_selector = context_record->SegDs;
 	core_data->guest_vmcb.save_state_area.es_selector = context_record->SegEs;

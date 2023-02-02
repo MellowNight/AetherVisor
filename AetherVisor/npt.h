@@ -21,7 +21,7 @@ PTE_64*	AssignNptEntry(
 );
 
 void* AllocateNewTable(
-    PML4E_64* PageEntry
+    PT_ENTRY_64* page_entry
 );
 
 void NestedPageFaultHandler(

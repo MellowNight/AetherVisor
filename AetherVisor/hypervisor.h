@@ -1,5 +1,6 @@
 #pragma once
 #include "svm.h"
+#include "paging_utils.h"
 
 struct GuestRegs
 {
@@ -33,9 +34,10 @@ struct GuestRegs
 
 struct VcpuData
 {
-    uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(int64_t) * 4];
+    uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(int64_t) * 5];
     uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
     uintptr_t   host_vmcb_physicaladdr;
+    PhysMemAccess* mem_access;
     struct      VcpuData* self;
     uint8_t     pad[8];
     VMCB        guest_vmcb;
@@ -70,8 +72,6 @@ public:
     int core_count;
 
     static Hypervisor* Get();
-
-public:
 
     bool IsCoreVirtualized(int32_t core_number);
 };

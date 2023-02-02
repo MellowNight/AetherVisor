@@ -23,6 +23,7 @@ enum VMEXIT
     VMMCALL = 0x81,
     NPF = 0x400,
     PF = 0x4E,
+    ss = 0x4E,
     BP = 0x43,
     INVALID = -1,
     GP = 0x4D,
@@ -47,8 +48,17 @@ void VmmcallHandler(
     bool* EndVM
 );
 
-void BreakpointHandler(VcpuData* vcpu, GuestRegs* guest_ctx);
+void BreakpointHandler(
+    VcpuData* vcpu, 
+    GuestRegs* guest_ctx
+);
 
-void DebugExceptionHandler(VcpuData* vcpu, GuestRegs* guest_ctx);
+void DebugFaultHandler(
+    VcpuData* vcpu, 
+    GuestRegs* guest_ctx
+);
 
-bool InvalidOpcodeHandler(VcpuData vcpu, GuestRegs* guest_ctx);
+bool InvalidOpcodeHandler(
+    VcpuData* vcpu, 
+    GuestRegs* guest_ctx
+);

@@ -56,7 +56,7 @@ struct ApicBarMsr
 {
     union
     {
-        uint64_t Flags;
+        uint64_t flags;
         struct
         {
             uint64_t reserved1 : 8;             // [0:7]

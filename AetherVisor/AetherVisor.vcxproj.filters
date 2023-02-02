@@ -109,6 +109,9 @@
     <ClInclude Include="amd.h">
       <Filter>Source Files\AMD structs</Filter>
     </ClInclude>
+    <ClInclude Include="syscall_hook.h">
+      <Filter>Source Files\vmexit handlers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -164,6 +167,12 @@
     </ClCompile>
     <ClCompile Include="instrumentation_hook.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="syscall_hook.cpp">
+      <Filter>Source Files\vmexit handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="ud_exception.cpp">
+      <Filter>Source Files\vmexit handlers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -286,7 +286,7 @@ uintptr_t BuildNestedPagingTables(uintptr_t* ncr3, PTEAccess flags)
 
 	ApicBarMsr apic_bar;
 
-	apic_bar.Flags = __readmsr(MSR::apic_bar);
+	apic_bar.flags = __readmsr(MSR::apic_bar);
 
 	AssignNptEntry(npml4_virtual, apic_bar.apic_base << PAGE_SHIFT, flags);
 

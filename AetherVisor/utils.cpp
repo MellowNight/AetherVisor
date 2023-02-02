@@ -83,7 +83,7 @@ namespace Utils
         PDE_64* pd;
         PDE_64* pde;
 
-        pd = (PDE_64*)Utils::VirtualAddrFromPfn(pdpte->PageFrameNumber);
+        pd = (PDE_64*)Utils::PfnToVirtualAddr(pdpte->PageFrameNumber);
 
         pde = &pd[helper.AsIndex.pd];
 
@@ -100,7 +100,7 @@ namespace Utils
         PTE_64* pt;
         PTE_64* pte;
 
-        pt = (PTE_64*)Utils::VirtualAddrFromPfn(pde->PageFrameNumber);
+        pt = (PTE_64*)Utils::PfnToVirtualAddr(pde->PageFrameNumber);
 
         pte = &pt[helper.AsIndex.pt];
 

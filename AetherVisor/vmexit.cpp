@@ -20,7 +20,7 @@ void InjectException(VcpuData* core_data, int vector, bool push_error, int error
     core_data->guest_vmcb.control_area.event_inject = event_inject.fields;
 }
 
-extern "C" bool HandleVmexit(VcpuData* vcpu, GuestRegs* guest_ctx)
+extern "C" bool HandleVmexit(VcpuData* vcpu, GuestRegs* guest_ctx, PhysMemAccess* physical_mem)
 {
     /*	load host extra state	*/
 
@@ -37,7 +37,7 @@ extern "C" bool HandleVmexit(VcpuData* vcpu, GuestRegs* guest_ctx)
         }
         case VMEXIT::DB:
         {  
-            DebugExceptionHandler(vcpu, guest_ctx);
+            DebugFaultHandler(vcpu, guest_ctx);
 
             break;
         }
@@ -61,6 +61,11 @@ extern "C" bool HandleVmexit(VcpuData* vcpu, GuestRegs* guest_ctx)
         {        
             NestedPageFaultHandler(vcpu, guest_ctx);
 
+            break;
+        }
+        case VMEXIT::UD:
+        {
+            InvalidOpcodeHandler(vcpu, guest_ctx);
             break;
         }
         case VMEXIT::INVALID: 

@@ -2,40 +2,36 @@
 
 namespace SyscallHook
 {
-    bool EmulateSysret(VcpuData* vcpu, GuestRegs guest_ctx)
+    bool EmulateSysret(VcpuData* vcpu, GuestRegs* guest_ctx)
     {
-        SEGMENT_SELECTOR cs, ss;
-
         vcpu->guest_vmcb.save_state_area.rip = guest_ctx->rcx;
 
         //
         // Load RFLAGS from R11. Clear RF, VM, reserved bits
         //
-        int64_t rflags = (guest_ctx->r11 & ~(X86_FLAGS_RF | X86_FLAGS_VM | X86_FLAGS_RESERVED_BITS)) | X86_FLAGS_FIXED;
+        int64_t rflags = (guest_ctx->r11 & ~(RFLAGS_RESUME_FLAG_BIT | X86_FLAGS_VM | X86_FLAGS_RESERVED_BITS)) | X86_FLAGS_FIXED;
         
-        vcpu->guest_vmcb.save_state_area.rflags = rflags;
+        vcpu->guest_vmcb.save_state_area.rflags.Flags = rflags;
 
         //
         // SYSRET loads the CS and SS selectors with values derived from bits 63:48 of IA32_STAR
         //
         uintptr_t star_msr  = __readmsr(IA32_STAR);
 
-        cs.Selector          = (uint16_t)(((star_msr >> 48) + 16) | 3); // (STAR[63:48]+16) | 3 (* RPL forced to 3 *)
-        cs.Base              = 0;                                     // Flat segment
-        cs.Limit             = (uint32_t)~0;                            // 4GB limit
-        cs.Attributes.AsUInt = 0xA0FB;                                // L+DB+P+S+DPL3+Code
-        SetGuestCs(&cs);
+        vcpu->guest_vmcb.save_state_area.cs_selector = (uint16_t)(((star_msr >> 48) + 16) | 3); // (STAR[63:48]+16) | 3 (* RPL forced to 3 *)
+        vcpu->guest_vmcb.save_state_area.cs_base = 0;                                     // Flat segment
+        vcpu->guest_vmcb.save_state_area.cs_limit = (uint32_t)~0;                            // 4GB limit
+        vcpu->guest_vmcb.save_state_area.cs_attrib = 0xA0FB;                                // L+DB+P+S+DPL3+Code
 
-        ss.Selector          = (UINT16)(((star_msr >> 48) + 8) | 3); // (STAR[63:48]+8) | 3 (* RPL forced to 3 *)
-        ss.Base              = 0;                                    // Flat segment
-        ss.Limit             = (UINT32)~0;                           // 4GB limit
-        ss.Attributes.AsUInt = 0xC0F3;                               // G+DB+P+S+DPL3+Data
-        SetGuestSs(&ss);
+        vcpu->guest_vmcb.save_state_area.ss_selector = (UINT16)(((star_msr >> 48) + 8) | 3); // (STAR[63:48]+8) | 3 (* RPL forced to 3 *)
+        vcpu->guest_vmcb.save_state_area.ss_base = 0;                                    // Flat segment
+        vcpu->guest_vmcb.save_state_area.ss_limit = (UINT32)~0;                           // 4GB limit
+        vcpu->guest_vmcb.save_state_area.ss_attrib = 0xC0F3;                               // G+DB+P+S+DPL3+Data
 
-        return TRUE;
+        return true;
     }
 
-    bool EmulateSyscall(VcpuData* vcpu, GuestRegs guest_ctx)
+    bool EmulateSyscall(VcpuData* vcpu, GuestRegs* guest_ctx)
     {
         SEGMENT_SELECTOR cs, ss;
 
@@ -56,24 +52,28 @@ namespace SyscallHook
         // Save RFLAGS into R11 and then mask RFLAGS using IA32_FMASK
         //
         uintptr_t fmask  = __readmsr(IA32_FMASK);
-        guest_ctx->r11 = vcpu->guest_vmcb.save_state_area.rflags;
-        vcpu->guest_vmcb.save_state_area.rflags &= ~(fmask | X86_FLAGS_RF);
+
+        guest_ctx->r11 = vcpu->guest_vmcb.save_state_area.rflags.Flags;
+
+        vcpu->guest_vmcb.save_state_area.rflags.Flags &= ~(fmask | RFLAGS_RESUME_FLAG_BIT);
 
         //
         // Load the CS and SS selectors with values derived from bits 47:32 of IA32_STAR
         //
-        uintptr_t star       = __readmsr(IA32_STAR);
-        cs.Selector          = (uint16_t)((star >> 32) & ~3); // STAR[47:32] & ~RPL3
-        cs.Base              = 0;                               // flat segment
-        cs.Limit             = (uint32_t)~0;                      // 4GB limit
-        cs.Attributes.AsUInt = 0xA09B;                          // L+DB+P+S+DPL0+Code
-        SetGuestCs(&Cs);
+        uintptr_t star  = __readmsr(IA32_STAR);
 
-        ss.Selector          = (uint16_t)(((star >> 32) & ~3) + 8); // STAR[47:32] + 8
-        ss.Base              = 0;                                     // flat segment
-        ss.Limit             = (uint32_t)~0;                            // 4GB limit
-        ss.Attributes.AsUInt = 0xC093;                                // G+DB+P+S+DPL0+Data
-        SetGuestSs(&ss);
+        vcpu->guest_vmcb.save_state_area.cs_selector    = (uint16_t)((star >> 32) & ~3);   // STAR[47:32] & ~RPL3
+        vcpu->guest_vmcb.save_state_area.cs_base        = 0;                               // flat segment
+
+        vcpu->guest_vmcb.save_state_area.cs_limit       = (uint32_t)~0;                 // 4GB limit
+        vcpu->guest_vmcb.save_state_area.cs_attrib      = 0xA09B;                          // L+DB+P+S+DPL0+Code
+
+
+        vcpu->guest_vmcb.save_state_area.ss_selector = (uint16_t)(((star >> 32) & ~3) + 8); // STAR[47:32] + 8
+        vcpu->guest_vmcb.save_state_area.ss_base = 0;                                       // flat segment
+
+        vcpu->guest_vmcb.save_state_area.ss_limit = (uint32_t)~0;                            // 4GB limit
+        vcpu->guest_vmcb.save_state_area.ss_attrib = 0xC093;                                // G+DB+P+S+DPL0+Data
 
         return true;
     }
