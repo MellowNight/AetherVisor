@@ -13,7 +13,9 @@ bool HandleSplitInstruction(VcpuData* vcpu, uintptr_t guest_rip, PHYSICAL_ADDRES
 
 	bool switch_ncr3 = true;
 
-	int insn_len = Disasm::LengthOfInstructions(guest_rip, );
+	ZydisDecodedOperand operands[5];
+
+	int insn_len = Disasm::Disassemble((uint8_t*)guest_rip, operands).length;
 
 	/*	handle cases where an instruction is split across 2 pages (using SINGLE STEP is better here tbh)	*/
 
@@ -41,10 +43,10 @@ bool HandleSplitInstruction(VcpuData* vcpu, uintptr_t guest_rip, PHYSICAL_ADDRES
 		auto guest_cr3 = vcpu->guest_vmcb.save_state_area.cr3.Flags;
 
 		auto page1_physical = faulting_physical.QuadPart;
-		auto page2_physical = PageUtils::GetPte((void*)(guest_rip + insn_len), guest_cr3)->PageFrameNumber << PAGE_SHIFT;
+		auto page2_physical = Utils::GetPte((void*)(guest_rip + insn_len), guest_cr3)->PageFrameNumber << PAGE_SHIFT;
 
-		PageUtils::GetPte((void*)page1_physical, ncr3.QuadPart)->ExecuteDisable = 0;
-		PageUtils::GetPte((void*)page2_physical, ncr3.QuadPart)->ExecuteDisable = 0;
+		Utils::GetPte((void*)page1_physical, ncr3.QuadPart)->ExecuteDisable = 0;
+		Utils::GetPte((void*)page2_physical, ncr3.QuadPart)->ExecuteDisable = 0;
 	}
 
 	return switch_ncr3;
@@ -130,7 +132,7 @@ void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
 			Instrumentation::InvokeHook(vcpu, Instrumentation::sandbox_execute, is_system_page);
 		}
 
-		auto sandbox_npte = PageUtils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
+		auto sandbox_npte = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
 		if (sandbox_npte->ExecuteDisable == FALSE)
 		{
@@ -143,7 +145,7 @@ void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
 			return;
 		}
 
-		auto npthooked_page = PageUtils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[shadow]);
+		auto npthooked_page = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[shadow]);
 
 		/*	handle cases where an instruction is split across 2 pages	*/
 
@@ -219,7 +221,7 @@ PTE_64*	AssignNptEntry(PML4E_64* npml4, uintptr_t physical_addr, PTEAccess flags
 	}
 	else
 	{
-		pdpt = (PDPTE_64*)PageUtils::VirtualAddrFromPfn(pml4e->PageFrameNumber);
+		pdpt = (PDPTE_64*)Utils::PfnToVirtualAddr(pml4e->PageFrameNumber);
 	}
 
 	PDPTE_64* pdpte = &pdpt[address_bits.AsIndex.pdpt];
@@ -231,7 +233,7 @@ PTE_64*	AssignNptEntry(PML4E_64* npml4, uintptr_t physical_addr, PTEAccess flags
 	}
 	else
 	{
-		pd = (PDE_64*)PageUtils::VirtualAddrFromPfn(pdpte->PageFrameNumber);
+		pd = (PDE_64*)Utils::PfnToVirtualAddr(pdpte->PageFrameNumber);
 	}
 
 	PDE_64* pde = &pd[address_bits.AsIndex.pd];
@@ -243,7 +245,7 @@ PTE_64*	AssignNptEntry(PML4E_64* npml4, uintptr_t physical_addr, PTEAccess flags
 	}
 	else
 	{
-		pt = (PTE_64*)PageUtils::VirtualAddrFromPfn(pde->PageFrameNumber);
+		pt = (PTE_64*)Utils::PfnToVirtualAddr(pde->PageFrameNumber);
 	}
 
 	PTE_64* pte = &pt[address_bits.AsIndex.pt];

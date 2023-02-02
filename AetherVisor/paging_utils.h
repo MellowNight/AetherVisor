@@ -18,7 +18,7 @@ class PhysMemAccess
         CR3 cr3; cr3.Flags = __readcr3();
 
         mapping_window.window = ExAllocatePool(NonPagedPool, PAGE_SIZE);
-        mapping_window.window_pte = (PTE_64*)Memory::GetPte(mapping_window.eservedPage, cr3);
+        mapping_window.window_pte = (PTE_64*)Utils::GetPte(mapping_window.window, cr3.AddressOfPageDirectory << PAGE_SHIFT);
     }
 
     template<class T>

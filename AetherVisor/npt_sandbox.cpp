@@ -39,9 +39,7 @@ namespace Sandbox
 
 	void ReleasePage(SandboxPage* hook_entry)
 	{
-		hook_entry->active = false;
-
-		PageUtils::UnlockPages(hook_entry->mdl);
+		Utils::UnlockPages(hook_entry->mdl);
 
 		memmove(sandbox_page_array + sandbox_page_count - 1, 
 			sandbox_page_array + sandbox_page_count, max_hooks - sandbox_page_count);
@@ -64,9 +62,9 @@ namespace Sandbox
 
 		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
-		LOCK_OPERATION operation = address < 0x7FFFFFFFFFF ? Usermode : KernelMode;
+		KPROCESSOR_MODE mode = (uintptr_t)address < 0x7FFFFFFFFFF ? UserMode : KernelMode;
 
-		sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, operation);
+		sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
 
 		sandbox_page_count += 1;
 
@@ -74,7 +72,7 @@ namespace Sandbox
 
 		sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-		auto sandbox_npte = PageUtils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
+		auto sandbox_npte = Utils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
 		if (allow_reads)
 		{
@@ -115,11 +113,11 @@ namespace Sandbox
 
 		if ((uintptr_t)address < 0x7FFFFFFFFFF)
 		{
-			sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, UserMode);
+			sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, UserMode);
 		}
 		else
 		{
-			sandbox_entry->mdl = PageUtils::LockPages(address, IoReadAccess, KernelMode);
+			sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, KernelMode);
 		}
 
 		sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
@@ -130,11 +128,11 @@ namespace Sandbox
 
 		/*	disable execute on the nested pte of the guest physical address, in NCR3 1	*/
 
-		sandbox_entry->primary_npte = PageUtils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[primary]);
+		sandbox_entry->primary_npte = Utils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[primary]);
 
 		sandbox_entry->primary_npte->ExecuteDisable = 1;
 
-		auto sandbox_npte = PageUtils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
+		auto sandbox_npte = Utils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
 		sandbox_npte->ExecuteDisable = 0;
 

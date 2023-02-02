@@ -43,11 +43,11 @@ namespace BranchTracer
 
 		if (is_system)
 		{
-			mdl = PageUtils::LockPages((void*)log_buffer, IoModifyAccess, KernelMode, log_buffer->info.capacity);
+			mdl = Utils::LockPages((void*)log_buffer, IoModifyAccess, KernelMode, log_buffer->info.capacity);
 		}
 		else
 		{
-			mdl = PageUtils::LockPages((void*)log_buffer, IoModifyAccess, UserMode, log_buffer->info.capacity);
+			mdl = Utils::LockPages((void*)log_buffer, IoModifyAccess, UserMode, log_buffer->info.capacity);
 		}
 
 

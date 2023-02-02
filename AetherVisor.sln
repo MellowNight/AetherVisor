@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AetherVisor", "AMD-Hypervisor\AMD-Hypervisor.vcxproj", "{EEBE7609-CF06-424A-99AA-088B5747D4DF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AetherVisor", "AetherVisor\AetherVisor.vcxproj", "{EEBE7609-CF06-424A-99AA-088B5747D4DF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AetherVisor-api", "ForteVisorApi\MatrixVisorLib.vcxproj", "{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AetherVisor-api", "AetherVisor-lib\AetherVisor-lib.vcxproj", "{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AetherVisor-api-kernel", "ForteVisorKernelApi\ForteVisorKernelApi.vcxproj", "{4F8B1376-6F78-4A00-AAED-0F62D351BCC0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AetherVisor-api-kernel", "AetherVisor-lib-kernel\AetherVisor-lib-kernel.vcxproj", "{4F8B1376-6F78-4A00-AAED-0F62D351BCC0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,14 +45,18 @@ Global
 		{EEBE7609-CF06-424A-99AA-088B5747D4DF}.Release|x86.ActiveCfg = Release|Win32
 		{EEBE7609-CF06-424A-99AA-088B5747D4DF}.Release|x86.Build.0 = Release|Win32
 		{EEBE7609-CF06-424A-99AA-088B5747D4DF}.Release|x86.Deploy.0 = Release|Win32
-		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|ARM.ActiveCfg = Debug|Win32
-		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|ARM.ActiveCfg = Debug|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|ARM.Build.0 = Debug|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|ARM64.ActiveCfg = Debug|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|ARM64.Build.0 = Debug|x64
 		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|x64.ActiveCfg = Debug|x64
 		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|x64.Build.0 = Debug|x64
 		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|x86.ActiveCfg = Debug|Win32
 		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Debug|x86.Build.0 = Debug|Win32
-		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|ARM.ActiveCfg = Release|Win32
-		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|ARM64.ActiveCfg = Release|Win32
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|ARM.ActiveCfg = Release|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|ARM.Build.0 = Release|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|ARM64.ActiveCfg = Release|x64
+		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|ARM64.Build.0 = Release|x64
 		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|x64.ActiveCfg = Release|x64
 		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|x64.Build.0 = Release|x64
 		{A87C1B3A-63B2-4EBF-AFFE-B468E3E76A2B}.Release|x86.ActiveCfg = Release|Win32

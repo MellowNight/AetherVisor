@@ -5,7 +5,7 @@
 
 namespace Utils
 {
-     void* VirtualAddrFromPfn(uintptr_t pfn)
+     void* PfnToVirtualAddr(uintptr_t pfn)
     {
         PHYSICAL_ADDRESS pa; 
         
@@ -66,7 +66,7 @@ namespace Utils
         PDPTE_64* pdpt;
         PDPTE_64* pdpte;
 
-        pdpt = (PDPTE_64*)PageUtils::VirtualAddrFromPfn(pml4e->PageFrameNumber);
+        pdpt = (PDPTE_64*)Utils::PfnToVirtualAddr(pml4e->PageFrameNumber);
 
         pdpte = &pdpt[helper.AsIndex.pdpt];
 
@@ -83,7 +83,7 @@ namespace Utils
         PDE_64* pd;
         PDE_64* pde;
 
-        pd = (PDE_64*)PageUtils::VirtualAddrFromPfn(pdpte->PageFrameNumber);
+        pd = (PDE_64*)Utils::VirtualAddrFromPfn(pdpte->PageFrameNumber);
 
         pde = &pd[helper.AsIndex.pd];
 
@@ -100,7 +100,7 @@ namespace Utils
         PTE_64* pt;
         PTE_64* pte;
 
-        pt = (PTE_64*)PageUtils::VirtualAddrFromPfn(pde->PageFrameNumber);
+        pt = (PTE_64*)Utils::VirtualAddrFromPfn(pde->PageFrameNumber);
 
         pte = &pt[helper.AsIndex.pt];
 
@@ -112,6 +112,45 @@ namespace Utils
         return  (PT_ENTRY_64*)pte;
     }
     
+    void* GetKernelModule(size_t* out_size, UNICODE_STRING driver_name)
+    {
+        PLIST_ENTRY module_list = (PLIST_ENTRY)PsLoadedModuleList;
+
+        for (PLIST_ENTRY link = module_list;
+            link != module_list->Blink;
+            link = link->Flink)
+        {
+            LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(link, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+            if (RtlCompareUnicodeString(&driver_name, &entry->BaseDllName, false) == 0)
+            {
+                // DbgPrint("found module! %wZ at %p \n", &entry->BaseDllName, entry->DllBase);
+
+                if (out_size && MmIsAddressValid(out_size))
+                {
+                    *out_size = entry->SizeOfImage;
+                }
+                return entry->DllBase;
+            }
+        }
+    }
+
+    int ForEachCore(void(*callback)(void* params), void* params)
+    {
+        auto core_count = KeQueryActiveProcessorCount(0);
+
+        for (auto idx = 0; idx < core_count; ++idx)
+        {
+            KAFFINITY affinity = Exponent(2, idx);
+
+            KeSetSystemAffinityThread(affinity);
+
+            callback(params);
+        }
+
+        return 0;
+    }
+
     uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const char* pattern, size_t pattern_size, char wildcard)
     {
         for (auto byte = (char*)region_base; byte < (char*)region_base + region_size;

@@ -47,7 +47,7 @@ namespace NptHooks
 		hook_entry->process_cr3 = 0;
 		hook_entry->guest_pte->ExecuteDisable = hook_entry->original_nx;
 
-		PageUtils::UnlockPages(hook_entry->mdl);
+		Utils::UnlockPages(hook_entry->mdl);
 
 		memmove(npt_hook_list + hook_count - 1, npt_hook_list + hook_count, max_hooks - hook_count);
 
@@ -67,9 +67,9 @@ namespace NptHooks
 
 		auto hook_entry = &npt_hook_list[hook_count];
 
-		LOCK_OPERATION operation = address < 0x7FFFFFFFFFF ? Usermode : KernelMode;
+		KPROCESSOR_MODE mode = (uintptr_t)address < 0x7FFFFFFFFFF ? UserMode : KernelMode;
 
-		hook_entry->mdl = PageUtils::LockPages(address, IoReadAccess, operation);
+		hook_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
 
 		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
@@ -83,7 +83,7 @@ namespace NptHooks
 
 		hook_entry->guest_physical_page = (uint8_t*)physical_page;
 
-		hook_entry->guest_pte = PageUtils::GetPte((void*)address, hook_entry->process_cr3);
+		hook_entry->guest_pte = Utils::GetPte((void*)address, hook_entry->process_cr3);
 
 		hook_entry->original_nx = hook_entry->guest_pte->ExecuteDisable;
 
@@ -93,7 +93,7 @@ namespace NptHooks
 
 		/*	get the nested pte of the guest physical address, in primary nCR3	*/
 
-		hook_entry->hookless_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[ncr3_id]);
+		hook_entry->hookless_npte = Utils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[ncr3_id]);
 
 		if (hook_entry->hookless_npte->ExecuteDisable == 1)
 		{
@@ -106,7 +106,7 @@ namespace NptHooks
 
 		/*	get the nested pte of the guest physical address in the shadow NCR3, and map it to our hook page	*/
 
-		hook_entry->hooked_npte = PageUtils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[shadow]);
+		hook_entry->hooked_npte = Utils::GetPte((void*)physical_page, Hypervisor::Get()->ncr3_dirs[shadow]);
 
 		if (address != patch && patch_len != PAGE_SIZE)
 		{
@@ -115,7 +115,7 @@ namespace NptHooks
 
 		hook_entry->hooked_npte->ExecuteDisable = 0;
 		
-		auto hooked_copy = PageUtils::VirtualAddrFromPfn(hook_entry->hooked_npte->PageFrameNumber);
+		auto hooked_copy = Utils::PfnToVirtualAddr(hook_entry->hooked_npte->PageFrameNumber);
 
 		auto page_offset = (uintptr_t)address & (PAGE_SIZE - 1);
 

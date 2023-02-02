@@ -34,7 +34,7 @@ namespace NptHooks
 			cr3.Flags = __readcr3();
 
 			hooked_page = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'HOOK');
-			hooked_pte = PageUtils::GetPte(hooked_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
+			hooked_pte = Utils::GetPte(hooked_page, cr3.AddressOfPageDirectory << PAGE_SHIFT);
 		}
 	};
 	

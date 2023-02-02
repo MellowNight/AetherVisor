@@ -32,7 +32,7 @@ namespace NptHooks
 			to prevent physical memory mapping inconsistencies	
 		*/
 
-		uint32_t nt_size = NULL;
+		size_t nt_size = NULL;
 
 		auto ntoskrnl = (uintptr_t)Utils::GetKernelModule(&nt_size, RTL_CONSTANT_STRING(L"ntoskrnl.exe"));
 
