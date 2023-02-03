@@ -12,7 +12,7 @@ void BranchLogFullHook()
 
 void BranchTraceFinished()
 {
-	Logger::Get()->Print(COLOR_ID::blue, "BranchTraceFinished(), dumping branch trace to file! \n");
+	Utils::Log("BranchTraceFinished(), dumping branch trace to file! \n");
 
 	for (auto entry : traced_branches)
 	{

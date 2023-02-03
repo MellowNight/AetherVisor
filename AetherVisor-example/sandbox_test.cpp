@@ -7,16 +7,16 @@ void ExecuteHook(GuestRegisters* registers, void* return_address, void* o_guest_
 	AddressInfo retaddr_info = { return_address };
 	AddressInfo rip_info = { o_guest_rip };
 
-	Logger::Get()->Print(COLOR_ID::green, "[EXECUTE]\n");  
-	Logger::Get()->Print(COLOR_ID::none, "return address = ");
+	Utils::Log("[EXECUTE]\n");  
+	Utils::Log("return address = ");
 
 	retaddr_info.Print();
 
-	Logger::Get()->Print(COLOR_ID::none, "RIP = ", o_guest_rip);
+	Utils::Log("RIP = ", o_guest_rip);
 
 	rip_info.Print();
 
-	Logger::Get()->Print(COLOR_ID::none, "\n\n");
+	Utils::Log("\n\n");
 }
 
 
@@ -30,8 +30,8 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 	auto instruction = Disasm::Disassemble((uint8_t*)o_guest_rip, operands);
 
-	Logger::Get()->Print(COLOR_ID::magenta, "[READ/WRITE]\n");
-	Logger::Get()->Print(COLOR_ID::none, "RIP = ");
+	Utils::Log("[READ/WRITE]\n");
+    Utils::Log("RIP = ");
 
 	rip_info.Print();
 
@@ -46,15 +46,15 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 		if (operands[i].actions & ZYDIS_OPERAND_ACTION_MASK_WRITE)
 		{
-			Logger::Get()->Print(COLOR_ID::none, "[write => 0x%02x]\n", mem_target);
+			Utils::Log("[write => 0x%02x]\n", mem_target);
 		}
 		else if (operands[i].actions & ZYDIS_OPERAND_ACTION_MASK_READ)
 		{
-			Logger::Get()->Print(COLOR_ID::none, "[read => 0x%02x]\n", mem_target);
+			Utils::Log("[read => 0x%02x]\n", mem_target);
 		}
 	}
 
-	Logger::Get()->Print(COLOR_ID::none, "\n\n");
+	Utils::Log("\n\n");
 }
 
 void SandboxTest()

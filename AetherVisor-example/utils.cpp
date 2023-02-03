@@ -75,7 +75,7 @@ namespace Utils
 		VirtualProtect((LPVOID)address, len, old_prot, 0);
 	}
 
-	void log(const char* format, ...)
+	void Log(const char* format, ...)
 	{
 		static char buffer[256];
 		va_list args;

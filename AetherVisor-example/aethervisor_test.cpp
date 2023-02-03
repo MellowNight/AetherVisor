@@ -13,24 +13,6 @@ struct AddressInfo
 		dll_name_address.second = Utils::ModuleFromAddress((uintptr_t)address, &dll_name_address.first);
 	}
 
-	void Print()
-	{
-		if (!symbol.empty())
-		{
-			Logger::Get()->Print(
-				COLOR_ID::none, "%wZ!%s (0x%02x) \n", &dll_name_address.first, symbol.c_str(), address);
-		}
-		else if (dll_name_address.second)
-		{
-			Logger::Get()->Print(COLOR_ID::none, "%wZ+0x%02x \n",
-				&dll_name_address.first, (uintptr_t)address - (uintptr_t)dll_name_address.second);
-		}
-		else
-		{
-			Logger::Get()->Print(COLOR_ID::none, "0x%02x \n", address);
-		}
-	}
-
 	std::string Format()
 	{
 		char buffer[256];
@@ -67,8 +49,7 @@ void StartTests()
 	Disasm::Init();
 	Symbols::Init();
 
-	Logger::Get()->Print(COLOR_ID::magenta, 
-		"Symbols::GetSymFromAddr((uintptr_t)GetProcAddress); %s \n", Symbols::GetSymFromAddr((uintptr_t)GetProcAddress).c_str());
+	Utils::Log("Symbols::GetSymFromAddr((uintptr_t)GetProcAddress); %s \n", Symbols::GetSymFromAddr((uintptr_t)GetProcAddress).c_str());
 
 	/*	Sandbox all BEClient.dll pages 	*/
 

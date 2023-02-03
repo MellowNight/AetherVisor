@@ -2,5 +2,5 @@
 
 void EferSyscallHook()
 {
-    
+    AetherVisor::HookEferSyscalls();
 }
