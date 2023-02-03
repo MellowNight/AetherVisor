@@ -83,7 +83,7 @@ namespace AetherVisor
     {
         for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
         {
-            BVM::SandboxPage((uintptr_t)offset, NULL);
+            AetherVisor::SandboxPage((uintptr_t)offset, NULL);
         }
     }
 
