@@ -88,7 +88,7 @@ extern "C" __declspec(dllexport) void __fastcall CreateUserThreadEntry()
 
 	PE::ResolveImports((uint8_t*)Global::dll_params->dll_base);
 
-	StartBELogger();
+	StartTests();
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule,
