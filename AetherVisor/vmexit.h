@@ -13,6 +13,7 @@ enum VMMCALL_ID : uintptr_t
     register_instrumentation_hook = 0x11111117,
     deny_sandbox_reads = 0x11111118,
     start_branch_trace = 0x11111119,
+    efer_syscall_hook = 0x1111111A,
 };
 
 enum VMEXIT
@@ -23,42 +24,12 @@ enum VMEXIT
     VMMCALL = 0x81,
     NPF = 0x400,
     PF = 0x4E,
-    ss = 0x4E,
+    UD = 0x46,
     BP = 0x43,
     INVALID = -1,
     GP = 0x4D,
     DB = 0x41,
-    VMEXIT_MWAIT_CONDITIONAL = 0x8C,
-    VMEXIT_TR_WRITE = 0x6D,
     WRITE_CR3 = 0x13,
 };
 
-void InjectException(
-    VcpuData* core_data, 
-    int vector, 
-    bool push_error, 
-    int error_code
-);
-
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
-
-void VmmcallHandler(
-    VcpuData* vmcb_data, 
-    GuestRegs* GuestRegs, 
-    bool* EndVM
-);
-
-void BreakpointHandler(
-    VcpuData* vcpu, 
-    GuestRegs* guest_ctx
-);
-
-void DebugFaultHandler(
-    VcpuData* vcpu, 
-    GuestRegs* guest_ctx
-);
-
-bool InvalidOpcodeHandler(
-    VcpuData* vcpu, 
-    GuestRegs* guest_ctx
-);

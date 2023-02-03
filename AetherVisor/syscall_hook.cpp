@@ -1,7 +1,31 @@
 #include "syscall_hook.h"
+#include "disassembly.h"
 
 namespace SyscallHook
 {
+    void Init(VcpuData* vcpu, BOOLEAN EnableEFERSyscallHook)
+    {
+        IA32_VMX_BASIC_REGISTER VmxBasicMsr = { 0 };
+
+        EferMsr efer_msr;
+
+        efer_msr.flags = __readmsr(IA32_EFER);
+
+        if (EnableEFERSyscallHook)
+        {
+            efer_msr.syscall = FALSE;
+        }
+        else
+        {
+            efer_msr.syscall = TRUE;
+
+            //
+            // unset the exception to not cause vm-exit on #UDs
+            //
+            ProtectedHvRemoveUndefinedInstructionForDisablingSyscallSysretCommands();
+        }
+    }
+
     bool EmulateSysret(VcpuData* vcpu, GuestRegs* guest_ctx)
     {
         vcpu->guest_vmcb.save_state_area.rip = guest_ctx->rcx;
@@ -9,9 +33,14 @@ namespace SyscallHook
         //
         // Load RFLAGS from R11. Clear RF, VM, reserved bits
         //
-        int64_t rflags = (guest_ctx->r11 & ~(RFLAGS_RESUME_FLAG_BIT | X86_FLAGS_VM | X86_FLAGS_RESERVED_BITS)) | X86_FLAGS_FIXED;
+        RFLAGS rflags; rflags.Flags = guest_ctx->r11;
         
-        vcpu->guest_vmcb.save_state_area.rflags.Flags = rflags;
+        rflags.Virtual8086ModeFlag = 0;
+        rflags.ResumeFlag = 0;
+        rflags.Reserved1 = 0; rflags.Reserved2 = 0; rflags.Reserved3 = 0; rflags.Reserved4 = 0;
+        rflags.ReadAs1 = 1;
+
+        vcpu->guest_vmcb.save_state_area.rflags = rflags;
 
         //
         // SYSRET loads the CS and SS selectors with values derived from bits 63:48 of IA32_STAR
@@ -20,12 +49,12 @@ namespace SyscallHook
 
         vcpu->guest_vmcb.save_state_area.cs_selector = (uint16_t)(((star_msr >> 48) + 16) | 3); // (STAR[63:48]+16) | 3 (* RPL forced to 3 *)
         vcpu->guest_vmcb.save_state_area.cs_base = 0;                                     // Flat segment
-        vcpu->guest_vmcb.save_state_area.cs_limit = (uint32_t)~0;                            // 4GB limit
+        vcpu->guest_vmcb.save_state_area.cs_limit = UINT32_MAX;                            // 4GB limit
         vcpu->guest_vmcb.save_state_area.cs_attrib = 0xA0FB;                                // L+DB+P+S+DPL3+Code
 
         vcpu->guest_vmcb.save_state_area.ss_selector = (UINT16)(((star_msr >> 48) + 8) | 3); // (STAR[63:48]+8) | 3 (* RPL forced to 3 *)
         vcpu->guest_vmcb.save_state_area.ss_base = 0;                                    // Flat segment
-        vcpu->guest_vmcb.save_state_area.ss_limit = (UINT32)~0;                           // 4GB limit
+        vcpu->guest_vmcb.save_state_area.ss_limit = UINT32_MAX;                           // 4GB limit
         vcpu->guest_vmcb.save_state_area.ss_attrib = 0xC0F3;                               // G+DB+P+S+DPL3+Data
 
         return true;
@@ -33,9 +62,11 @@ namespace SyscallHook
 
     bool EmulateSyscall(VcpuData* vcpu, GuestRegs* guest_ctx)
     {
-        SEGMENT_SELECTOR cs, ss;
-
         uintptr_t guest_rip = vcpu->guest_vmcb.save_state_area.rip;
+
+        ZydisDecodedOperand operands[5];
+
+        auto insn_len = Disasm::Disassemble((uint8_t*)guest_rip, operands).length;
 
         //
         // Reading guest's Rflags

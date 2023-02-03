@@ -3,91 +3,95 @@
 #include "msr.h"
 #include "disassembly.h"
 
-void InjectException(VcpuData* core_data, int vector, bool push_error, int error_code)
+void VcpuData::InjectException(int vector, bool push_error, int error_code)
 {
     EventInject event_inject = { 0 };
 
     event_inject.vector = vector;
     event_inject.type = 3;
     event_inject.valid = 1;
-    
+
     if (push_error)
     {
         event_inject.push_error = 1;
         event_inject.error_code = error_code;
     }
 
-    core_data->guest_vmcb.control_area.event_inject = event_inject.fields;
+    guest_vmcb.control_area.event_inject = event_inject.fields;
 }
 
-extern "C" bool HandleVmexit(VcpuData* vcpu, GuestRegs* guest_ctx, PhysMemAccess* physical_mem)
+extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegs * guest_ctx, PhysMemAccess * physical_mem)
 {
     /*	load host extra state	*/
 
     __svm_vmload(vcpu->host_vmcb_physicaladdr);
 
-    bool end_hypervisor = false;		
+    bool end_hypervisor = false;
 
     switch (vcpu->guest_vmcb.control_area.exit_code)
     {
-        case VMEXIT::MSR: 
-        {
-            MsrExitHandler(vcpu, guest_ctx);
-            break;
-        }
-        case VMEXIT::DB:
-        {  
-            DebugFaultHandler(vcpu, guest_ctx);
+    case VMEXIT::MSR:
+    {
+        vcpu->MsrExitHandler(guest_ctx);
 
-            break;
-        }
-        case VMEXIT::VMRUN: 
-        {
-            InjectException(vcpu, EXCEPTION_GP_FAULT, false, 0);
-            break;
-        }
-        case VMEXIT::VMMCALL: 
-        {            
-            VmmcallHandler(vcpu, guest_ctx, &end_hypervisor);
-            break;
-        }
-        case VMEXIT::BP:
-        {     
-            BreakpointHandler(vcpu, guest_ctx);
+        break;
+    }
+    case VMEXIT::DB:
+    {
+        vcpu->DebugFaultHandler(guest_ctx);
 
-            break;
-        }
-        case VMEXIT::NPF:
-        {        
-            NestedPageFaultHandler(vcpu, guest_ctx);
+        break;
+    }
+    case VMEXIT::VMRUN:
+    {
+        vcpu->InjectException(EXCEPTION_VECTOR::GeneralProtection, false, 0);
 
-            break;
-        }
-        case VMEXIT::UD:
-        {
-            InvalidOpcodeHandler(vcpu, guest_ctx);
-            break;
-        }
-        case VMEXIT::INVALID: 
-        {
-            SegmentAttribute cs_attrib;
+        break;
+    }
+    case VMEXIT::VMMCALL:
+    {
+        vcpu->VmmcallHandler(guest_ctx, &end_hypervisor);
 
-            cs_attrib.as_uint16 = vcpu->guest_vmcb.save_state_area.cs_attrib;
+        break;
+    }
+    case VMEXIT::BP:
+    {
+        vcpu->BreakpointHandler(guest_ctx);
 
-            IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
+        break;
+    }
+    case VMEXIT::NPF:
+    {
+        vcpu->NestedPageFaultHandler(guest_ctx);
 
-            break;
-        }
-        default:
-        {            
-            KeBugCheckEx(MANUALLY_INITIATED_CRASH, 
-                vcpu->guest_vmcb.control_area.exit_code, vcpu->guest_vmcb.control_area.exit_info1, vcpu->guest_vmcb.control_area.exit_info2, vcpu->guest_vmcb.save_state_area.rip);
+        break;
+    }
+    case VMEXIT::UD:
+    {
+        vcpu->InvalidOpcodeHandler(guest_ctx, physical_mem);
 
-            break;
-        }
+        break;
+    }
+    case VMEXIT::INVALID:
+    {
+        SegmentAttribute cs_attrib;
+
+        cs_attrib.as_uint16 = vcpu->guest_vmcb.save_state_area.cs_attrib;
+
+        IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
+
+        break;
+    }
+    default:
+    {
+        KeBugCheckEx(MANUALLY_INITIATED_CRASH, vcpu->guest_vmcb.control_area.exit_code, 
+            vcpu->guest_vmcb.control_area.exit_info1, vcpu->guest_vmcb.control_area.exit_info2, vcpu->guest_vmcb.save_state_area.rip);
+
+        break;
+    }
     }
 
-    if (end_hypervisor) 
+    if (end_hypervisor)
     {
         // 1. Load guest CR3 context
         __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);

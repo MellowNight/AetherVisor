@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "forte_api.h"
+#include "aethervisor.h"
 #include "ia32.h"
 #include "utils.h"
 
@@ -37,7 +37,7 @@ namespace BVM
             case sandbox_execute:
             {
                 sandbox_execute_handler = static_cast<decltype(sandbox_execute_handler)>(address);
-                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, execute_handler_wrap);                break;
+                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, execute_handler_wrap);
                 break;
             }
             case branch_log_full:

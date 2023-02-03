@@ -153,14 +153,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\AMD-Hypervisor\ia32.h" />
-    <ClInclude Include="forte_api.h" />
+    <ClInclude Include="aethervisor.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="ia32.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="forte_api.cpp" />
+    <ClCompile Include="aethervisor.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -172,7 +172,7 @@
   <ItemGroup>
     <MASM Include="sandbox_handler.asm" />
     <MASM Include="vmmcall.asm">
-      <FileType>Document</FileType>
+      <FileType>MASM</FileType>
     </MASM>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

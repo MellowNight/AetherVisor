@@ -4,27 +4,27 @@
 
 struct GuestRegs
 {
-    UINT64  r15;
-    UINT64  r14;
-    UINT64  r13;
-    UINT64  r12;
-    UINT64  r11;
-    UINT64  r10;
-    UINT64  r9;
-    UINT64  r8;
-    UINT64  rdi;
-    UINT64  rsi;
-    UINT64  rbp;
-    UINT64  rsp;
-    UINT64  rbx;
-    UINT64  rdx;
-    UINT64  rcx;
-    UINT64  rax;
+    uintptr_t  r15;
+    uintptr_t  r14;
+    uintptr_t  r13;
+    uintptr_t  r12;
+    uintptr_t  r11;
+    uintptr_t  r10;
+    uintptr_t  r9;
+    uintptr_t  r8;
+    uintptr_t  rdi;
+    uintptr_t  rsi;
+    uintptr_t  rbp;
+    uintptr_t  rsp;
+    uintptr_t  rbx;
+    uintptr_t  rdx;
+    uintptr_t  rcx;
+    uintptr_t  rax;
 };
 
 /*
     VcpuData:
-    A structure which contains some core-specific data, must be 16 byte aligned on the stack
+    Contains core-specific VMCB data and other information. Must be 16 byte aligned on the stack
 
     StackSpace - Stack Space required because we are manually setting stack pointer to guest_vmcbPa
     We need to also subtract some size to make VMCB 4KB aligned	& guest_vmcbPa 16 byte aligned
@@ -43,6 +43,36 @@ struct VcpuData
     VMCB        guest_vmcb;
     VMCB        host_vmcb;
     uint8_t     host_save_area[0x1000];
+
+    void InjectException(int vector, bool push_error, int error_code);
+
+    void VmmcallHandler(
+        GuestRegs* GuestRegs,
+        bool* EndVM
+    );
+
+    void BreakpointHandler(
+        GuestRegs* guest_ctx
+    );
+
+    void DebugFaultHandler(
+        GuestRegs* guest_ctx
+    );
+
+    bool InvalidOpcodeHandler(
+        GuestRegs* guest_ctx,
+        PhysMemAccess* physical_mem
+    );
+
+    void MsrExitHandler(
+        GuestRegs* guest_regs
+    );
+
+    void NestedPageFaultHandler(
+        GuestRegs* guest_registers
+    );
+
+    void ConfigureProcessor(CONTEXT* context_record);
 };
 
 /* Global hypervisor information    */

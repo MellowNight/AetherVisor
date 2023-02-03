@@ -5,7 +5,7 @@
 
 namespace Utils
 {
-     void* PfnToVirtualAddr(uintptr_t pfn)
+    void* PfnToVirtualAddr(uintptr_t pfn)
     {
         PHYSICAL_ADDRESS pa; 
         
@@ -14,7 +14,7 @@ namespace Utils
         return MmGetVirtualForPhysical(pa);
     }
 
-    PFN_NUMBER	PfnFromVirtualAddr(uintptr_t va)
+    PFN_NUMBER	VirtualAddrToPfn(uintptr_t va)
     {
         return MmGetPhysicalAddress((void*)va).QuadPart >> PAGE_SHIFT;
     }

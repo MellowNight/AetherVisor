@@ -24,11 +24,6 @@ void* AllocateNewTable(
     PT_ENTRY_64* page_entry
 );
 
-void NestedPageFaultHandler(
-	VcpuData* VpData,
-	GuestRegs* GuestContext
-);
-
 enum NCR3_DIRECTORIES
 {
     primary,

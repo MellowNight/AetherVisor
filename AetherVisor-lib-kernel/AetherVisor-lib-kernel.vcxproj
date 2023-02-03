@@ -35,18 +35,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="aethervisor_kernel.cpp" />
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="aethervisor_kernel.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="..\ForteVisorApi\sandbox_handler.asm" />
+    <ClCompile Include="aethervisor_kernel.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
     <MASM Include="vmmcall.asm" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

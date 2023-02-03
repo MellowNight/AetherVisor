@@ -2,13 +2,14 @@
 #include "npt_sandbox.h"
 #include "branch_tracer.h"
 
-void BreakpointHandler(VcpuData* vcpu, GuestRegs* guest_ctx)
+
+void VcpuData::BreakpointHandler(GuestRegs* guest_ctx)
 {
     auto vmroot_cr3 = __readcr3();
 
-    __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
+    __writecr3(guest_vmcb.save_state_area.cr3.Flags);
 
-    auto guest_rip = vcpu->guest_vmcb.save_state_area.rip;
+    auto guest_rip = guest_vmcb.save_state_area.rip;
 
     if (BranchTracer::initialized && guest_rip == BranchTracer::start_address && !BranchTracer::thread_id)
     {
@@ -25,22 +26,21 @@ void BreakpointHandler(VcpuData* vcpu, GuestRegs* guest_ctx)
                 return false;
             },
             (void*)guest_rip
-        );
+                );
 
         /*  clean TLB after removing the NPT hook   */
 
-        vcpu->guest_vmcb.control_area.vmcb_clean &= 0xFFFFFFEF;
-        vcpu->guest_vmcb.control_area.tlb_control = 1;
+        guest_vmcb.control_area.vmcb_clean &= 0xFFFFFFEF;
+        guest_vmcb.control_area.tlb_control = 1;
 
         /*  capture the ID of the target thread & start the tracer  */
 
-        BranchTracer::Start(vcpu);
+        BranchTracer::Start(this);
     }
     else
     {
-        InjectException(vcpu, EXCEPTION_VECTOR::Breakpoint, FALSE, 0);
+        InjectException(EXCEPTION_VECTOR::Breakpoint, FALSE, 0);
     }
-
 
     __writecr3(vmroot_cr3);
 }

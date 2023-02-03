@@ -53,22 +53,22 @@ bool HandleSplitInstruction(VcpuData* vcpu, uintptr_t guest_rip, PHYSICAL_ADDRES
 }
 
 
-void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
+void VcpuData::NestedPageFaultHandler(GuestRegs* guest_regs)
 {
-	PHYSICAL_ADDRESS fault_physical; fault_physical.QuadPart = vcpu->guest_vmcb.control_area.exit_info2;
+	PHYSICAL_ADDRESS fault_physical; fault_physical.QuadPart = guest_vmcb.control_area.exit_info2;
 
-	NestedPageFaultInfo1 exit_info1; exit_info1.as_uint64 = vcpu->guest_vmcb.control_area.exit_info1;
+	NestedPageFaultInfo1 exit_info1; exit_info1.as_uint64 = guest_vmcb.control_area.exit_info1;
 
-	PHYSICAL_ADDRESS ncr3; ncr3.QuadPart = vcpu->guest_vmcb.control_area.ncr3;
+	PHYSICAL_ADDRESS ncr3; ncr3.QuadPart = guest_vmcb.control_area.ncr3;
 
-	auto guest_rip = vcpu->guest_vmcb.save_state_area.rip;
+	auto guest_rip = guest_vmcb.save_state_area.rip;
 
 	/*	clean ncr3 cache	*/
 
-	vcpu->guest_vmcb.control_area.vmcb_clean &= 0xFFFFFFEF;
-	vcpu->guest_vmcb.control_area.tlb_control = 1;
+	guest_vmcb.control_area.vmcb_clean &= 0xFFFFFFEF;
+	guest_vmcb.control_area.tlb_control = 1;
 
-	Logger::Get()->LogJunk("[#NPF HANDLER] 	guest physical %p, guest RIP virtual %p \n", fault_physical.QuadPart, vcpu->guest_vmcb.save_state_area.rip);
+	Logger::Get()->LogJunk("[#NPF HANDLER] 	guest physical %p, guest RIP virtual %p \n", fault_physical.QuadPart, guest_vmcb.save_state_area.rip);
 
 	if (exit_info1.fields.valid == 0)
 	{
@@ -97,9 +97,9 @@ void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
 
 			BranchTracer::Pause(vcpu);
 
-			vcpu->guest_vmcb.save_state_area.rflags.TrapFlag = 1;
+			guest_vmcb.save_state_area.rflags.TrapFlag = 1;
 
-			vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
+			guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}
 		else
 		{
@@ -120,14 +120,14 @@ void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
 			/*  Resume the branch tracer after an NCR3 switch, if the tracer is active.
 				Single-stepping mode => only #DB on branches
 			*/
-			BranchTracer::Resume(vcpu);
+			BranchTracer::Resume(this);
 		}
 
-		if (vcpu->guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
+		if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
 			/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
-			auto is_system_page = (vcpu->guest_vmcb.save_state_area.cr3.Flags == __readcr3()) ? true : false;
+			auto is_system_page = (guest_vmcb.save_state_area.cr3.Flags == __readcr3()) ? true : false;
 
 			Instrumentation::InvokeHook(vcpu, Instrumentation::sandbox_execute, is_system_page);
 		}
@@ -140,7 +140,7 @@ void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
 
 			// DbgPrint("0x%p is a sandbox page! \n", faulting_physical.QuadPart);
 
-			vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
+			guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
 
 			return;
 		}
@@ -149,7 +149,7 @@ void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
 
 		/*	handle cases where an instruction is split across 2 pages	*/
 
-		auto switch_ncr3 = HandleSplitInstruction(vcpu, guest_rip, fault_physical, !npthooked_page->ExecuteDisable);
+		auto switch_ncr3 = HandleSplitInstruction(this, guest_rip, fault_physical, !npthooked_page->ExecuteDisable);
 
 		if (switch_ncr3)
 		{
@@ -157,11 +157,11 @@ void NestedPageFaultHandler(VcpuData* vcpu, GuestRegs* guest_registers)
 			{
 				/*  move into hooked page and switch to ncr3 with hooks mapped  */
 
-				vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[shadow];
+				guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[shadow];
 			}
 			else
 			{
-				vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
+				guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
 			}
 		}
 	}
@@ -217,7 +217,7 @@ PTE_64*	AssignNptEntry(PML4E_64* npml4, uintptr_t physical_addr, PTEAccess flags
 
 	if (pml4e->Present == 0)
 	{
-		pdpt = (PDPTE_64*)AllocateNewTable(pml4e);
+		pdpt = (PDPTE_64*)AllocateNewTable((PT_ENTRY_64*)pml4e);
 	}
 	else
 	{
@@ -229,7 +229,7 @@ PTE_64*	AssignNptEntry(PML4E_64* npml4, uintptr_t physical_addr, PTEAccess flags
 
 	if (pdpte->Present == 0)
 	{
-		pd = (PDE_64*)AllocateNewTable((PML4E_64*)pdpte);
+		pd = (PDE_64*)AllocateNewTable((PT_ENTRY_64*)pdpte);
 	}
 	else
 	{
@@ -241,7 +241,7 @@ PTE_64*	AssignNptEntry(PML4E_64* npml4, uintptr_t physical_addr, PTEAccess flags
 
 	if (pde->Present == 0)
 	{
-		pt = (PTE_64*)AllocateNewTable((PML4E_64*)pde);
+		pt = (PTE_64*)AllocateNewTable((PT_ENTRY_64*)pde);
 	}
 	else
 	{
