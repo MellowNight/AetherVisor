@@ -8,13 +8,9 @@ void ExecuteHook(GuestRegisters* registers, void* return_address, void* o_guest_
 	AddressInfo rip_info = { o_guest_rip };
 
 	Utils::Log("[EXECUTE]\n");  
-	Utils::Log("return address = ");
+	Utils::Log("return address = %s \n", retaddr_info.Format());
 
-	retaddr_info.Print();
-
-	Utils::Log("RIP = ", o_guest_rip);
-
-	rip_info.Print();
+	Utils::Log("RIP = %s \n", rip_info.Format());
 
 	Utils::Log("\n\n");
 }
@@ -31,9 +27,7 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 	auto instruction = Disasm::Disassemble((uint8_t*)o_guest_rip, operands);
 
 	Utils::Log("[READ/WRITE]\n");
-    Utils::Log("RIP = ");
-
-	rip_info.Print();
+    Utils::Log("RIP = %s \n", rip_info.Format());
 
 	ZydisRegisterContext context;
 

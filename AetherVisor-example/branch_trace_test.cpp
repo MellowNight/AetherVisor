@@ -4,7 +4,7 @@ std::vector<BranchLog::LogEntry> traced_branches;
 
 void BranchLogFullHook()
 {
-	Logger::Get()->Print(COLOR_ID::blue, "BranchLogFullHook(), AetherVisor::log_buffer->info.buffer 0x%p, AetherVisor::log_buffer->info.buffer_idx %i \n", AetherVisor::log_buffer->info.buffer, AetherVisor::log_buffer->info.buffer_idx);
+	Utils::Log("BranchLogFullHook(), AetherVisor::log_buffer->info.buffer 0x%p, AetherVisor::log_buffer->info.buffer_idx %i \n", AetherVisor::log_buffer->info.buffer, AetherVisor::log_buffer->info.buffer_idx);
 
 	traced_branches.insert(traced_branches.end(),
 		AetherVisor::log_buffer->info.buffer, AetherVisor::log_buffer->info.buffer + AetherVisor::log_buffer->info.buffer_idx);
