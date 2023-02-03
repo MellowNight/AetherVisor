@@ -2,7 +2,7 @@
 #include "syscall_hook.h"
 #include "paging_utils.h"
 
-bool VcpuData::InvalidOpcodeHandler(GuestRegs* guest_ctx, PhysMemAccess* physical_mem)
+bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* physical_mem)
 {
     auto guest_rip = guest_vmcb.save_state_area.rip;
 

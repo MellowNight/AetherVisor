@@ -29,17 +29,17 @@ namespace Util
         VirtualProtect((LPVOID)address, len, old_prot, 0);
     }
 
-    void TriggerCOWAndPageIn(void* address)
+#pragma optimize( "", off )
+
+    void TriggerCOW(void* address)
     {
         uint8_t buffer;
-
-        /*	1. page in	*/
-
-        buffer = *(uint8_t*)address;
-
-        /*	2. trigger COW	*/
+        /*	trigger COW	*/
 
         WriteToReadOnly(address, (uint8_t*)"\xC3", 1);
         WriteToReadOnly(address, &buffer, 1);
     }
+#pragma optimize( "", on )
+
+
 };

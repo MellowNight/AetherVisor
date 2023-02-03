@@ -3,7 +3,7 @@
 #include "branch_tracer.h"
 
 
-void VcpuData::BreakpointHandler(GuestRegs* guest_ctx)
+void VcpuData::BreakpointHandler(GuestRegisters* guest_ctx)
 {
     auto vmroot_cr3 = __readcr3();
 
@@ -26,7 +26,7 @@ void VcpuData::BreakpointHandler(GuestRegs* guest_ctx)
                 return false;
             },
             (void*)guest_rip
-                );
+         );
 
         /*  clean TLB after removing the NPT hook   */
 

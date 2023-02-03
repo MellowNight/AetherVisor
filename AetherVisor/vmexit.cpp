@@ -20,7 +20,7 @@ void VcpuData::InjectException(int vector, bool push_error, int error_code)
     guest_vmcb.control_area.event_inject = event_inject.fields;
 }
 
-extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegs * guest_ctx, PhysMemAccess * physical_mem)
+extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMemAccess * physical_mem)
 {
     /*	load host extra state	*/
 

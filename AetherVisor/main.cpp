@@ -41,9 +41,9 @@ bool VirtualizeAllProcessors()
 			DbgPrint("[SETUP] active processor count %i \n", Hypervisor::Get()->core_count);
 			DbgPrint("[SETUP] Currently running on core %i \n", core_num);
 
-			auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
+			auto register_ctx = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
 
-			RtlCaptureContext(reg_context);
+			RtlCaptureContext(register_ctx);
 
 			if (Hypervisor::Get()->IsCoreVirtualized(core_num) == false)
 			{
@@ -53,7 +53,7 @@ bool VirtualizeAllProcessors()
 
 				vcpu[core_num] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
 
-				ConfigureProcessor(vcpu[core_num], reg_context);
+				vcpu[core_num]->Configure(register_ctx);
 
 				SegmentAttribute cs_attrib;
 

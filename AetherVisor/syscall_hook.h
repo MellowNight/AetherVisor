@@ -4,8 +4,8 @@
 
 namespace SyscallHook
 {
-    bool EmulateSyscall(VcpuData* vcpu, GuestRegs* guest_ctx);
-    bool EmulateSysret(VcpuData* vcpu, GuestRegs* guest_ctx);
+    bool EmulateSyscall(VcpuData* vcpu, GuestRegisters* guest_ctx);
+    bool EmulateSysret(VcpuData* vcpu, GuestRegisters* guest_ctx);
 
     void Init(VcpuData* vcpu, BOOLEAN EnableEFERSyscallHook);
 };

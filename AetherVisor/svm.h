@@ -1,6 +1,6 @@
 #pragma once
 #include "includes.h"
-
+#include "amd.h"
 
 /* VMCB exception intercept vector 2    */
 
@@ -176,7 +176,7 @@ typedef struct VmcbSaveStateArea
     uint8_t reserved1[0x0cb - 0x0a0];     // +0x0a0
     uint8_t cpl;                          // +0x0cb
     uint32_t reserved2;                   // +0x0cc
-    uint64_t efer;                        // +0x0d0
+    EferMsr efer;                        // +0x0d0
     uint8_t reserved3[0x148 - 0x0d8];     // +0x0d8
     CR4 cr4;                            // +0x148
     CR3 cr3;                            // +0x150

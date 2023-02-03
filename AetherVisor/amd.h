@@ -25,7 +25,7 @@ enum MSR : uint64_t
 
 /*	AMD EFER (Extended Feature Enable Register) MSR     */
 
-struct  EferMsr
+struct EferMsr
 {
     union
     {

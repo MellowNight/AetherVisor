@@ -4,7 +4,7 @@
 #include "instrumentation_hook.h"
 
 
-void VcpuData::DebugFaultHandler(GuestRegs* guest_ctx)
+void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 {
     auto guest_rip = guest_vmcb.save_state_area.rip;
 

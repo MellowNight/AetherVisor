@@ -3,15 +3,9 @@
 #include "ia32.h"
 #include "utils.h"
 
-void (*sandbox_execute_handler)(GuestRegs* registers, void* return_address, void* o_guest_rip) = NULL;
-void (*sandbox_mem_access_handler)(GuestRegs* registers, void* o_guest_rip) = NULL;
-void (*branch_log_full_handler)() = NULL;
-void (*branch_trace_finish_handler)() = NULL;
-void (*syscall_handler)() = NULL;
-
 /*  parameter order: rcx, rdx, r8, r9, r12, r11  */
 
-namespace BVM
+namespace AetherVisor
 {
     BranchLog* log_buffer;
 
@@ -24,38 +18,40 @@ namespace BVM
         svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, NULL, log_buffer, range_base, range_size);
     }
 
-    void InstrumentationHook(HookId handler_id, void* address)
+    void (*branch_trace_finish_handler)() = NULL;
+
+    struct Hook {
+        HOOK_ID id;
+        void** handler;
+        void (*handler_wrap)();
+    };
+
+    Hook hooks[] = {
+        {sandbox_readwrite, (void**)&sandbox_mem_access_handler, rw_handler_wrap},
+        {sandbox_execute, (void**)&sandbox_execute_handler, execute_handler_wrap},
+        {branch_log_full, (void**)&branch_log_full_handler, branch_log_full_handler_wrap},
+        {branch_trace_finished, (void**)&branch_trace_finish_handler, branch_trace_finish_handler_wrap}
+    };
+
+    void InstrumentationHook(HOOK_ID handler_id, void* address)
     {
-        switch (handler_id)
+        for (const auto& hook : hooks) 
         {
-            case sandbox_readwrite:
+            if (hook.id == handler_id) 
             {
-                sandbox_mem_access_handler = static_cast<decltype(sandbox_mem_access_handler)>(address);
-                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, rw_handler_wrap);
-                break;
-            }
-            case sandbox_execute:
-            {
-                sandbox_execute_handler = static_cast<decltype(sandbox_execute_handler)>(address);
-                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, execute_handler_wrap);
-                break;
-            }
-            case branch_log_full:
-            {
-                branch_log_full_handler = static_cast<decltype(branch_log_full_handler)>(address);
-                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, branch_log_full_handler_wrap);
-                break;
-            }
-            case branch_trace_finished:
-            {
-                branch_trace_finish_handler = static_cast<decltype(branch_trace_finish_handler)>(address);
-                svm_vmmcall(VMMCALL_ID::register_instrumentation_hook, handler_id, branch_trace_finish_handler_wrap);
+                *hook.handler = static_cast<decltype(*hook.handler)>(address);
+                svm_vmmcall(VMMCALL_ID::instrumentation_hook, handler_id, hook.handler_wrap);
                 break;
             }
         }
     }
 
-    void DenySandboxMemAccess(void* page_addr)
+    void HookEferSyscalls()
+    {
+        svm_vmmcall(VMMCALL_ID::hook_efer_syscall);
+    }
+
+    void DenySandboxMemAccess(void* page_addr, bool allow_reads)
     {
         svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, page_addr);
     }
@@ -64,28 +60,15 @@ namespace BVM
 
     int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id, bool global_page)
     {
-        int a;
-
-        if (global_page)
-        {
-            Util::TriggerCOWAndPageIn((uint8_t*)address);
-        }
-        else
-        {
-            /*  page in */
-
-            memcpy(&a, (void*)address, sizeof(int));
-        }
+        Util::TriggerCOW((uint8_t*)address);
 
         svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, ncr3_id);
-
-        return a;
     }
 #pragma optimize( "", on )
 
     int SandboxPage(uintptr_t address, uintptr_t tag)
     {
-        Util::TriggerCOWAndPageIn((uint8_t*)address);
+        Util::TriggerCOW((uint8_t*)address);
 
         svm_vmmcall(VMMCALL_ID::sandbox_page, address, tag);
 
@@ -96,7 +79,7 @@ namespace BVM
     {
         for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
         {
-            BVM::SandboxPage((uintptr_t)offset, NULL);
+            AetherVisor::SandboxPage((uintptr_t)offset, NULL);
         }
     }
 

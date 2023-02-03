@@ -11,7 +11,7 @@
     Parameters are passed in the order of rdx, r8, r9, r12, r11
 */
 
-void VcpuData::VmmcallHandler(GuestRegs* guest_ctx, bool* end_svm)
+void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
 {
     auto id = guest_ctx->rcx;
 
@@ -32,7 +32,7 @@ void VcpuData::VmmcallHandler(GuestRegs* guest_ctx, bool* end_svm)
 
         break;
     }
-    case VMMCALL_ID::register_instrumentation_hook:
+    case VMMCALL_ID::instrumentation_hook:
     {
         auto handler_id = guest_ctx->rdx;
 
@@ -100,7 +100,7 @@ void VcpuData::VmmcallHandler(GuestRegs* guest_ctx, bool* end_svm)
 
         break;
     }
-    case VMMCALL_ID::efer_syscall_hook:
+    case VMMCALL_ID::hook_efer_syscall:
     {
         SyscallHook::Init(this, TRUE);
 

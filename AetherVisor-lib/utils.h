@@ -1,5 +1,5 @@
 #pragma once
-#include "forte_api.h"
+#include "aethervisor.h"
 
 namespace Util
 {
@@ -7,6 +7,6 @@ namespace Util
 
     void WriteToReadOnly(void* address, uint8_t* bytes, size_t len);
 
-    void TriggerCOWAndPageIn(void* address);
+    void TriggerCOW(void* address);
 };
 

@@ -11,14 +11,15 @@ enum VMMCALL_ID : uintptr_t
     remove_npt_hook = 0x11111113,
     is_hv_present = 0x11111114,
     sandbox_page = 0x11111116,
-    register_instrumentation_hook = 0x11111117,
+    instrumentation_hook = 0x11111117,
     deny_sandbox_reads = 0x11111118,
     start_branch_trace = 0x11111119,
+    hook_efer_syscall = 0x1111111A,
 };
 
 #define PAGE_SIZE 0x1000
 
-struct GuestRegs
+struct GuestRegisters
 {
     uintptr_t  r15;
     uintptr_t  r14;
@@ -63,22 +64,25 @@ union BranchLog
     }
 };
 
-extern "C" void (*sandbox_execute_handler)(GuestRegs * registers, void* return_address, void* o_guest_rip);
-extern "C" void __stdcall execute_handler_wrap();
+extern "C" {
+    void (*sandbox_execute_handler)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
+    void __stdcall execute_handler_wrap();
 
-extern "C" void (*sandbox_mem_access_handler)(GuestRegs * registers, void* o_guest_rip);
-extern "C" void __stdcall rw_handler_wrap();
+    void (*sandbox_mem_access_handler)(GuestRegisters * registers, void* o_guest_rip);
+    void __stdcall rw_handler_wrap();
+    
+    void (*branch_log_full_handler)();
+    void __stdcall branch_log_full_handler_wrap();
 
-extern "C" void (*branch_log_full_handler)();
-extern "C" void __stdcall branch_log_full_handler_wrap();
+    void (*branch_trace_finish_handler)();
+    void __stdcall branch_trace_finish_handler_wrap();
 
-extern "C" void (*branch_trace_finish_handler)();
-extern "C" void __stdcall branch_trace_finish_handler_wrap();
-
-extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
+    int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
+}
 
 
-namespace BVM
+
+namespace AetherVisor
 {
     extern BranchLog* log_buffer;
 
@@ -90,7 +94,7 @@ namespace BVM
         sandbox_single_step
     };
 
-    enum HookId
+    enum HOOK_ID
     {
         sandbox_readwrite = 0,
         sandbox_execute = 1,
@@ -109,7 +113,7 @@ namespace BVM
 
     void DenySandboxMemAccess(void* page_addr);
 
-    void InstrumentationHook(HookId handler_id, void* address);
+    void InstrumentationHook(HOOK_ID handler_id, void* address);
 
     int RemoveNptHook(uintptr_t address);
 

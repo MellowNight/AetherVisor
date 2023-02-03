@@ -53,7 +53,7 @@ bool HandleSplitInstruction(VcpuData* vcpu, uintptr_t guest_rip, PHYSICAL_ADDRES
 }
 
 
-void VcpuData::NestedPageFaultHandler(GuestRegs* guest_regs)
+void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 {
 	PHYSICAL_ADDRESS fault_physical; fault_physical.QuadPart = guest_vmcb.control_area.exit_info2;
 
@@ -95,7 +95,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegs* guest_regs)
 				Single-stepping mode => single-step on every instruction
 			*/
 
-			BranchTracer::Pause(vcpu);
+			BranchTracer::Pause(this);
 
 			guest_vmcb.save_state_area.rflags.TrapFlag = 1;
 
@@ -129,7 +129,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegs* guest_regs)
 
 			auto is_system_page = (guest_vmcb.save_state_area.cr3.Flags == __readcr3()) ? true : false;
 
-			Instrumentation::InvokeHook(vcpu, Instrumentation::sandbox_execute, is_system_page);
+			Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute, is_system_page);
 		}
 
 		auto sandbox_npte = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);

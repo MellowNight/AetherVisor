@@ -2,7 +2,7 @@
 #include "svm.h"
 #include "paging_utils.h"
 
-struct GuestRegs
+struct GuestRegisters
 {
     uintptr_t  r15;
     uintptr_t  r14;
@@ -47,32 +47,32 @@ struct VcpuData
     void InjectException(int vector, bool push_error, int error_code);
 
     void VmmcallHandler(
-        GuestRegs* GuestRegs,
+        GuestRegisters* GuestRegs,
         bool* EndVM
     );
 
     void BreakpointHandler(
-        GuestRegs* guest_ctx
+        GuestRegisters* guest_ctx
     );
 
     void DebugFaultHandler(
-        GuestRegs* guest_ctx
+        GuestRegisters* guest_ctx
     );
 
     bool InvalidOpcodeHandler(
-        GuestRegs* guest_ctx,
+        GuestRegisters* guest_ctx,
         PhysMemAccess* physical_mem
     );
 
     void MsrExitHandler(
-        GuestRegs* guest_regs
+        GuestRegisters* guest_regs
     );
 
     void NestedPageFaultHandler(
-        GuestRegs* guest_registers
+        GuestRegisters* guest_registers
     );
 
-    void ConfigureProcessor(CONTEXT* context_record);
+    void Configure(CONTEXT* context_record);
 };
 
 /* Global hypervisor information    */

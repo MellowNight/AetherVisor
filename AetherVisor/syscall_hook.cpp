@@ -5,28 +5,22 @@ namespace SyscallHook
 {
     void Init(VcpuData* vcpu, BOOLEAN EnableEFERSyscallHook)
     {
-        IA32_VMX_BASIC_REGISTER VmxBasicMsr = { 0 };
-
-        EferMsr efer_msr;
-
-        efer_msr.flags = __readmsr(IA32_EFER);
-
         if (EnableEFERSyscallHook)
         {
-            efer_msr.syscall = FALSE;
+            vcpu->guest_vmcb.save_state_area.efer.syscall = FALSE;
         }
         else
         {
-            efer_msr.syscall = TRUE;
+            vcpu->guest_vmcb.save_state_area.efer.syscall = TRUE;
 
             //
             // unset the exception to not cause vm-exit on #UDs
             //
-            ProtectedHvRemoveUndefinedInstructionForDisablingSyscallSysretCommands();
+          //  ProtectedHvRemoveUndefinedInstructionForDisablingSyscallSysretCommands();
         }
     }
 
-    bool EmulateSysret(VcpuData* vcpu, GuestRegs* guest_ctx)
+    bool EmulateSysret(VcpuData* vcpu, GuestRegisters* guest_ctx)
     {
         vcpu->guest_vmcb.save_state_area.rip = guest_ctx->rcx;
 
@@ -60,7 +54,7 @@ namespace SyscallHook
         return true;
     }
 
-    bool EmulateSyscall(VcpuData* vcpu, GuestRegs* guest_ctx)
+    bool EmulateSyscall(VcpuData* vcpu, GuestRegisters* guest_ctx)
     {
         uintptr_t guest_rip = vcpu->guest_vmcb.save_state_area.rip;
 
@@ -77,7 +71,7 @@ namespace SyscallHook
         //
         uintptr_t lstar  = __readmsr(IA32_LSTAR);
         guest_ctx->rcx = guest_rip + insn_len;
-        vcpu->guest_vmcb.save_state_area.rip  = lstar;
+        vcpu->guest_vmcb.save_state_area.rip = lstar;
 
         //
         // Save RFLAGS into R11 and then mask RFLAGS using IA32_FMASK

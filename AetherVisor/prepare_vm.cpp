@@ -49,7 +49,7 @@ void SetupMSRPM(VcpuData* vcpu)
 	RtlSetBits(&bitmap, efer_offset, 2);
 }
 
-void VcpuData::ConfigureProcessor(CONTEXT* context_record)
+void VcpuData::Configure(CONTEXT* context_record)
 {
 	guest_vmcb_physicaladdr = MmGetPhysicalAddress(&guest_vmcb).QuadPart;
 	host_vmcb_physicaladdr = MmGetPhysicalAddress(&host_vmcb).QuadPart;
@@ -94,7 +94,7 @@ void VcpuData::ConfigureProcessor(CONTEXT* context_record)
 	guest_vmcb.save_state_area.rax = context_record->Rax;
 	guest_vmcb.save_state_area.rsp = context_record->Rsp;
 
-	guest_vmcb.save_state_area.efer = __readmsr(MSR::efer);
+	guest_vmcb.save_state_area.efer.flags = __readmsr(MSR::efer);
 	guest_vmcb.save_state_area.guest_pat = __readmsr(MSR::pat);
 
 	guest_vmcb.save_state_area.gdtr_limit = gdtr.limit;

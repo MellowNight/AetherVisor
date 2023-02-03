@@ -35,11 +35,14 @@
     <Filter Include="Source Files\hypervisor">
       <UniqueIdentifier>{d87aeb79-e088-4308-b558-bcadcce84126}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\vmexit handlers">
-      <UniqueIdentifier>{705f43ca-c9b5-4e54-987c-7db80def48b2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\AMD structs">
       <UniqueIdentifier>{7f3c90e1-2152-4e57-94cf-f79e18650663}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vmexit">
+      <UniqueIdentifier>{705f43ca-c9b5-4e54-987c-7db80def48b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vmexit\handlers">
+      <UniqueIdentifier>{814330ca-ed5a-456a-aefc-32b9519229d1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -101,7 +104,7 @@
       <Filter>Source Files\hypervisor</Filter>
     </ClInclude>
     <ClInclude Include="vmexit.h">
-      <Filter>Source Files\vmexit handlers</Filter>
+      <Filter>Source Files\vmexit</Filter>
     </ClInclude>
     <ClInclude Include="instrumentation_hook.h">
       <Filter>Header Files</Filter>
@@ -110,7 +113,7 @@
       <Filter>Source Files\AMD structs</Filter>
     </ClInclude>
     <ClInclude Include="syscall_hook.h">
-      <Filter>Source Files\vmexit handlers</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -153,26 +156,26 @@
     <ClCompile Include="hypervisor.cpp">
       <Filter>Source Files\hypervisor</Filter>
     </ClCompile>
-    <ClCompile Include="vmmcall.cpp">
-      <Filter>Source Files\vmexit handlers</Filter>
-    </ClCompile>
     <ClCompile Include="vmexit.cpp">
-      <Filter>Source Files\vmexit handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="db_exception.cpp">
-      <Filter>Source Files\vmexit handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="bp_exception.cpp">
-      <Filter>Source Files\vmexit handlers</Filter>
+      <Filter>Source Files\vmexit</Filter>
     </ClCompile>
     <ClCompile Include="instrumentation_hook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="bp_exception.cpp">
+      <Filter>Source Files\vmexit\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="db_exception.cpp">
+      <Filter>Source Files\vmexit\handlers</Filter>
+    </ClCompile>
     <ClCompile Include="syscall_hook.cpp">
-      <Filter>Source Files\vmexit handlers</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ud_exception.cpp">
-      <Filter>Source Files\vmexit handlers</Filter>
+      <Filter>Source Files\vmexit\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="vmmcall.cpp">
+      <Filter>Source Files\vmexit\handlers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

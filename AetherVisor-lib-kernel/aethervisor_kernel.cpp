@@ -9,7 +9,7 @@ void (*branch_trace_finish_handler)() = NULL;
 
 /*  parameter order: rcx, rdx, r8, r9, r12, r11  */
 
-namespace BVM
+namespace AetherVisor
 {
     BranchLog* log_buffer;
 
