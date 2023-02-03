@@ -2,7 +2,6 @@
 #include "npt_sandbox.h"
 #include "branch_tracer.h"
 
-
 void VcpuData::BreakpointHandler(GuestRegisters* guest_ctx)
 {
     auto vmroot_cr3 = __readcr3();
@@ -14,7 +13,7 @@ void VcpuData::BreakpointHandler(GuestRegisters* guest_ctx)
     if (BranchTracer::initialized && guest_rip == BranchTracer::start_address && !BranchTracer::thread_id)
     {
         NptHooks::ForEachHook(
-            [](auto hook_entry, auto data)-> auto {
+            [](auto hook_entry, auto data) -> auto {
 
                 if (hook_entry->address == data)
                 {
@@ -22,7 +21,6 @@ void VcpuData::BreakpointHandler(GuestRegisters* guest_ctx)
 
                     UnsetHook(hook_entry);
                 }
-
                 return false;
             },
             (void*)guest_rip

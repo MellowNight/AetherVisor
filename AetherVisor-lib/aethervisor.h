@@ -1,21 +1,5 @@
 #pragma once
-#include <cstdint>
-#include <Windows.h>
-#include <math.h>
-#include <intrin.h>
-
-enum VMMCALL_ID : uintptr_t
-{
-    disable_hv = 0x11111111,
-    set_npt_hook = 0x11111112,
-    remove_npt_hook = 0x11111113,
-    is_hv_present = 0x11111114,
-    sandbox_page = 0x11111116,
-    instrumentation_hook = 0x11111117,
-    deny_sandbox_reads = 0x11111118,
-    start_branch_trace = 0x11111119,
-    hook_efer_syscall = 0x1111111A,
-};
+#include "vmmcalls.h"
 
 #define PAGE_SIZE 0x1000
 
@@ -65,6 +49,7 @@ union BranchLog
 };
 
 extern "C" {
+    
     void (*sandbox_execute_handler)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
     void __stdcall execute_handler_wrap();
 
@@ -103,19 +88,42 @@ namespace AetherVisor
         max_id
     };
 
-    void TraceFunction(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size);
+    void TraceFunction(
+        uint8_t* start_addr, 
+        uintptr_t range_base, 
+        uintptr_t range_size
+    );
 
-    int SetNptHook(uintptr_t address, uint8_t* patch, size_t patch_len, int32_t ncr3_id, bool global_page = true);
+    int SetNptHook(
+        uintptr_t address, 
+        uint8_t* patch, 
+        size_t patch_len, 
+        int32_t ncr3_id, 
+        bool global_page = true
+    );
 
-    int SandboxPage(uintptr_t address, uintptr_t tag);
+    int SandboxPage(
+        uintptr_t address, 
+        uintptr_t tag
+    );
 
-    void SandboxRegion(uintptr_t base, uintptr_t size);
+    void SandboxRegion(
+        uintptr_t base, 
+        uintptr_t size
+    );
 
-    void DenySandboxMemAccess(void* page_addr);
+    void DenySandboxMemAccess(
+        void* page_addr
+    );
 
-    void InstrumentationHook(HOOK_ID handler_id, void* address);
+    void InstrumentationHook(
+        HOOK_ID handler_id, 
+        void* address
+    );
 
-    int RemoveNptHook(uintptr_t address);
+    int RemoveNptHook(
+        uintptr_t address
+    );
 
     int DisableHv();
 };

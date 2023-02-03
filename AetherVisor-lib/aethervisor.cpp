@@ -1,41 +1,46 @@
-#include "pch.h"
 #include "aethervisor.h"
 #include "ia32.h"
 #include "utils.h"
 
-/*  parameter order: rcx, rdx, r8, r9, r12, r11  */
+/*  vmmcall parameter order: rcx, rdx, r8, r9, r12, r11  */
 
 namespace AetherVisor
 {
     BranchLog* log_buffer;
 
-    void TraceFunction(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size)
+    void TraceFunction(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL)
     {
         log_buffer = new BranchLog{};
 
         SetNptHook((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox);
-
-        svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, NULL, log_buffer, range_base, range_size);
+        
+        svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, stop_addr, log_buffer, range_base, range_size);
     }
 
-    void (*branch_trace_finish_handler)() = NULL;
-
-    struct Hook {
+    struct Hook
+    {
         HOOK_ID id;
         void** handler;
         void (*handler_wrap)();
     };
 
-    Hook hooks[] = {
-        {sandbox_readwrite, (void**)&sandbox_mem_access_handler, rw_handler_wrap},
+    Hook instrumentation_hooks[] = {
+        // Invoked when sandboxed code reads/writes from a page that denies read/write access.
+        {sandbox_readwrite, (void**)&sandbox_mem_access_handler, rw_handler_wrap}, 
+
+        // Invoked every time RIP leaves a sandbox memory region
         {sandbox_execute, (void**)&sandbox_execute_handler, execute_handler_wrap},
+
+        // Invoked when branch trace buffer is full
         {branch_log_full, (void**)&branch_log_full_handler, branch_log_full_handler_wrap},
+
+        // Invoked when the branch tracer has reached the stop address
         {branch_trace_finished, (void**)&branch_trace_finish_handler, branch_trace_finish_handler_wrap}
     };
 
     void InstrumentationHook(HOOK_ID handler_id, void* address)
     {
-        for (const auto& hook : hooks) 
+        for (const auto& hook : instrumentation_hooks) 
         {
             if (hook.id == handler_id) 
             {
@@ -48,7 +53,11 @@ namespace AetherVisor
 
     void HookEferSyscalls()
     {
-        svm_vmmcall(VMMCALL_ID::hook_efer_syscall);
+        Util::ForEachCore(
+            [](void* params) -> void {
+                svm_vmmcall(VMMCALL_ID::hook_efer_syscall);
+            }, NULL
+        );
     }
 
     void DenySandboxMemAccess(void* page_addr, bool allow_reads)
@@ -94,7 +103,8 @@ namespace AetherVisor
     int DisableHv()
     {
         Util::ForEachCore(
-            [](void* params) -> void {
+            [](void* params) -> void 
+            {
                 svm_vmmcall(VMMCALL_ID::disable_hv);
             }, NULL
         );
