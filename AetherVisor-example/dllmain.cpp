@@ -1,6 +1,6 @@
 #include "be_logging.h"
 
-#define DEFAULT_HOOK_MODE  2 // 1 == INTEL | 2 == AMD | 3 == normal
+#define ENTRYPOINT_INVOCATION  2 // 1 == 2D injector | 2 == present inline hook call entry point
 
 #define LOG_FILE "C:\\Users\\user123\\Desktop\\testing_drivers\\test_logs.txt"
 
@@ -34,7 +34,7 @@ extern "C" __declspec(dllexport) HRESULT __fastcall HookEntryPoint(IDXGISwapChai
 		}
 
 		/*	restore entrypoint hook		*/
-		if (DEFAULT_HOOK_MODE == 1)
+		if (ENTRYPOINT_INVOCATION == 1)
 		{
 			auto dxgi = (uintptr_t)GetModuleHandle(L"dxgi.dll");
 
@@ -43,9 +43,9 @@ extern "C" __declspec(dllexport) HRESULT __fastcall HookEntryPoint(IDXGISwapChai
 				"\x48\x89\x74\x24\x00\x55\x57\x41\x56\x48\x8D\x6C\x24\x00\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x48\x33\xC4\x48\x89\x45\x60", 35, 0x00
 			) - 5;
 
-			// IntelVisor::RemoveEptHookUsermode((void*)present_address);
+			ForteVisor::RemoveNptHook((void*)present_address);
 		}
-		else if (DEFAULT_HOOK_MODE == 2)
+		else if (ENTRYPOINT_INVOCATION == 2)
 		{
 			auto dxgi = (uintptr_t)GetModuleHandle(L"dxgi.dll");
 
