@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "utils.h"
 
 namespace Util
@@ -40,6 +39,4 @@ namespace Util
         WriteToReadOnly(address, &buffer, 1);
     }
 #pragma optimize( "", on )
-
-
 };

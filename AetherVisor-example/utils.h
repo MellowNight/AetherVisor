@@ -12,7 +12,7 @@ namespace Utils
 
 	void WriteToReadOnly(void* address, uint8_t* bytes, size_t len);
 
-	void log(const char* format, ...);
+	void Log(const char* format, ...);
 
 	size_t LoadFileIntoMemory(const wchar_t* path, char** buffer);
 

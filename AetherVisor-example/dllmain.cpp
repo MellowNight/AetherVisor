@@ -1,6 +1,8 @@
-#include "be_logging.h"
+#include "aethervisor_test.h"
+#include "global.h"
+#include "portable_executable.h"
 
-#define ENTRYPOINT_INVOCATION  2 // 1 == 2D injector | 2 == present inline hook call entry point
+#define ENTRYPOINT_METHOD  2 // 1 == 2D injector | 2 == present inline hook call entry point
 
 #define LOG_FILE "C:\\Users\\user123\\Desktop\\testing_drivers\\test_logs.txt"
 
@@ -34,7 +36,7 @@ extern "C" __declspec(dllexport) HRESULT __fastcall HookEntryPoint(IDXGISwapChai
 		}
 
 		/*	restore entrypoint hook		*/
-		if (ENTRYPOINT_INVOCATION == 1)
+		if (ENTRYPOINT_METHOD == 1)
 		{
 			auto dxgi = (uintptr_t)GetModuleHandle(L"dxgi.dll");
 
@@ -43,9 +45,9 @@ extern "C" __declspec(dllexport) HRESULT __fastcall HookEntryPoint(IDXGISwapChai
 				"\x48\x89\x74\x24\x00\x55\x57\x41\x56\x48\x8D\x6C\x24\x00\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x48\x33\xC4\x48\x89\x45\x60", 35, 0x00
 			) - 5;
 
-			ForteVisor::RemoveNptHook((void*)present_address);
+			AetherVisor::RemoveNptHook(present_address);
 		}
-		else if (ENTRYPOINT_INVOCATION == 2)
+		else if (ENTRYPOINT_METHOD == 2)
 		{
 			auto dxgi = (uintptr_t)GetModuleHandle(L"dxgi.dll");
 
@@ -61,12 +63,13 @@ extern "C" __declspec(dllexport) HRESULT __fastcall HookEntryPoint(IDXGISwapChai
 				}
 			}
 
-			memcpy((void*)present_address, Global::dll_params->original_present_bytes, Global::dll_params->o_present_bytes_size);
+			memcpy((void*)present_address,
+				Global::dll_params->original_present_bytes, Global::dll_params->o_present_bytes_size);
 		}
 
 		PE::ResolveImports((uint8_t*)Global::dll_params->dll_base);
 
-		StartBELogger();
+		StartTests();
 	}
 
 	return 0;
@@ -104,7 +107,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 		Global::dll_params->dll_size = PeHeader(hModule)->OptionalHeader.SizeOfImage;
 		Global::dll_params->dll_base = (uintptr_t)hModule;
 
-		CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)StartBELogger, NULL, NULL, NULL);
+		CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)StartTests, NULL, NULL, NULL);
 
 		break;
 	}

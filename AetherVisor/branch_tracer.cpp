@@ -50,7 +50,6 @@ namespace BranchTracer
 			mdl = Utils::LockPages((void*)log_buffer, IoModifyAccess, UserMode, log_buffer->info.capacity);
 		}
 
-
 		start_address = start_addr;
 
 		stop_address = stop_addr;

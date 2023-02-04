@@ -120,6 +120,7 @@ struct SegmentAttribute
 
 
 /*	 Core::X86::Msr::VM_CR	*/
+
 union MsrVmcr
 {
     struct

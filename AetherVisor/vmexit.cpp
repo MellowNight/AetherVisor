@@ -76,7 +76,7 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
     {
         SegmentAttribute cs_attrib;
 
-        cs_attrib.as_uint16 = vcpu->guest_vmcb.save_state_area.cs_attrib;
+        cs_attrib.as_uint16 = vcpu->guest_vmcb.save_state_area.cs_attrib.as_uint16;
 
         IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
 

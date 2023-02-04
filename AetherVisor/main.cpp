@@ -42,10 +42,10 @@ bool VirtualizeAllProcessors()
 			DbgPrint("[SETUP] Currently running on core %i \n", core_num);
 
 			auto register_ctx = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
-
+			
 			RtlCaptureContext(register_ctx);
 
-			if (Hypervisor::Get()->IsCoreVirtualized(core_num) == false)
+			if (Hypervisor::Get()->IsCoreVirtualized(core_num))
 			{
 				EnableSvme();
 
@@ -57,11 +57,11 @@ bool VirtualizeAllProcessors()
 
 				SegmentAttribute cs_attrib;
 
-				cs_attrib.as_uint16 = vcpu[core_num]->guest_vmcb.save_state_area.cs_attrib;
+				cs_attrib = vcpu[core_num]->guest_vmcb.save_state_area.cs_attrib;
 
 				if (IsCoreReadyForVmrun(&vcpu[core_num]->guest_vmcb, cs_attrib))
 				{
-					DbgPrint("address of guest vmcb save state area = %p \n", &vcpu[core_num]->guest_vmcb.save_state_area.rip);
+					DbgPrint("address of guest vmcb save state area = %p \n", &vcpu[core_num]->guest_vmcb.save_state_area);
 
 					LaunchVm(&vcpu[core_num]->guest_vmcb_physicaladdr);
 				}
@@ -75,6 +75,7 @@ bool VirtualizeAllProcessors()
 			{
 				DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 			}
+
 		}, NULL
 	);
 

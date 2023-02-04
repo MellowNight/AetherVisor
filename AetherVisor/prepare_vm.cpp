@@ -116,10 +116,10 @@ void VcpuData::Configure(CONTEXT* context_record)
 	guest_vmcb.save_state_area.dr7.Flags = __readdr(7);
 	guest_vmcb.save_state_area.dbg_ctl.Flags = __readmsr(IA32_DEBUGCTL);
 
-	guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base).as_uint16;
-	guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base).as_uint16;
-	guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).as_uint16;
-	guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).as_uint16;
+	guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base);
+	guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base);
+	guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base);
+	guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base);
 
 	SetupMSRPM(this);
 
@@ -133,7 +133,8 @@ void VcpuData::Configure(CONTEXT* context_record)
 }
 
 
-bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
+bool 
+IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 {
 	if (cs_attribute.fields.long_mode == 1)
 	{
@@ -268,7 +269,7 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 		return false;
 	}
 
-	DbgPrint("consistency checks passed \n");
+	DbgPrint("consistency checks passed guest_vmcb at %p \n", guest_vmcb);
 
 	return true;
 

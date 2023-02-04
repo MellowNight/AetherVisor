@@ -34,12 +34,12 @@ struct GuestRegisters
 
 struct VcpuData
 {
-    uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(int64_t) * 5];
+    uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(int64_t) * 6];
     uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
     uintptr_t   host_vmcb_physicaladdr;
     PhysMemAccess* mem_access;
     struct      VcpuData* self;
-    uint8_t     pad[8];
+    uint8_t     pad[16];
     VMCB        guest_vmcb;
     VMCB        host_vmcb;
     uint8_t     host_save_area[0x1000];
@@ -47,8 +47,8 @@ struct VcpuData
     void InjectException(int vector, bool push_error, int error_code);
 
     void VmmcallHandler(
-        GuestRegisters* GuestRegs,
-        bool* EndVM
+        GuestRegisters* guest_regs,
+        bool* end_svm
     );
 
     void BreakpointHandler(

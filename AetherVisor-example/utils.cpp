@@ -82,7 +82,7 @@ namespace Utils
 		va_start(args, format);
 		vsprintf(buffer, format, args);
 		va_end(args);
-		buffer[200] = '\0';
+		buffer[255] = '\0';
 		OutputDebugStringA(buffer);
 	}
 

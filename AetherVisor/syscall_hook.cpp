@@ -42,14 +42,31 @@ namespace SyscallHook
         uintptr_t star_msr  = __readmsr(IA32_STAR);
 
         vcpu->guest_vmcb.save_state_area.cs_selector = (uint16_t)(((star_msr >> 48) + 16) | 3); // (STAR[63:48]+16) | 3 (* RPL forced to 3 *)
-        vcpu->guest_vmcb.save_state_area.cs_base = 0;                                     // Flat segment
-        vcpu->guest_vmcb.save_state_area.cs_limit = UINT32_MAX;                            // 4GB limit
-        vcpu->guest_vmcb.save_state_area.cs_attrib = 0xA0FB;                                // L+DB+P+S+DPL3+Code
+        vcpu->guest_vmcb.save_state_area.cs_base = 0;               // Flat segment
+        vcpu->guest_vmcb.save_state_area.cs_limit = UINT32_MAX;     // 4GB limit
+                                                                    
+        // as uint16 = 0xAFB; // L+DB+P+S+DPL3+Code
+
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type = 0xB;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.dpl = 3;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.present = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.long_mode = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.granularity = 1;
+
 
         vcpu->guest_vmcb.save_state_area.ss_selector = (UINT16)(((star_msr >> 48) + 8) | 3); // (STAR[63:48]+8) | 3 (* RPL forced to 3 *)
-        vcpu->guest_vmcb.save_state_area.ss_base = 0;                                    // Flat segment
-        vcpu->guest_vmcb.save_state_area.ss_limit = UINT32_MAX;                           // 4GB limit
-        vcpu->guest_vmcb.save_state_area.ss_attrib = 0xC0F3;                               // G+DB+P+S+DPL3+Data
+        vcpu->guest_vmcb.save_state_area.ss_base = 0;               // Flat segment
+        vcpu->guest_vmcb.save_state_area.ss_limit = UINT32_MAX;     // 4GB limit
+
+         // as uint16 = 0xCF3;   // G+DB+P+S+DPL3+Data
+       
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 3;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.system = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.present = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.default_bit = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
 
         return true;
     }
@@ -89,16 +106,30 @@ namespace SyscallHook
 
         vcpu->guest_vmcb.save_state_area.cs_selector    = (uint16_t)((star >> 32) & ~3);   // STAR[47:32] & ~RPL3
         vcpu->guest_vmcb.save_state_area.cs_base        = 0;                               // flat segment
+        vcpu->guest_vmcb.save_state_area.cs_limit       = (uint32_t)~0;     // 4GB limit
 
-        vcpu->guest_vmcb.save_state_area.cs_limit       = (uint32_t)~0;                 // 4GB limit
-        vcpu->guest_vmcb.save_state_area.cs_attrib      = 0xA09B;                          // L+DB+P+S+DPL0+Code
+        //  0xA9B, L+DB+P+S+DPL0+Code
+
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type = 0xB;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.dpl = 0;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.present = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.long_mode = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.granularity = 1;
 
 
         vcpu->guest_vmcb.save_state_area.ss_selector = (uint16_t)(((star >> 32) & ~3) + 8); // STAR[47:32] + 8
-        vcpu->guest_vmcb.save_state_area.ss_base = 0;                                       // flat segment
-
-        vcpu->guest_vmcb.save_state_area.ss_limit = (uint32_t)~0;                            // 4GB limit
-        vcpu->guest_vmcb.save_state_area.ss_attrib = 0xC093;                                // G+DB+P+S+DPL0+Data
+        vcpu->guest_vmcb.save_state_area.ss_base = 0;               // flat segment
+        vcpu->guest_vmcb.save_state_area.ss_limit = (uint32_t)~0;   // 4GB limit
+                                                                                             
+        // 0xC93 G+DB+P+S+DPL0+Data
+        
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 0;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.system = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.present = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.default_bit = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
 
         return true;
     }
