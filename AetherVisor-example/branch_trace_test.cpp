@@ -1,13 +1,22 @@
 #include "aethervisor_test.h"
 
+using namespace AetherVisor;
+using namespace AetherVisor::BranchTracer;
+
+/*  branch_trace_test.cpp:  ???  */
+
+
 std::vector<BranchLog::LogEntry> traced_branches;
 
 void BranchLogFullHook()
 {
-	Utils::Log("BranchLogFullHook(), AetherVisor::log_buffer->info.buffer 0x%p, AetherVisor::log_buffer->info.buffer_idx %i \n", AetherVisor::log_buffer->info.buffer, AetherVisor::log_buffer->info.buffer_idx);
+	Utils::Log(
+		"BranchLogFullHook(), AetherVisor::log_buffer->info.buffer 0x%p, AetherVisor::log_buffer->info.buffer_idx %i \n",
+		BranchTracer::log_buffer->info.buffer, BranchTracer::log_buffer->info.buffer_idx
+	);
 
-	traced_branches.insert(traced_branches.end(),
-		AetherVisor::log_buffer->info.buffer, AetherVisor::log_buffer->info.buffer + AetherVisor::log_buffer->info.buffer_idx);
+	traced_branches.insert(traced_branches.end(), BranchTracer::log_buffer->info.buffer,
+		BranchTracer::log_buffer->info.buffer + BranchTracer::log_buffer->info.buffer_idx);
 }
 
 void BranchTraceFinished()
@@ -29,9 +38,11 @@ void BranchTraceFinished()
 
 void BranchTraceTest()
 {
-	AetherVisor::InstrumentationHook(AetherVisor::branch_log_full, BranchLogFullHook);
-	AetherVisor::InstrumentationHook(AetherVisor::branch_trace_finished, BranchTraceFinished);
+	auto beclient = (uintptr_t)GetModuleHandle(L"BEClient.dll");
 
-	AetherVisor::TraceFunction(
+	AetherVisor::SetCallback(AetherVisor::branch_log_full, BranchLogFullHook);
+	AetherVisor::SetCallback(AetherVisor::branch_trace_finished, BranchTraceFinished);
+
+	BranchTracer::Trace(
 		(uint8_t*)GetModuleHandleA(NULL) + 0x1100, beclient, PeHeader(beclient)->OptionalHeader.SizeOfImage);
 }

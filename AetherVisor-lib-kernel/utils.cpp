@@ -1,41 +1,42 @@
-#include "pch.h"
 #include "utils.h"
 
 namespace Util
 {
-    int Exponent(int base, int power)
-    {
-        int start = 1;
-        for (int i = 0; i < power; ++i)
-        {
-            start *= base;
-        }
-
-        return start;
-    }
-
-#pragma optimize( "", off )
-
-    int PageIn(void* address)
-    {
-        return *(int*)address;
-    }
-
-#pragma optimize("", on)
-
     int ForEachCore(void(*callback)(void* params), void* params)
     {
-        auto core_count = KeQueryActiveProcessorCount(0);
+        SYSTEM_INFO sys_info;
+        GetSystemInfo(&sys_info);
+        auto core_count = sys_info.dwNumberOfProcessors;
 
         for (auto idx = 0; idx < core_count; ++idx)
         {
-            KAFFINITY affinity = Util::Exponent(2, idx);
+            auto affinity = pow(2, idx);
 
-            KeSetSystemAffinityThread(affinity);
+            SetThreadAffinityMask(GetCurrentThread(), affinity);
 
             callback(params);
         }
 
         return 0;
     }
+
+    void WriteToReadOnly(void* address, uint8_t* bytes, size_t len)
+    {
+        DWORD old_prot;
+        VirtualProtect((LPVOID)address, len, PAGE_EXECUTE_READWRITE, &old_prot);
+        memcpy((void*)address, (void*)bytes, len);
+        VirtualProtect((LPVOID)address, len, old_prot, 0);
+    }
+
+#pragma optimize( "", off )
+
+    void TriggerCOW(void* address)
+    {
+        uint8_t buffer;
+        /*	trigger COW	*/
+
+        WriteToReadOnly(address, (uint8_t*)"\xC3", 1);
+        WriteToReadOnly(address, &buffer, 1);
+    }
+#pragma optimize( "", on )
 };

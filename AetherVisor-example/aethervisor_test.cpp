@@ -1,8 +1,7 @@
-#include "aethervisor.h"
-#include "hooks.h"
+#include "shellcode.h"
 #include "disassembly.h"
 #include "dbg_symbols.h"
-
+#include "aethervisor_test.h"
 
 void StartTests()
 {
@@ -24,5 +23,5 @@ void StartTests()
 	SandboxTest();
 	BranchTraceTest();
 	NptHookTest();
-	EferSyscallHookTest();
+	EferSyscallHook();
 }

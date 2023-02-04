@@ -1,6 +1,6 @@
 #include "vmexit.h"
 #include "npt_sandbox.h"
-#include "msr.h"
+#include "vmexit.h"
 #include "disassembly.h"
 
 void VcpuData::InjectException(int vector, bool push_error, int error_code)

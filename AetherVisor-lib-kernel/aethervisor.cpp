@@ -1,4 +1,4 @@
-#include "aethervisor_base.h"
+#include "aethervisor.h"
 #include "ia32.h"
 #include "utils.h"
 
@@ -10,12 +10,12 @@ namespace AetherVisor
     {
         CALLBACK_ID id;
         void** handler;
-        void (*handler_wrapper)();
+        void (*handler_wrap)();
     };
 
     Callback instrumentation_hooks[] = {
         // Invoked when sandboxed code reads/writes from a page that denies read/write access.
-        {sandbox_readwrite, (void**)&sandbox_mem_access_handler, rw_handler_wrap},
+        {sandbox_readwrite, (void**)&sandbox_mem_access_handler, rw_handler_wrap}, 
 
         // Invoked every time RIP leaves a sandbox memory region
         {sandbox_execute, (void**)&sandbox_execute_handler, execute_handler_wrap},
@@ -31,7 +31,7 @@ namespace AetherVisor
     {
         *instrumentation_hooks[handler_id].handler = address;
 
-        svm_vmmcall(VMMCALL_ID::instrumentation_hook, handler_id, *instrumentation_hooks[handler_id].handler_wrapper);
+        svm_vmmcall(VMMCALL_ID::instrumentation_hook, handler_id, *instrumentation_hooks[handler_id].handler_wrap);
     }
 
     int StopHv()

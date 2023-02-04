@@ -1,6 +1,9 @@
 #include "aethervisor_test.h"
 #include "shellcode.h"
 
+/*  npt_hook_test.cpp:  Install a hidden NPT hook on kernel32.dll!GetProcAddress to catch BE's shellcode  */
+
+
 enum MEMORY_INFORMATION_CLASS
 {
     MemoryBasicInformation = 0
@@ -15,11 +18,16 @@ extern "C" NTSTATUS NTAPI NtQueryVirtualMemory(
     _Out_opt_ PSIZE_T                  ReturnLength
 );
 
+#define DUMP_PATH "C:\\Users\\user123\\Documents\\battleye\\shellcodes\\"
+
 std::vector<uintptr_t> dumped_shellcodes;
 
-WINBASEAPI FARPROC (WINAPI* get_proc_address)(HMODULE hModule, LPCSTR lpProcName);
+WINBASEAPI FARPROC (WINAPI* get_proc_address)(
+    HMODULE hModule, 
+    LPCSTR lpProcName
+);
 
-Hooks::JmpRipCode get_proc_address_hk;
+Hooks::JmpRipCode* get_proc_address_hk;
 
 LPVOID GetProcAddress_hk(HMODULE hModule, LPCSTR lpProcName) 
 {
@@ -35,29 +43,30 @@ LPVOID GetProcAddress_hk(HMODULE hModule, LPCSTR lpProcName)
         {
             if (std::find(dumped_shellcodes.begin(), dumped_shellcodes.end(), (uintptr_t)mbi.AllocationBase) == dumped_shellcodes.end()) 
             {
-                std::string to_stream = "C:\\Users\\weak\\Desktop\\r6dmps\\shellcode\\" + std::to_string((uintptr_t)mbi.BaseAddress) + ".dat"; //R6 has no admin rights so dont use paths like C:\file.dat
+                std::string dump_path = DUMP_PATH + std::to_string((uintptr_t)mbi.BaseAddress) + ".dat";
 
-                printf("Call from be-shellcode dumping: %s\n", to_stream.c_str());
+                Utils::Log("Call from be-shellcode dumping: %s\n", dump_path.c_str());
 
-                uintptr_t possible_shellcode_start = utils::scanpattern((uintptr_t)mbi.BaseAddress, mbi.RegionSize, "4C 89");
+                auto possible_shellcode_start = Utils::FindPattern(
+                    (uintptr_t)mbi.BaseAddress, mbi.RegionSize, "\x4C\x89", 2, 0x00);
 
-                printf("Possible entry-rva: %x\n", possible_shellcode_start - (uintptr_t)mbi.BaseAddress);
+                Utils::Log("Possible entry-rva: %x\n", possible_shellcode_start - (uintptr_t)mbi.BaseAddress);
 
-                utils::CreateFileFromMemory(to_stream, (char*)mbi.BaseAddress, mbi.RegionSize);
+                Utils::NewFile(dump_path.c_str(), (char*)mbi.BaseAddress, mbi.RegionSize);
 
                 dumped_shellcodes.push_back((uintptr_t)mbi.AllocationBase);
             }
         }
     }
-    return get_proc_address(hModule, lpProcName);
+
+    return static_cast<decltype(&GetProcAddress)>(get_proc_address_hk->original_bytes)(hModule, lpProcName);
 }
 
-/*	Install a hidden NPT hook on kernel32.dll!GetProcAddress to catch BE's shellcode  */
 
 void NptHookTest()
 {
-    get_proc_address_hk = Hooks::JmpRipCode{ (uintptr_t)GetProcAddress, (uintptr_t)GetProcAddress_hk };
+    get_proc_address_hk = new Hooks::JmpRipCode{ (uintptr_t)GetProcAddress, (uintptr_t)GetProcAddress_hk };
 
-    AetherVisor::SetNptHook(
-        get_proc_address_hk.fn_address, get_proc_address_hk.hook_code, get_proc_address_hk.hook_size, AetherVisor::primary, true);
+    AetherVisor::NptHook::Set(get_proc_address_hk->fn_address, 
+        get_proc_address_hk->hook_code, get_proc_address_hk->hook_size, AetherVisor::primary, true);
 }

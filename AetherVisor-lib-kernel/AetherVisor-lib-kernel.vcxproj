@@ -34,20 +34,6 @@
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="aethervisor_kernel.h" />
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="aethervisor_kernel.cpp" />
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="vmmcall.asm" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4F8B1376-6F78-4A00-AAED-0F62D351BCC0}</ProjectGuid>
     <TemplateGuid>{0a049372-4c4d-4ea0-a64e-dc6ad88ceca1}</TemplateGuid>

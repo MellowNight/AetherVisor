@@ -44,6 +44,12 @@
     <Filter Include="Source Files\vmexit\handlers">
       <UniqueIdentifier>{814330ca-ed5a-456a-aefc-32b9519229d1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\branch trace">
+      <UniqueIdentifier>{54547a8e-309b-46d2-bd04-eac8936502c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\syscall hook">
+      <UniqueIdentifier>{7222b95b-1b2a-4720-931c-7cd89d17d707}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes.h">
@@ -94,9 +100,6 @@
     <ClInclude Include="npt_sandbox.h">
       <Filter>Source Files\nested paging</Filter>
     </ClInclude>
-    <ClInclude Include="branch_tracer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="hypervisor.h">
       <Filter>Source Files\hypervisor</Filter>
     </ClInclude>
@@ -109,8 +112,11 @@
     <ClInclude Include="amd.h">
       <Filter>Source Files\AMD structs</Filter>
     </ClInclude>
+    <ClInclude Include="branch_tracer.h">
+      <Filter>Source Files\branch trace</Filter>
+    </ClInclude>
     <ClInclude Include="syscall_hook.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\syscall hook</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -147,9 +153,6 @@
     <ClCompile Include="msr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="branch_tracer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hypervisor.cpp">
       <Filter>Source Files\hypervisor</Filter>
     </ClCompile>
@@ -165,14 +168,17 @@
     <ClCompile Include="db_exception.cpp">
       <Filter>Source Files\vmexit\handlers</Filter>
     </ClCompile>
-    <ClCompile Include="syscall_hook.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ud_exception.cpp">
       <Filter>Source Files\vmexit\handlers</Filter>
     </ClCompile>
     <ClCompile Include="vmmcall.cpp">
       <Filter>Source Files\vmexit\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="branch_tracer.cpp">
+      <Filter>Source Files\branch trace</Filter>
+    </ClCompile>
+    <ClCompile Include="syscall_hook.cpp">
+      <Filter>Source Files\syscall hook</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

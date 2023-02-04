@@ -12,3 +12,5 @@ bool IsCoreReadyForVmrun(
 	VMCB* guest_vmcb, 
 	SegmentAttribute cs_attribute
 );
+
+void SetupMSRPM(VcpuData* vcpu);

@@ -1,12 +1,12 @@
 #include "includes.h"
 
-#define PeHeader(image) ((IMAGE_NT_HEADERS64*)((uint64_t)image + ((IMAGE_DOS_HEADER*)image)->e_lfanew))
+#define LOG_FILE "C:\\Users\\user123\\Desktop\\testing_drivers\\test_logs.txt"
 
 namespace Utils
 {
-	PVOID ModuleFromAddress(uintptr_t address, PUNICODE_STRING out_name);
+	bool NewFile(const char* file_path, const char* address, size_t size);
 
-	void TriggerCOWAndPageIn(void* address);
+	void* ModuleFromAddress(uintptr_t address, PUNICODE_STRING out_name);
 
 	void LogToFile(const char* file_name, const char* format, ...);
 
@@ -14,7 +14,7 @@ namespace Utils
 
 	void Log(const char* format, ...);
 
-	size_t LoadFileIntoMemory(const wchar_t* path, char** buffer);
+	size_t LoadFile(const wchar_t* path, char** buffer);
 
 	bool IsAddressValid(void* address);
 		

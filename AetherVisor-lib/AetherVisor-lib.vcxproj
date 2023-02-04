@@ -20,14 +20,23 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="aethervisor.cpp" />
+    <ClCompile Include="branch_trace.cpp" />
+    <ClCompile Include="npt_hook.cpp" />
+    <ClCompile Include="npt_sandbox.cpp" />
+    <ClCompile Include="syscall_hook.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="aethervisor.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="ia32.h" />
-    <ClInclude Include="utils.h" />
-    <ClInclude Include="vmmcall.h" />
+    <ClInclude Include="includes\aethervisor.h" />
+    <ClInclude Include="includes\aethervisor_base.h" />
+    <ClInclude Include="includes\branch_trace.h" />
+    <ClInclude Include="includes\ia32.h" />
+    <ClInclude Include="includes\npt_hook.h" />
+    <ClInclude Include="includes\npt_sandbox.h" />
+    <ClInclude Include="includes\utils.h" />
+    <ClInclude Include="includes\vmmcall.h" />
+    <ClInclude Include="syscall_hook.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="sandbox_handler.asm" />
@@ -158,6 +167,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>

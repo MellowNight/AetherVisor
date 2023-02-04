@@ -1,5 +1,7 @@
 #pragma once
-#include "aethervisor.h"
+#include <cstdint>
+#include <Windows.h>
+#include <cmath>
 
 #define PAGE_ALIGN(Va) ((PVOID)((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
 

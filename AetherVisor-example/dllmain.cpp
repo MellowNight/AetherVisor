@@ -4,8 +4,6 @@
 
 #define ENTRYPOINT_METHOD  2 // 1 == 2D injector | 2 == present inline hook call entry point
 
-#define LOG_FILE "C:\\Users\\user123\\Desktop\\testing_drivers\\test_logs.txt"
-
 enum INJECTOR_CONSTANTS
 {
 	mapped_dll_header = 0x12345678,
@@ -40,12 +38,11 @@ extern "C" __declspec(dllexport) HRESULT __fastcall HookEntryPoint(IDXGISwapChai
 		{
 			auto dxgi = (uintptr_t)GetModuleHandle(L"dxgi.dll");
 
-			auto present_address = Utils::FindPattern(
-				dxgi, PeHeader(dxgi)->OptionalHeader.SizeOfImage,
+			auto present_address = Utils::FindPattern(dxgi, PeHeader(dxgi)->OptionalHeader.SizeOfImage,
 				"\x48\x89\x74\x24\x00\x55\x57\x41\x56\x48\x8D\x6C\x24\x00\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x48\x33\xC4\x48\x89\x45\x60", 35, 0x00
 			) - 5;
 
-			AetherVisor::RemoveNptHook(present_address);
+			AetherVisor::NptHook::Remove(present_address);
 		}
 		else if (ENTRYPOINT_METHOD == 2)
 		{

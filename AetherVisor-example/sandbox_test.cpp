@@ -15,7 +15,6 @@ void ExecuteHook(GuestRegisters* registers, void* return_address, void* o_guest_
 	Utils::Log("\n\n");
 }
 
-
 /*	log specific reads and writes		*/
 
 void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
@@ -53,12 +52,12 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 void SandboxTest()
 {
-    AetherVisor::InstrumentationHook(AetherVisor::sandbox_readwrite, ReadWriteHook);
-	AetherVisor::InstrumentationHook(AetherVisor::sandbox_execute, ExecuteHook);
+	auto beclient = (uintptr_t)GetModuleHandle(L"BEClient.dll");
 
-	AetherVisor::SandboxRegion(beclient, PeHeader(beclient)->OptionalHeader.SizeOfImage);
+    AetherVisor::SetCallback(AetherVisor::sandbox_readwrite, ReadWriteHook);
+	AetherVisor::SetCallback(AetherVisor::sandbox_execute, ExecuteHook);
 
-	auto kernel32 = (uint8_t*)GetModuleHandleA("kernel32.dll");
+	AetherVisor::Sandbox::SandboxRegion(beclient, PeHeader(beclient)->OptionalHeader.SizeOfImage);
 
-	AetherVisor::DenySandboxMemAccess(kernel32 + 0x1005);
+	AetherVisor::Sandbox::DenyRegionAccess((void*)Global::dll_params->dll_base, Global::dll_params->dll_size, false);
 }

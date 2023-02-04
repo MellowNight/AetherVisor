@@ -5,7 +5,24 @@
 
 namespace Utils
 {
-	PVOID ModuleFromAddress(uintptr_t address, PUNICODE_STRING out_name)
+	bool NewFile(const char* file_path, const char* address, size_t size)
+	{
+		auto file_handle = CreateFileA(file_path, GENERIC_READ | GENERIC_WRITE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		size_t written;
+
+		WriteFile(file_handle, address, size, (LPDWORD)&written, NULL);
+
+		if (GetLastError() != 183 && GetLastError() != 0)
+		{
+			MessageBoxA(NULL, "WriteFile GetLastError", std::to_string(GetLastError()).c_str(), MB_OK);
+		}
+
+		CloseHandle(file_handle);
+	}
+
+	void* ModuleFromAddress(uintptr_t address, PUNICODE_STRING out_name)
 	{
 #define LDR_IMAGESIZE 0x40
 #define BASE_DLL_NAME 0x58
@@ -21,8 +38,7 @@ namespace Utils
 			_LDR_DATA_TABLE_ENTRY* mod = (_LDR_DATA_TABLE_ENTRY*)CONTAINING_RECORD(curr.Flink, _LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
 
 			if ((uintptr_t)mod->DllBase <= address &&
-				address <= ((uintptr_t)mod->DllBase + *(uintptr_t*)((uintptr_t)mod + LDR_IMAGESIZE))
-				)
+				address <= ((uintptr_t)mod->DllBase + *(uintptr_t*)((uintptr_t)mod + LDR_IMAGESIZE)))
 			{
 				*out_name = *(PUNICODE_STRING)((uintptr_t)mod + BASE_DLL_NAME);
 				return mod->DllBase;
@@ -30,6 +46,7 @@ namespace Utils
 
 			curr = *curr.Flink;
 		}
+		
 		return NULL;
 	}
 
@@ -86,7 +103,7 @@ namespace Utils
 		OutputDebugStringA(buffer);
 	}
 
-	size_t LoadFileIntoMemory(const wchar_t* path, char** buffer)
+	size_t LoadFile(const wchar_t* path, char** buffer)
 	{
 		auto file_handle = CreateFileW(
 			path, GENERIC_ALL, 0, NULL,

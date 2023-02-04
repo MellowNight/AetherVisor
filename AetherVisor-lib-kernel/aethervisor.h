@@ -1,5 +1,6 @@
 #pragma once
 #include "vmmcall.h"
+#include "utils.h"
 
 #define PAGE_SIZE 0x1000
 
@@ -23,30 +24,6 @@ struct GuestRegisters
     uintptr_t  rax;
 };
 
-union BranchLog
-{
-    struct LogEntry
-    {
-        uintptr_t branch_address;
-        uintptr_t branch_target;
-    };
-
-    struct
-    {
-        int capacity;
-        int buffer_idx;
-        LogEntry* buffer;
-    } info;
-
-    LogEntry log_entries[PAGE_SIZE / sizeof(LogEntry)];
-
-    BranchLog()
-    {
-        info.capacity = ((PAGE_SIZE - sizeof(info)) / sizeof(LogEntry));
-        info.buffer_idx = 0;
-        info.buffer = &log_entries[1];
-    }
-};
 
 extern "C" {
     
@@ -65,12 +42,8 @@ extern "C" {
     int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 }
 
-
-
 namespace AetherVisor
 {
-    extern BranchLog* log_buffer;
-
     enum NCR3_DIRECTORIES
     {
         primary,
@@ -79,7 +52,7 @@ namespace AetherVisor
         sandbox_single_step
     };
 
-    enum HOOK_ID
+    enum CALLBACK_ID
     {
         sandbox_readwrite = 0,
         sandbox_execute = 1,
@@ -92,14 +65,6 @@ namespace AetherVisor
         uint8_t* start_addr, 
         uintptr_t range_base, 
         uintptr_t range_size
-    );
-
-    int SetNptHook(
-        uintptr_t address, 
-        uint8_t* patch, 
-        size_t patch_len, 
-        NCR3_DIRECTORIES ncr3_id = NCR3_DIRECTORIES::primary,
-        bool global_page = false
     );
 
     int SandboxPage(
@@ -116,14 +81,11 @@ namespace AetherVisor
         void* page_addr
     );
 
-    void InstrumentationHook(
-        HOOK_ID handler_id, 
+    void SetCallback(
+        CALLBACK_ID handler_id, 
         void* address
     );
 
-    int RemoveNptHook(
-        uintptr_t address
-    );
 
-    int DisableHv();
+    int StopHv();
 };

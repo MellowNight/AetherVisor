@@ -52,13 +52,13 @@ namespace Sandbox
 		- allow_reads 0: non-present nPTE, no access
 	*/
 
-	void DenyMemoryAccess(VcpuData* vmcb_data, void* address, bool allow_reads)
+	void DenyMemoryAccess(VcpuData* vcpu, void* address, bool allow_reads)
 	{
 		/*	attach to the guest process context	*/
 
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.cr3.Flags);
+		__writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
 
 		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
@@ -92,12 +92,13 @@ namespace Sandbox
 
 		__writecr3(vmroot_cr3);
 
-		vmcb_data->guest_vmcb.control_area.tlb_control = 3;
+		vcpu->guest_vmcb.control_area.tlb_control = 3;
 	}
 
 
 	/*
 		IMPORTANT: if you want to set a hook in a globally mapped DLL such as ntdll.dll, you must trigger copy on write first!	
+		
 		Sandbox::AddPageToSandbox() is basically just a modified version of NPTHooks::SetNptHook
 	*/
 
