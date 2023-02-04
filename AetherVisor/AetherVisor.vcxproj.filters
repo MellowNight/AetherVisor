@@ -94,9 +94,6 @@
     <ClInclude Include="npt_sandbox.h">
       <Filter>Source Files\nested paging</Filter>
     </ClInclude>
-    <ClInclude Include="msr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="branch_tracer.h">
       <Filter>Source Files</Filter>
     </ClInclude>

@@ -79,6 +79,7 @@ namespace NptHooks
 		hook_entry->address = address;
 		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.cr3.Flags;
 
+
 		/*	get the guest pte and physical address of the hooked page	*/
 
 		hook_entry->guest_physical_page = (uint8_t*)physical_page;
@@ -103,6 +104,7 @@ namespace NptHooks
 		}
 
 		hook_entry->hookless_npte->ExecuteDisable = 1;
+
 
 		/*	get the nested pte of the guest physical address in the shadow NCR3, and map it to our hook page	*/
 
@@ -131,6 +133,7 @@ namespace NptHooks
 
 			memcpy((uint8_t*)hooked_copy + page_offset, patch, patch_len);
 		}
+
 		/*	SetNptHook epilogue	*/
 
 		vmcb_data->guest_vmcb.control_area.tlb_control = 3;

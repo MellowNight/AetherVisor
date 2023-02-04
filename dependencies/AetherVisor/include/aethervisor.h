@@ -49,13 +49,13 @@ union BranchLog
 };
 
 extern "C" {
-    
+
     void (*sandbox_execute_handler)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
     void __stdcall execute_handler_wrap();
 
-    void (*sandbox_mem_access_handler)(GuestRegisters * registers, void* o_guest_rip);
+    void (*sandbox_mem_access_handler)(GuestRegisters* registers, void* o_guest_rip);
     void __stdcall rw_handler_wrap();
-    
+
     void (*branch_log_full_handler)();
     void __stdcall branch_log_full_handler_wrap();
 
@@ -89,26 +89,26 @@ namespace AetherVisor
     };
 
     void TraceFunction(
-        uint8_t* start_addr, 
-        uintptr_t range_base, 
+        uint8_t* start_addr,
+        uintptr_t range_base,
         uintptr_t range_size
     );
 
     int SetNptHook(
-        uintptr_t address, 
-        uint8_t* patch, 
-        size_t patch_len, 
-        int32_t ncr3_id, 
-        bool global_page = true
+        uintptr_t address,
+        uint8_t* patch,
+        size_t patch_len,
+        NCR3_DIRECTORIES ncr3_id = NCR3_DIRECTORIES::primary,
+        bool global_page = false
     );
 
     int SandboxPage(
-        uintptr_t address, 
+        uintptr_t address,
         uintptr_t tag
     );
 
     void SandboxRegion(
-        uintptr_t base, 
+        uintptr_t base,
         uintptr_t size
     );
 
@@ -117,7 +117,7 @@ namespace AetherVisor
     );
 
     void InstrumentationHook(
-        HOOK_ID handler_id, 
+        HOOK_ID handler_id,
         void* address
     );
 

@@ -98,8 +98,8 @@ namespace AetherVisor
         uintptr_t address, 
         uint8_t* patch, 
         size_t patch_len, 
-        int32_t ncr3_id, 
-        bool global_page = true
+        NCR3_DIRECTORIES ncr3_id = NCR3_DIRECTORIES::primary,
+        bool global_page = false
     );
 
     int SandboxPage(

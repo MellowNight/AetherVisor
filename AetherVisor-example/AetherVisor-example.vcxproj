@@ -129,7 +129,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\AetherVisor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\AetherVisor\include;$(SolutionDir)dependencies\Zydis\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -150,12 +150,14 @@
     <ClInclude Include="address_info.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="portable_executable.h" />
+    <ClInclude Include="shellcode.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="aethervisor_test.cpp" />
     <ClCompile Include="branch_trace_test.cpp" />
     <ClCompile Include="dbg_symbols.cpp" />
+    <ClCompile Include="disassembly.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="npt_hook_test.cpp" />
     <ClCompile Include="pch.cpp">

@@ -15,9 +15,12 @@ namespace BranchTracer
 	void Pause(VcpuData* vcpu);
 	void Resume(VcpuData* vcpu);
 
-	void Init(VcpuData* vcpu, 
-		uintptr_t start_addr, uintptr_t stop_addr, 
-		uintptr_t out_buffer, uintptr_t trace_range_base,
+	void Init(
+		VcpuData* vcpu, 
+		uintptr_t start_addr, 
+		uintptr_t stop_addr, 
+		uintptr_t out_buffer,
+		uintptr_t trace_range_base, 
 		uintptr_t trace_range_size
 	);
 

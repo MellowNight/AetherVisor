@@ -15,18 +15,21 @@ namespace Symbols
     void Init()
     {
         auto result = SymInitialize(
-            GetCurrentProcess(),
-            "srv*C:\\Symbols*https://msdl.microsoft.com/download/symbols",
-            FALSE
-        );
+            GetCurrentProcess(), "srv*C:\\Symbols*https://msdl.microsoft.com/download/symbols", FALSE);
     }
 
-    ULONG GetSymAddr(ULONG Index, uintptr_t module_base, bool* Status)
+    uint32_t GetSymAddr(uint32_t index, uintptr_t module_base, bool* status)
     {
-        ULONG Offset = 0;
-        BOOL SymStatus = SymGetTypeInfo(GetCurrentProcess(), module_base, Index, TI_GET_OFFSET, &Offset);
-        if (Status) *Status = SymStatus;
-        return Offset;
+        uint32_t offset = 0;
+
+        auto sym_status = SymGetTypeInfo(GetCurrentProcess(), module_base, index, TI_GET_OFFSET, &offset);
+
+        if (status)
+        {
+            *status = sym_status;
+        }
+
+        return offset;
     }
 
     uintptr_t LoadSymbolsForModule(std::string image_name, uintptr_t mapped_base, uintptr_t image_size)

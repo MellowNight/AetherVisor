@@ -8,4 +8,3 @@
 #include <vector>
 
 #include "aethervisor.h"
-#include "Zydis/Zydis.h"

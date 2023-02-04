@@ -189,7 +189,6 @@
     <ClInclude Include="kernel_exports.h" />
     <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
-    <ClInclude Include="msr.h" />
     <ClInclude Include="npthook_safety.h" />
     <ClInclude Include="npt_sandbox.h" />
     <ClInclude Include="paging_utils.h" />

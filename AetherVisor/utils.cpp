@@ -14,14 +14,15 @@ namespace Utils
         return MmGetVirtualForPhysical(pa);
     }
 
-    PFN_NUMBER	VirtualAddrToPfn(uintptr_t va)
+    PFN_NUMBER VirtualAddrToPfn(uintptr_t va)
     {
         return MmGetPhysicalAddress((void*)va).QuadPart >> PAGE_SHIFT;
     }
 
     PMDL LockPages(void* virtual_address, LOCK_OPERATION operation, KPROCESSOR_MODE access_mode, int size)
     {
-        PMDL mdl = IoAllocateMdl(virtual_address, size, FALSE, FALSE, nullptr);
+        PMDL mdl = IoAllocateMdl(
+            virtual_address, size, FALSE, FALSE, nullptr);
 
         MmProbeAndLockPages(mdl, KernelMode, operation);
 
@@ -36,8 +37,7 @@ namespace Utils
         return STATUS_SUCCESS;
     }
 
-    PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, 
-        int (*page_table_callback)(PT_ENTRY_64*, void*), void* callback_data)
+    PT_ENTRY_64* GetPte(void* virtual_address, uintptr_t pml4_base_pa, int (*page_table_callback)(PT_ENTRY_64*, void*), void* callback_data)
     {
         AddressTranslationHelper helper;
 
@@ -114,15 +114,14 @@ namespace Utils
     
     void* GetKernelModule(size_t* out_size, UNICODE_STRING driver_name)
     {
-        PLIST_ENTRY module_list = (PLIST_ENTRY)PsLoadedModuleList;
+        auto module_list = (PLIST_ENTRY)PsLoadedModuleList;
 
-        for (PLIST_ENTRY link = module_list;
-            link != module_list->Blink;
-            link = link->Flink)
+        for (auto link = module_list; link != module_list->Blink; link = link->Flink)
         {
             LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(link, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
-            if (RtlCompareUnicodeString(&driver_name, &entry->BaseDllName, false) == 0)
+            if (RtlCompareUnicodeString(
+                &driver_name, &entry->BaseDllName, false) == 0)
             {
                 // DbgPrint("found module! %wZ at %p \n", &entry->BaseDllName, entry->DllBase);
 

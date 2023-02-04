@@ -64,9 +64,9 @@ namespace Sandbox
 
 		KPROCESSOR_MODE mode = (uintptr_t)address < 0x7FFFFFFFFFF ? UserMode : KernelMode;
 
-		sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
-
 		sandbox_page_count += 1;
+
+		sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
 
 		sandbox_entry->unreadable = !allow_reads;
 
@@ -111,14 +111,9 @@ namespace Sandbox
 
 		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
-		if ((uintptr_t)address < 0x7FFFFFFFFFF)
-		{
-			sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, UserMode);
-		}
-		else
-		{
-			sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, KernelMode);
-		}
+		KPROCESSOR_MODE mode = (uintptr_t)address < 0x7FFFFFFFFFF ? UserMode : KernelMode;
+
+		sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
 
 		sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 

@@ -25,6 +25,8 @@ void BranchTraceFinished()
 	}
 }
 
+/*	trace BE shellcode report	*/
+
 void BranchTraceTest()
 {
 	AetherVisor::InstrumentationHook(AetherVisor::branch_log_full, BranchLogFullHook);
