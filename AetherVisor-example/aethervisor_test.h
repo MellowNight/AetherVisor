@@ -9,7 +9,7 @@
 void SandboxTest();
 void BranchTraceTest();
 void NptHookTest();
-void EferSyscallHook();
+void EferSyscallHookTest();
 
 
 void StartTests();

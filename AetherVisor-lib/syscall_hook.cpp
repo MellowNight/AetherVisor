@@ -1,4 +1,6 @@
-#include "syscall_hook.h"
+
+#include "aethervisor.h"
+#include "utils.h"
 
 namespace AetherVisor
 {
@@ -11,6 +13,8 @@ namespace AetherVisor
                     svm_vmmcall(VMMCALL_ID::hook_efer_syscall);
                 }, NULL
             );
+
+            return 0;
         }
     }
 }

@@ -1,8 +1,7 @@
 #pragma once
 #include <cstdint>
-#include <Windows.h>
-#include <math.h>
-#include <intrin.h>
+
+#define PAGE_SIZE 0x1000
 
 enum VMMCALL_ID : uintptr_t
 {
@@ -16,8 +15,6 @@ enum VMMCALL_ID : uintptr_t
     start_branch_trace = 0x11111119,
     hook_efer_syscall = 0x1111111A,
 };
-
-#define PAGE_SIZE 0x1000
 
 struct GuestRegisters
 {
@@ -137,7 +134,7 @@ namespace AetherVisor
     }
 
     void SetCallback(
-        CALLBACK_ID handler_id,
+        CALLBACK_ID handler_id, 
         void* address
     );
 

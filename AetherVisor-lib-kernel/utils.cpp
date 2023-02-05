@@ -4,15 +4,13 @@ namespace Util
 {
     int ForEachCore(void(*callback)(void* params), void* params)
     {
-        SYSTEM_INFO sys_info;
-        GetSystemInfo(&sys_info);
-        auto core_count = sys_info.dwNumberOfProcessors;
+        auto core_count = KeQueryActiveProcessorCount(0);
 
         for (auto idx = 0; idx < core_count; ++idx)
         {
-            auto affinity = pow(2, idx);
+            KAFFINITY affinity = Exponent(2, idx);
 
-            SetThreadAffinityMask(GetCurrentThread(), affinity);
+            KeSetSystemAffinityThread(affinity);
 
             callback(params);
         }
@@ -20,12 +18,31 @@ namespace Util
         return 0;
     }
 
+    int Exponent(int base, int power)
+    {
+        int start = 1;
+        for (int i = 0; i < power; ++i)
+        {
+            start *= base;
+        }
+
+        return start;
+    }
+
     void WriteToReadOnly(void* address, uint8_t* bytes, size_t len)
     {
-        DWORD old_prot;
-        VirtualProtect((LPVOID)address, len, PAGE_EXECUTE_READWRITE, &old_prot);
+        DWORD old_prot, old_prot2 = 0;
+
+        SIZE_T size = len;
+
+        auto status = ZwProtectVirtualMemory(ZwCurrentProcess(),
+            (void**)&address, &size, PAGE_EXECUTE_READWRITE, &old_prot);
+
         memcpy((void*)address, (void*)bytes, len);
-        VirtualProtect((LPVOID)address, len, old_prot, 0);
+
+
+        status = ZwProtectVirtualMemory(ZwCurrentProcess(),
+            (void**)&address, &size, old_prot, &old_prot2);
     }
 
 #pragma optimize( "", off )
@@ -33,6 +50,7 @@ namespace Util
     void TriggerCOW(void* address)
     {
         uint8_t buffer;
+
         /*	trigger COW	*/
 
         WriteToReadOnly(address, (uint8_t*)"\xC3", 1);

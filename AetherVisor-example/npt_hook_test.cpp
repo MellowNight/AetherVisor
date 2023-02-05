@@ -3,20 +3,25 @@
 
 /*  npt_hook_test.cpp:  Install a hidden NPT hook on kernel32.dll!GetProcAddress to catch BE's shellcode  */
 
+#pragma comment(lib, "ntdll.lib")
 
 enum MEMORY_INFORMATION_CLASS
 {
     MemoryBasicInformation = 0
 };
 
-extern "C" NTSTATUS NTAPI NtQueryVirtualMemory(
-    _In_      HANDLE                   ProcessHandle,
-    _In_opt_  PVOID                    BaseAddress,
-    _In_      MEMORY_INFORMATION_CLASS MemoryInformationClass,
-    _Out_     PVOID                    MemoryInformation,
-    _In_      SIZE_T                   MemoryInformationLength,
-    _Out_opt_ PSIZE_T                  ReturnLength
+extern "C" NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryVirtualMemory(
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ PVOID BaseAddress,
+    _In_ MEMORY_INFORMATION_CLASS MemoryInformationClass,
+    _Out_writes_bytes_(MemoryInformationLength) PVOID MemoryInformation,
+    _In_ SIZE_T MemoryInformationLength,
+    _Out_opt_ PSIZE_T ReturnLength
 );
+
 
 #define DUMP_PATH "C:\\Users\\user123\\Documents\\battleye\\shellcodes\\"
 

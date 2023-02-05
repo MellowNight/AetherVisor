@@ -1,6 +1,16 @@
-#include "aethervisor_base.h"
-#include "ia32.h"
+
+#include "aethervisor.h"
 #include "utils.h"
+
+void (*sandbox_execute_handler)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
+
+void (*sandbox_mem_access_handler)(GuestRegisters* registers, void* o_guest_rip);
+
+void (*branch_log_full_handler)();
+
+void (*branch_trace_finish_handler)();
+
+void (*syscall_callback)();
 
 /*  vmmcall parameter order: rcx, rdx, r8, r9, r12, r11  */
 

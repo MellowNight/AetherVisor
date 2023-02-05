@@ -4,37 +4,22 @@
     <ClCompile Include="aethervisor.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="branch_trace.cpp">
-      <Filter>features\Branch Trace</Filter>
+      <Filter>features</Filter>
     </ClCompile>
     <ClCompile Include="npt_hook.cpp">
-      <Filter>features\NPT hook</Filter>
-    </ClCompile>
-    <ClCompile Include="syscall_hook.cpp">
-      <Filter>features\Syscall EFER hook</Filter>
+      <Filter>features</Filter>
     </ClCompile>
     <ClCompile Include="npt_sandbox.cpp">
-      <Filter>features\NPT sandbox</Filter>
+      <Filter>features</Filter>
+    </ClCompile>
+    <ClCompile Include="syscall_hook.cpp">
+      <Filter>features</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
-    <ClInclude Include="syscall_hook.h">
-      <Filter>features\Syscall EFER hook</Filter>
-    </ClInclude>
-    <ClInclude Include="includes\aethervisor.h" />
-    <ClInclude Include="includes\ia32.h" />
     <ClInclude Include="includes\utils.h" />
-    <ClInclude Include="includes\vmmcall.h" />
-    <ClInclude Include="includes\npt_sandbox.h">
-      <Filter>features\NPT sandbox</Filter>
-    </ClInclude>
-    <ClInclude Include="includes\branch_trace.h">
-      <Filter>features\Branch Trace</Filter>
-    </ClInclude>
-    <ClInclude Include="includes\npt_hook.h">
-      <Filter>features\NPT hook</Filter>
-    </ClInclude>
-    <ClInclude Include="includes\aethervisor_base.h" />
+    <ClInclude Include="includes\aethervisor.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="vmmcall.asm" />
@@ -45,18 +30,6 @@
   <ItemGroup>
     <Filter Include="features">
       <UniqueIdentifier>{d7d68a1a-db8f-4f4c-9d2a-2eef9e8edc3f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="features\NPT hook">
-      <UniqueIdentifier>{2a544b08-6d05-43a6-a07f-df608a456978}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="features\Syscall EFER hook">
-      <UniqueIdentifier>{18b2acaa-9b44-4e63-8656-7fbfbe4e6959}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="features\Branch Trace">
-      <UniqueIdentifier>{79a6d957-e2a2-42c2-8c02-193b690d5d64}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="features\NPT sandbox">
-      <UniqueIdentifier>{d6d4527e-0600-467b-8277-c656e61b478b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

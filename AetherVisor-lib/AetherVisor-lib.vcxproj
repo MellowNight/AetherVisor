@@ -29,14 +29,7 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="includes\aethervisor.h" />
-    <ClInclude Include="includes\aethervisor_base.h" />
-    <ClInclude Include="includes\branch_trace.h" />
-    <ClInclude Include="includes\ia32.h" />
-    <ClInclude Include="includes\npt_hook.h" />
-    <ClInclude Include="includes\npt_sandbox.h" />
     <ClInclude Include="includes\utils.h" />
-    <ClInclude Include="includes\vmmcall.h" />
-    <ClInclude Include="syscall_hook.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="sandbox_handler.asm" />

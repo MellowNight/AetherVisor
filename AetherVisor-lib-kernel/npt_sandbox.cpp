@@ -1,15 +1,17 @@
-#include "aethervisor.h"
+
+#include "aethervisor_kernel.h"
+#include "utils.h"
 
 namespace AetherVisor
 {
 	namespace Sandbox
 	{
-        void DenySandboxMemAccess(void* page_addr, bool allow_reads)
+        void DenyPageAccess(void* page_addr, bool allow_reads)
         {
             svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, PAGE_ALIGN(page_addr));
         }
 
-        void DenySandboxMemAccessRange(void* base, size_t range, bool allow_reads)
+        void DenyRegionAccess(void* base, size_t range, bool allow_reads)
         {
             auto aligned_range = (uintptr_t)PAGE_ALIGN(range + 0x1000);
 
@@ -18,7 +20,6 @@ namespace AetherVisor
                 svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, base, offset);
             }
         }
-
 
         int SandboxPage(uintptr_t address, uintptr_t tag)
         {
@@ -33,7 +34,7 @@ namespace AetherVisor
         {
             for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
             {
-                AetherVisor::SandboxPage((uintptr_t)offset, NULL);
+                SandboxPage((uintptr_t)offset, NULL);
             }
         }
 	}

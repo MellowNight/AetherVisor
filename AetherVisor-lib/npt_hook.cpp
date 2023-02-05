@@ -1,4 +1,7 @@
-#include "npt_hook.h"
+
+#include "aethervisor.h"
+#include "utils.h"
+
 
 namespace AetherVisor
 {
@@ -10,15 +13,13 @@ namespace AetherVisor
         {
             Util::TriggerCOW((uint8_t*)address);
 
-            svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, ncr3_id);
+            return svm_vmmcall(VMMCALL_ID::set_npt_hook, address, patch, patch_len, ncr3_id);
         }
 #pragma optimize( "", on )
 
         int Remove(uintptr_t address)
         {
-            svm_vmmcall(VMMCALL_ID::remove_npt_hook, address);
-
-            return 0;
+            return svm_vmmcall(VMMCALL_ID::remove_npt_hook, address);
         }
 	}
 }

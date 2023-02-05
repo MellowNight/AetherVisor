@@ -23,5 +23,5 @@ void StartTests()
 	SandboxTest();
 	BranchTraceTest();
 	NptHookTest();
-	EferSyscallHook();
+	EferSyscallHookTest();
 }

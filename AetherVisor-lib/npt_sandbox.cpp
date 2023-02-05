@@ -1,4 +1,6 @@
-#include "npt_hook.h"
+
+#include "aethervisor.h"
+#include "utils.h"
 
 namespace AetherVisor
 {
