@@ -2,24 +2,6 @@
 
 namespace Util
 {
-    int ForEachCore(void(*callback)(void* params), void* params)
-    {
-        SYSTEM_INFO sys_info;
-        GetSystemInfo(&sys_info);
-        auto core_count = sys_info.dwNumberOfProcessors;
-
-        for (auto idx = 0; idx < core_count; ++idx)
-        {
-            auto affinity = pow(2, idx);
-
-            SetThreadAffinityMask(GetCurrentThread(), affinity);
-
-            callback(params);
-        }
-
-        return 0;
-    }
-
     void WriteToReadOnly(void* address, uint8_t* bytes, size_t len)
     {
         DWORD old_prot;

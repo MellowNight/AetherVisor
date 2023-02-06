@@ -5,11 +5,6 @@
 
 namespace Utils
 {
-	int ForEachCore(
-		void(*callback)(void* params), 
-		void* params
-	);
-
 	void* GetKernelModule(size_t* out_size, UNICODE_STRING DriverName);
 
 	int Exponent(

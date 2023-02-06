@@ -14,3 +14,5 @@ bool IsCoreReadyForVmrun(
 );
 
 void SetupMSRPM(VcpuData* vcpu);
+
+void ConfigureProcessor(VcpuData* vcpu, CONTEXT* context_record);

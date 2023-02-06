@@ -27,57 +27,56 @@ bool VirtualizeAllProcessors()
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[shadow], PTEAccess{ true, true, false });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], PTEAccess{ true, true, false });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox_single_step], PTEAccess{ true, true, true });
-	
-	Utils::ForEachCore(
-		[](void* params) -> void {
+    
 
-			PROCESSOR_NUMBER processor_num;
+	Hypervisor::Get()->core_count = KeQueryActiveProcessorCount(0);
 
-			KeGetCurrentProcessorNumberEx(&processor_num);
+	for (int idx = 0; idx < Hypervisor::Get()->core_count; ++idx)
+	{
+		KAFFINITY affinity = Utils::Exponent(2, idx);
 
-			auto core_num = KeGetProcessorIndexFromNumber(&processor_num);
+		KeSetSystemAffinityThread(affinity);
 
-			DbgPrint("=============================================================== \n");
-			DbgPrint("[SETUP] active processor count %i \n", Hypervisor::Get()->core_count);
-			DbgPrint("[SETUP] Currently running on core %i \n", core_num);
+		DbgPrint("=============================================================== \n");
+		DbgPrint("[SETUP] amount of active processors %i \n", Hypervisor::Get()->core_count);
+		DbgPrint("[SETUP] Currently running on core %i \n", idx);
 
-			auto register_ctx = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
-			
-			RtlCaptureContext(register_ctx);
+		auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
 
-			if (Hypervisor::Get()->IsCoreVirtualized(core_num))
+		RtlCaptureContext(reg_context);
+
+		if (Hypervisor::Get()->IsCoreVirtualized(idx) == false)
+		{
+			EnableSvme();
+
+			auto vcpu_data = Hypervisor::Get()->vcpus;
+
+			vcpu_data[idx] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
+
+			ConfigureProcessor(vcpu_data[idx], reg_context);
+
+			SegmentAttribute cs_attrib;
+
+			cs_attrib.as_uint16 = vcpu_data[idx]->guest_vmcb.save_state_area.cs_attrib.as_uint16;
+
+			if (IsCoreReadyForVmrun(&vcpu_data[idx]->guest_vmcb, cs_attrib))
 			{
-				EnableSvme();
+				DbgPrint("address of guest vmcb save state area = %p \n", &vcpu_data[idx]->guest_vmcb.save_state_area.rip);
 
-				auto vcpu = Hypervisor::Get()->vcpu;
-
-				vcpu[core_num] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
-
-				vcpu[core_num]->Configure(register_ctx);
-
-				SegmentAttribute cs_attrib;
-
-				cs_attrib = vcpu[core_num]->guest_vmcb.save_state_area.cs_attrib;
-
-				if (IsCoreReadyForVmrun(&vcpu[core_num]->guest_vmcb, cs_attrib))
-				{
-					DbgPrint("address of guest vmcb save state area = %p \n", &vcpu[core_num]->guest_vmcb.save_state_area);
-
-					LaunchVm(&vcpu[core_num]->guest_vmcb_physicaladdr);
-				}
-				else
-				{
-					Logger::Get()->Log("[SETUP] A problem occured!! invalid guest state \n");
-					__debugbreak();
-				}
+				LaunchVm(&vcpu_data[idx]->guest_vmcb_physicaladdr);
 			}
 			else
 			{
-				DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
+				Logger::Get()->Log("[SETUP] A problem occured!! invalid guest state \n");
+				__debugbreak();
 			}
+		}
+		else
+		{
+			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
+		}
+	}
 
-		}, NULL
-	);
 
 	NptHooks::CleanupOnProcessExit();
 }

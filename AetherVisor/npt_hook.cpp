@@ -59,21 +59,31 @@ namespace NptHooks
 
 	NptHook* SetNptHook(VcpuData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t ncr3_id)
 	{
+		DbgPrint("vmcb_data %p, address %p, patch %p, patch_len %i, ncr3_id  %i \n", vmcb_data, address, patch, patch_len, ncr3_id);
+
+		/*	First, switch to guest process context	*/
+	
 		auto vmroot_cr3 = __readcr3();
 
 		__writecr3(vmcb_data->guest_vmcb.save_state_area.cr3.Flags);
 
 		bool reused_hook = false;
 
+
+		/*	I switched from a linked list to an array, because traversing the linked list took too long	(CLOCK_WATCHDOG_TIMEOUT :|)*/
+
 		auto hook_entry = &npt_hook_list[hook_count];
+
+		hook_count += 1;
+
+		/*	Lock the virtual->physical address translation, so that the hook doesn't get corrupted		*/
 
 		KPROCESSOR_MODE mode = (uintptr_t)address < 0x7FFFFFFFFFF ? UserMode : KernelMode;
 
-		hook_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
-
 		auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-		hook_count += 1;
+
+		hook_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
 
 		hook_entry->ncr3_id = ncr3_id;
 		hook_entry->address = address;
@@ -133,6 +143,7 @@ namespace NptHooks
 
 			memcpy((uint8_t*)hooked_copy + page_offset, patch, patch_len);
 		}
+
 
 		/*	SetNptHook epilogue	*/
 

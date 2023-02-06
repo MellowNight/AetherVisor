@@ -34,12 +34,12 @@ struct GuestRegisters
 
 struct VcpuData
 {
-    uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(int64_t) * 6];
+    uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(int64_t) * 4];
     uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
     uintptr_t   host_vmcb_physicaladdr;
-    PhysMemAccess* mem_access;
+//    PhysMemAccess* mem_access;
     struct      VcpuData* self;
-    uint8_t     pad[16];
+    uint8_t     pad[8];
     VMCB        guest_vmcb;
     VMCB        host_vmcb;
     uint8_t     host_save_area[0x1000];
@@ -71,8 +71,6 @@ struct VcpuData
     void NestedPageFaultHandler(
         GuestRegisters* guest_registers
     );
-
-    void Configure(CONTEXT* context_record);
 };
 
 /* Global hypervisor information    */
@@ -88,7 +86,7 @@ private:
 
         for (int i = 0; i < 32; ++i)
         {
-            vcpu[i] = NULL;
+            vcpus[i] = NULL;
         }
     }
 public:
@@ -97,7 +95,7 @@ public:
 
     PHYSICAL_MEMORY_RANGE phys_mem_range[12];
 
-    VcpuData* vcpu[32];
+    VcpuData* vcpus[32];
 
     int core_count;
 

@@ -74,11 +74,11 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
     }
     case VMEXIT::INVALID:
     {
-        SegmentAttribute cs_attrib;
+        DbgPrint("VMEXIT::INVALID!! ! \n");
+       // auto cs_attrib = vcpu->guest_vmcb.save_state_area.cs_attrib;
 
-        cs_attrib.as_uint16 = vcpu->guest_vmcb.save_state_area.cs_attrib.as_uint16;
-
-        IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
+        // IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
+        vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
 
         break;
     }

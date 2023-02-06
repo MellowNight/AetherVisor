@@ -134,22 +134,6 @@ namespace Utils
         }
     }
 
-    int ForEachCore(void(*callback)(void* params), void* params)
-    {
-        auto core_count = KeQueryActiveProcessorCount(0);
-
-        for (auto idx = 0; idx < core_count; ++idx)
-        {
-            KAFFINITY affinity = Exponent(2, idx);
-
-            KeSetSystemAffinityThread(affinity);
-
-            callback(params);
-        }
-
-        return 0;
-    }
-
     uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const char* pattern, size_t pattern_size, char wildcard)
     {
         for (auto byte = (char*)region_base; byte < (char*)region_base + region_size;
