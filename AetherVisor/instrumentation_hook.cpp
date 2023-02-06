@@ -1,0 +1,47 @@
+#include "instrumentation_hook.h"
+
+namespace Instrumentation
+{
+	void* callbacks[4];
+
+	bool InvokeHook(VcpuData* vcpu, HOOK_ID handler, bool is_kernel)
+	{
+		auto vmroot_cr3 = __readcr3();
+
+		__writecr3(vcpu->guest_vmcb.save_state_area.Cr3);
+
+		auto guest_rip = vcpu->guest_vmcb.save_state_area.Rip;
+
+		DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
+
+		int callback_cpl = ((uintptr_t)callbacks[handler] > 0x7FFFFFFFFFFF) ? 3 : 0;
+
+		int rip_privilege = (guest_rip > 0x7FFFFFFFFFFF) ? 3 : 0;
+
+		if (callback_cpl == rip_privilege || handler == sandbox_readwrite)
+		{
+			vcpu->guest_vmcb.save_state_area.Rip = (uintptr_t)callbacks[handler];
+
+			vcpu->guest_vmcb.save_state_area.Rsp -= 8;
+
+			*(uintptr_t*)vcpu->guest_vmcb.save_state_area.Rsp = guest_rip;
+		}
+		else
+		{
+			// DbgPrint("ADDRESS SPACE MISMATCH \n");
+			__writecr3(vmroot_cr3);
+
+			return FALSE;
+		}
+
+		vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
+
+		vcpu->guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
+		vcpu->guest_vmcb.control_area.TlbControl = 1;
+
+		__writecr3(vmroot_cr3);
+
+		return TRUE;
+	}
+};
+
