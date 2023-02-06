@@ -3,7 +3,7 @@
 #include "disassembly.h"
 #include "prepare_vm.h"
 #include "vmexit.h"
-#include "memory_reader.h"
+#include "paging_utils.h"
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
@@ -57,11 +57,11 @@ bool VirtualizeAllProcessors()
 
 			SegmentAttribute cs_attrib;
 
-			cs_attrib.as_uint16 = vcpu_data[idx]->guest_vmcb.save_state_area.CsAttrib;
+			cs_attrib.as_uint16 = vcpu_data[idx]->guest_vmcb.save_state_area.cs_attrib;
 
 			if (IsProcessorReadyForVmrun(&vcpu_data[idx]->guest_vmcb, cs_attrib))
 			{
-				DbgPrint("address of guest VMCB save state area = %p \n", &vcpu_data[idx]->guest_vmcb.save_state_area.Rip);
+				DbgPrint("address of guest VMCB save state area = %p \n", &vcpu_data[idx]->guest_vmcb.save_state_area.rip);
 
 				LaunchVm(&vcpu_data[idx]->guest_vmcb_physicaladdr);
 			}
@@ -76,38 +76,13 @@ bool VirtualizeAllProcessors()
 			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 		}
 	}    
-
-	/*	experiment with TLB spliting	*/
-	//LARGE_INTEGER delay = { 30000000 };	// 3 seconds
-	//KeDelayExecutionThread(KernelMode, FALSE, &delay);
-
-	//auto code_page = ExAllocatePool(NonPagedPool, PAGE_SIZE);
-	//memset(code_page, 0xCC, PAGE_SIZE);
-	//*(char*)code_page = 0xC3;
-
-	//TlbHooks::SetTlbHook(code_page, (uint8_t*)"\xCC\xC3", 2);
-
-	//__debugbreak();
-	//static_cast<void(*)()>(code_page)();
-
-	//unsigned char firstbyte = *(unsigned char*)code_page & 0xFF;
-	//Logger::Get()->Log("first byte of code page is %02x \n", firstbyte);
-	//__debugbreak();
 }
 
 
 void Initialize()
 {
 	Logger::Get()->Start();
-	MemoryUtils::Init();
 	Disasm::Init();
-	//CR3 guest_cr3;
-	//guest_cr3.Flags = 0x8be2c000;
-
-	//auto guest_pte = MemoryUtils::GetPte(PAGE_ALIGN(0x0007FFBAA335A40), guest_cr3.AddressOfPageDirectory << PAGE_SHIFT);
-
-	//Logger::Get()->Log("\n ccc guest_pte %p, Physical address %p, MmGetPhysicalAddress %p \n",
-	//	*guest_pte, guest_pte->PageFrameNumber << PAGE_SHIFT, MmGetPhysicalAddress(PAGE_ALIGN(0x0007FFBAA335A40)));
 	NptHooks::Init();
 }
 

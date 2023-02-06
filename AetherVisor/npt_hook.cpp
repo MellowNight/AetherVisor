@@ -65,7 +65,7 @@ namespace NptHooks
 	
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
+		__writecr3(vmcb_data->guest_vmcb.save_state_area.cr3);
 
 		bool reused_hook = false;
 
@@ -87,7 +87,7 @@ namespace NptHooks
 
 		hook_entry->ncr3_id = ncr3_id;
 		hook_entry->address = address;
-		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.Cr3;
+		hook_entry->process_cr3 = vmcb_data->guest_vmcb.save_state_area.cr3;
 
 
 		/*	get the guest pte and physical address of the hooked page	*/
@@ -147,7 +147,7 @@ namespace NptHooks
 
 		/*	SetNptHook epilogue	*/
 
-		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
+		vmcb_data->guest_vmcb.control_area.tlb_control = 3;
 
 		__writecr3(vmroot_cr3);
 

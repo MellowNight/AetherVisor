@@ -29,7 +29,7 @@ namespace BranchTracer
 	{
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vcpu->guest_vmcb.save_state_area.Cr3);
+		__writecr3(vcpu->guest_vmcb.save_state_area.cr3);
 
 		initialized = true;
 		range_base = trace_range_base;
@@ -37,7 +37,7 @@ namespace BranchTracer
 
 		log_buffer = (BranchLog*)out_buffer;
 
-		is_system = (vcpu->guest_vmcb.save_state_area.Cr3 == __readcr3()) ? true : false;
+		is_system = (vcpu->guest_vmcb.save_state_area.cr3 == __readcr3()) ? true : false;
 
 		// DbgPrint("log_buffer  = %p \n", log_buffer);
 
@@ -57,9 +57,9 @@ namespace BranchTracer
 
 		/*  place breakpoint to capture ETHREAD  */
 
-		vcpu->guest_vmcb.save_state_area.Dr7.GlobalBreakpoint0 = 1;
-		vcpu->guest_vmcb.save_state_area.Dr7.Length0 = 0;
-		vcpu->guest_vmcb.save_state_area.Dr7.ReadWrite0 = 0;
+		vcpu->guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 1;
+		vcpu->guest_vmcb.save_state_area.dr7.Length0 = 0;
+		vcpu->guest_vmcb.save_state_area.dr7.ReadWrite0 = 0;
 
 		__writedr(0, (uintptr_t)start_addr);
 
@@ -68,12 +68,12 @@ namespace BranchTracer
 
 	void Start(VcpuData* vcpu)
 	{
-		process_cr3.Flags = vcpu->guest_vmcb.save_state_area.Cr3;
+		process_cr3.Flags = vcpu->guest_vmcb.save_state_area.cr3;
 		thread_id = PsGetCurrentThreadId();
 
 		if (stop_address == NULL)
 		{
-			stop_address = *(uintptr_t*)vcpu->guest_vmcb.save_state_area.Rsp;
+			stop_address = *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp;
 		}
 
 		// DbgPrint("BranchTracer::stop_address  = %p \n", stop_address);
@@ -84,7 +84,7 @@ namespace BranchTracer
 
 		KeSetSystemAffinityThread(affinity);
 
-		// DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+		// DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
 
 		active = true;
 
@@ -96,7 +96,7 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-		//	DbgPrint("BranchTracer::Resume guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.Rip);
+		//	DbgPrint("BranchTracer::Resume guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
 
 			int cpuinfo[4];
 
@@ -111,13 +111,13 @@ namespace BranchTracer
 
 			/*	BTF, LBR, and trap flag enable	*/
 
-			vcpu->guest_vmcb.save_state_area.DbgCtl.Btf = 1;
-			vcpu->guest_vmcb.save_state_area.DbgCtl.Lbr = 1;
+			vcpu->guest_vmcb.save_state_area.dbg_ctl.Btf = 1;
+			vcpu->guest_vmcb.save_state_area.dbg_ctl.Lbr = 1;
 
-			vcpu->guest_vmcb.save_state_area.Dr7.Flags |= (1 << 9);	// btf
-			vcpu->guest_vmcb.save_state_area.Dr7.Flags |= (1 << 8);	// lbr
+			vcpu->guest_vmcb.save_state_area.dr7.Flags |= (1 << 9);	// btf
+			vcpu->guest_vmcb.save_state_area.dr7.Flags |= (1 << 8);	// lbr
 
-			vcpu->guest_vmcb.save_state_area.Rflags.TrapFlag = 1;
+			vcpu->guest_vmcb.save_state_area.rflags.TrapFlag = 1;
 		}
 	}
 
@@ -125,17 +125,17 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-			DbgPrint("BranchTracer::Pause guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.Rip);
+			DbgPrint("BranchTracer::Pause guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
 
 			/*	BTF, LBR, and trap flag disable	*/
 
-			vcpu->guest_vmcb.save_state_area.DbgCtl.Btf = 0;
-			vcpu->guest_vmcb.save_state_area.DbgCtl.Lbr = 0;
+			vcpu->guest_vmcb.save_state_area.dbg_ctl.Btf = 0;
+			vcpu->guest_vmcb.save_state_area.dbg_ctl.Lbr = 0;
 
-			vcpu->guest_vmcb.save_state_area.Dr7.Flags &= ~((int64_t)1 << 9);
-			vcpu->guest_vmcb.save_state_area.Dr7.Flags &= ~((int64_t)1 << 8);
+			vcpu->guest_vmcb.save_state_area.dr7.Flags &= ~((int64_t)1 << 9);
+			vcpu->guest_vmcb.save_state_area.dr7.Flags &= ~((int64_t)1 << 8);
 
-			vcpu->guest_vmcb.save_state_area.Rflags.TrapFlag = 0;
+			vcpu->guest_vmcb.save_state_area.rflags.TrapFlag = 0;
 		}
 	}
 

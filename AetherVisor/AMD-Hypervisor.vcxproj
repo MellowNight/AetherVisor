@@ -186,7 +186,6 @@
     <ClInclude Include="kernel_exports.h" />
     <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
-    <ClInclude Include="memory_reader.h" />
     <ClInclude Include="npthook_safety.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt.h" />
@@ -194,25 +193,33 @@
     <ClInclude Include="paging_utils.h" />
     <ClInclude Include="portable_executable.h" />
     <ClInclude Include="shellcode.h" />
+    <ClInclude Include="svm.h" />
     <ClInclude Include="syscall_hook.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="prepare_vm.h" />
     <ClInclude Include="vmexit.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bp_exception.cpp" />
     <ClCompile Include="branch_tracer.cpp" />
+    <ClCompile Include="db_exception.cpp" />
     <ClCompile Include="disassembly.cpp" />
     <ClCompile Include="hypervisor.cpp" />
     <ClCompile Include="instrumentation_hook.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="logging.cpp" />
-    <ClCompile Include="memory_reader.cpp" />
+    <ClCompile Include="msr.cpp" />
+    <ClCompile Include="npthook_safety.cpp" />
     <ClCompile Include="npt_hook.cpp" />
     <ClCompile Include="npt.cpp" />
     <ClCompile Include="npt_sandbox.cpp" />
+    <ClCompile Include="paging_utils.cpp" />
+    <ClCompile Include="syscall_hook.cpp" />
+    <ClCompile Include="ud_exception.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="prepare_vm.cpp" />
     <ClCompile Include="vmexit.cpp" />
+    <ClCompile Include="vmmcall.cpp" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="instructions.asm" />

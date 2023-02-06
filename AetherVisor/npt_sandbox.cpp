@@ -58,7 +58,7 @@ namespace Sandbox
 
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vcpu->guest_vmcb.save_state_area.Cr3);
+		__writecr3(vcpu->guest_vmcb.save_state_area.cr3);
 
 		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
@@ -92,7 +92,7 @@ namespace Sandbox
 
 		__writecr3(vmroot_cr3);
 
-		vcpu->guest_vmcb.control_area.TlbControl = 3;
+		vcpu->guest_vmcb.control_area.tlb_control = 3;
 	}
 
 
@@ -108,7 +108,7 @@ namespace Sandbox
 
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.Cr3);
+		__writecr3(vmcb_data->guest_vmcb.save_state_area.cr3);
 
 		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
@@ -136,9 +136,8 @@ namespace Sandbox
 
 		__writecr3(vmroot_cr3);
 
-		vmcb_data->guest_vmcb.control_area.TlbControl = 3;
+		vmcb_data->guest_vmcb.control_area.tlb_control = 3;
 
 		return sandbox_entry;
 	}
-
 };

@@ -1,5 +1,5 @@
 #pragma once
-#include "amd.h"
+#include "svm.h"
 #include "paging_utils.h"
 
 struct GuestRegisters

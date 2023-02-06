@@ -1,158 +1,109 @@
+#include "svm.h"
 #include "vmexit.h"
+#include "npt_sandbox.h"
+#include "vmexit.h"
+#include "disassembly.h"
 
-void InjectException(VcpuData* core_data, int vector, int error_code)
+void VcpuData::InjectException(int vector, bool push_error, int error_code)
 {
-    EventInjection event_injection;
+    EventInjection event_inject = { 0 };
 
-    event_injection.vector = vector;
-    event_injection.type = 3;
-    event_injection.valid = 1;
+    event_inject.vector = vector;
+    event_inject.type = 3;
+    event_inject.valid = 1;
 
-    event_injection.push_error_code = 1;
-    event_injection.error_code = error_code;
+    if (push_error)
+    {
+        event_inject.push_error_code = 1;
+        event_inject.error_code = error_code;
+    }
 
-    core_data->guest_vmcb.control_area.EventInj = event_injection.fields;
+    guest_vmcb.control_area.event_inject = event_inject.fields;
 }
 
-void HandleMsrExit(VcpuData* VpData, GuestRegisters* GuestRegisters)
+extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMemAccess * physical_mem)
 {
-    auto msr_id = GuestRegisters->rcx;
+    /*	load host extra state	*/
 
-    LARGE_INTEGER msr_value;
+    __svm_vmload(vcpu->host_vmcb_physicaladdr);
 
-    msr_value.QuadPart = __readmsr(msr_id);
+    bool end_hypervisor = false;
 
-    switch (msr_id)
+    switch (vcpu->guest_vmcb.control_area.exit_code)
     {
-    case MSR::efer:
+    case VMEXIT::MSR:
     {
-        auto efer = (MsrEfer*)&msr_value.QuadPart;
-        Logger::Get()->Log(" MSR::efer caught, msr_value.QuadPart = %p \n", msr_value.QuadPart);
+        vcpu->MsrExitHandler(guest_ctx);
 
-        efer->svme = 0;
+        break;
+    }
+    case VMEXIT::DB:
+    {
+        vcpu->DebugFaultHandler(guest_ctx);
+
+        break;
+    }
+    case VMEXIT::VMRUN:
+    {
+        vcpu->InjectException(EXCEPTION_VECTOR::GeneralProtection, false, 0);
+
+        break;
+    }
+    case VMEXIT::VMMCALL:
+    {
+        vcpu->VmmcallHandler(guest_ctx, &end_hypervisor);
+
+        break;
+    }
+    case VMEXIT::BP:
+    {
+        vcpu->BreakpointHandler(guest_ctx);
+
+        break;
+    }
+    case VMEXIT::NPF:
+    {
+        vcpu->NestedPageFaultHandler(guest_ctx);
+
+        break;
+    }
+    case VMEXIT::UD:
+    {
+        vcpu->InvalidOpcodeHandler(guest_ctx, physical_mem);
+
+        break;
+    }
+    case VMEXIT::INVALID:
+    {
+        DbgPrint("VMEXIT::INVALID!! ! \n");
+        // auto cs_attrib = vcpu->guest_vmcb.save_state_area.cs_attrib;
+
+         // IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
+        vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
+
         break;
     }
     default:
+    {
+        KeBugCheckEx(MANUALLY_INITIATED_CRASH, vcpu->guest_vmcb.control_area.exit_code,
+            vcpu->guest_vmcb.control_area.exit_info1, vcpu->guest_vmcb.control_area.exit_info2, vcpu->guest_vmcb.save_state_area.rip);
+
         break;
     }
-
-    VpData->guest_vmcb.save_state_area.Rax = msr_value.LowPart;
-    GuestRegisters->rdx = msr_value.HighPart;
-
-    VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
-}
-
-/*  HandleVmmcall only handles the vmmcall for 1 core. 
-    It is the guest's responsibility to set thread affinity.
-*/
-void HandleVmmcall(VcpuData* VpData, GuestRegisters* GuestRegisters, bool* EndVM)
-{
-    auto id = GuestRegisters->rcx;
-
-    switch (id)
-    {
-        case VMMCALL_ID::set_npt_hook:
-        {
-            NptHooks::SetNptHook(
-                VpData,
-                (void*)GuestRegisters->rdx,
-                (uint8_t*)GuestRegisters->r8,
-                0,0
-            );
-
-            break;
-        }
-        case VMMCALL_ID::disable_hv:
-        {    
-            DbgPrint("[AMD-Hypervisor] - disable_hv vmmcall id %p \n", id);
-
-            *EndVM = true;
-            break;
-        }
-        default: 
-        {
-            break;
-        }
     }
 
-    VpData->guest_vmcb.save_state_area.Rip = VpData->guest_vmcb.control_area.NRip;
-}
-
-extern "C" bool HandleVmexit(VcpuData* core_data, GuestRegisters* GuestRegisters)
-{
-    /*	load host extra state	*/
-    __svm_vmload(core_data->host_vmcb_physicaladdr);
-
-    bool end_hypervisor = false;		
-
-    switch (core_data->guest_vmcb.control_area.ExitCode) 
+    if (end_hypervisor)
     {
-        case VMEXIT::MSR: 
-        {
-            HandleMsrExit(core_data, GuestRegisters);
-            break;
-        }
-        case VMEXIT::VMRUN: 
-        {
-            InjectException(core_data, 13);
-            break;
-        }
-        case VMEXIT::VMMCALL: 
-        {
-            HandleVmmcall(core_data, GuestRegisters, &end_hypervisor);
-            break;
-        }
-        case VMEXIT::NPF:
-        {
-            core_data->NestedPageFaultHandler(GuestRegisters);
-            break;
-        }
-        case VMEXIT::GP: 
-        {
-            InjectException(core_data, 13, 0xC0000005);
-            break;
-        }
-        case VMEXIT::INVALID: 
-        {
-            SegmentAttribute CsAttrib;
-            CsAttrib.as_uint16 = core_data->guest_vmcb.save_state_area.CsAttrib;
+        // 1. Load guest CR3 context
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3);
 
-            IsProcessorReadyForVmrun(&core_data->guest_vmcb, CsAttrib);
+        // 2. Load guest hidden context
+        __svm_vmload(vcpu->guest_vmcb_physicaladdr);
 
-            break;
-        }
-        default:
-        {
-            DbgPrint("[VMEXIT] vmexit with unknown reason %p ! guest VMCB at %p \n",
-                core_data->guest_vmcb.control_area.ExitCode, &core_data->guest_vmcb);
-
-            DbgPrint("[VMEXIT] RIP is %p \n", core_data->guest_vmcb.save_state_area.Rip);
-
-            __debugbreak();
-            break;
-        }
-    }
-
-    if (end_hypervisor) 
-    {
-        /*
-            When we end the VM operation, we just disable virtualization
-            and jump to the guest context
-
-            1. load guest state
-            2. disable IF
-            3. enable GIF
-            4. disable SVME
-            5. restore EFLAGS and re enable IF
-            6. set RBX to RIP
-            7. set RCX to RSP
-            8. return and jump back
-        */
-        
-        __writecr3(core_data->guest_vmcb.save_state_area.Cr3);
-        Logger::Get()->Log("[VMEXIT] NRip is %p \n", core_data->guest_vmcb.control_area.NRip);
-
+        // 3. Enable global interrupt flag
         __svm_stgi();
+
+        // 4. Disable interrupt flag in EFLAGS (to safely disable SVM)
         _disable();
 
         MsrEfer msr;
@@ -160,12 +111,15 @@ extern "C" bool HandleVmexit(VcpuData* core_data, GuestRegisters* GuestRegisters
         msr.flags = __readmsr(MSR::efer);
         msr.svme = 0;
 
+        // 5. disable SVM
         __writemsr(MSR::efer, msr.flags);
-        __writeeflags(core_data->guest_vmcb.save_state_area.Rflags.Flags);
 
-        GuestRegisters->rcx = core_data->guest_vmcb.save_state_area.Rsp;
-        GuestRegisters->rbx = core_data->guest_vmcb.control_area.NRip;
-        __svm_vmload(core_data->guest_vmcb_physicaladdr);
+        // 6. load the guest value of EFLAGS
+        __writeeflags(vcpu->guest_vmcb.save_state_area.rflags.Flags);
+
+        // 7. restore these values later
+        guest_ctx->rcx = vcpu->guest_vmcb.save_state_area.rsp;
+        guest_ctx->rbx = vcpu->guest_vmcb.control_area.nrip;
 
         Logger::Get()->Log("ending hypervisor... \n");
     }

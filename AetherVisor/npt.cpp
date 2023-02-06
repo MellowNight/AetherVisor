@@ -40,7 +40,7 @@ bool HandleSplitInstruction(VcpuData* vcpu, uintptr_t guest_rip, PHYSICAL_ADDRES
 			switch_ncr3 = false;
 		}
 
-		auto guest_cr3 = vcpu->guest_vmcb.save_state_area.Cr3;
+		auto guest_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
 
 		auto page1_physical = faulting_physical.QuadPart;
 		auto page2_physical = Utils::GetPte((void*)(guest_rip + insn_len), guest_cr3)->PageFrameNumber << PAGE_SHIFT;
@@ -55,20 +55,20 @@ bool HandleSplitInstruction(VcpuData* vcpu, uintptr_t guest_rip, PHYSICAL_ADDRES
 
 void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 {
-	PHYSICAL_ADDRESS fault_physical; fault_physical.QuadPart = guest_vmcb.control_area.ExitInfo2;
+	PHYSICAL_ADDRESS fault_physical; fault_physical.QuadPart = guest_vmcb.control_area.exit_info2;
 
-	NestedPageFaultInfo1 exit_info1; exit_info1.as_uint64 = guest_vmcb.control_area.ExitInfo1;
+	NestedPageFaultInfo1 exit_info1; exit_info1.as_uint64 = guest_vmcb.control_area.exit_info1;
 
 	PHYSICAL_ADDRESS ncr3; ncr3.QuadPart = guest_vmcb.control_area.ncr3;
 
-	auto guest_rip = guest_vmcb.save_state_area.Rip;
+	auto guest_rip = guest_vmcb.save_state_area.rip;
 
 	/*	clean ncr3 cache	*/
 
-	guest_vmcb.control_area.VmcbClean &= 0xFFFFFFEF;
-	guest_vmcb.control_area.TlbControl = 1;
+	guest_vmcb.control_area.vmcb_clean &= 0xFFFFFFEF;
+	guest_vmcb.control_area.tlb_control = 1;
 
-	Logger::Get()->LogJunk("[#NPF HANDLER] 	guest physical %p, guest RIP virtual %p \n", fault_physical.QuadPart, guest_vmcb.save_state_area.Rip);
+	Logger::Get()->LogJunk("[#NPF HANDLER] 	guest physical %p, guest RIP virtual %p \n", fault_physical.QuadPart, guest_vmcb.save_state_area.rip);
 
 	if (exit_info1.fields.valid == 0)
 	{
@@ -97,7 +97,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 			BranchTracer::Pause(this);
 
-			guest_vmcb.save_state_area.Rflags.TrapFlag = 1;
+			guest_vmcb.save_state_area.rflags.TrapFlag = 1;
 
 			guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
 		}
@@ -127,7 +127,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 		{
 			/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
-			auto is_system_page = (guest_vmcb.save_state_area.Cr3 == __readcr3()) ? true : false;
+			auto is_system_page = (guest_vmcb.save_state_area.cr3	 == __readcr3()) ? true : false;
 
 			Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute, is_system_page);
 		}

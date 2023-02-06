@@ -14,7 +14,7 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
     {
         if (BranchTracer::active == true &&
             (guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) &&
-            guest_vmcb.save_state_area.cr3.Flags == BranchTracer::process_cr3.Flags)
+            guest_vmcb.save_state_area.cr3 == BranchTracer::process_cr3.Flags)
         {
             if (guest_rip < BranchTracer::range_base || guest_rip > (BranchTracer::range_size + BranchTracer::range_base))
             {
@@ -27,7 +27,7 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
             auto vmroot_cr3 = __readcr3();
 
-            __writecr3(guest_vmcb.save_state_area.cr3.Flags);
+            __writecr3(guest_vmcb.save_state_area.cr3);
 
             DbgPrint("LastBranchFromIP %p guest_rip = %p \n", guest_vmcb.save_state_area.br_from, guest_rip);
 

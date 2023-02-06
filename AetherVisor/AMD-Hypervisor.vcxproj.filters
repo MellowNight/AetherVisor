@@ -49,9 +49,6 @@
     <ClInclude Include="hypervisor.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="vmexit.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="kernel_exports.h">
       <Filter>Source Files\nt kernel</Filter>
     </ClInclude>
@@ -76,9 +73,6 @@
     <ClInclude Include="amd.h">
       <Filter>Source Files\amd structs</Filter>
     </ClInclude>
-    <ClInclude Include="memory_reader.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="branch_tracer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -102,6 +96,12 @@
     </ClInclude>
     <ClInclude Include="instrumentation_hook.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="svm.h">
+      <Filter>Source Files\amd structs</Filter>
+    </ClInclude>
+    <ClInclude Include="vmexit.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -129,9 +129,6 @@
     <ClCompile Include="prepare_vm.cpp">
       <Filter>Source Files\preparation</Filter>
     </ClCompile>
-    <ClCompile Include="memory_reader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="disassembly.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -142,6 +139,30 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="npt_sandbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bp_exception.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="db_exception.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="msr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npthook_safety.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="paging_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="syscall_hook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ud_exception.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vmmcall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

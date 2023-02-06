@@ -103,13 +103,13 @@ bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 		}
 	}
 
-	if (guest_vmcb->control_area.GuestAsid == 0)
+	if (guest_vmcb->control_area.guest_asid == 0)
 	{
 		Logger::Get()->Log("ASID is equal to zero. Invalid guest state \n");
 		return false;
 	}
 
-	if (!(guest_vmcb->control_area.InterceptVec4 & 1))
+	if (!(guest_vmcb->control_area.intercept_vec4 & 1))
 	{
 		Logger::Get()->Log("The VMRUN intercept bit is clear. Invalid state! \n");
 		return false;
@@ -152,7 +152,7 @@ void SetupMSRPM(VcpuData* core_data)
 
 	auto msrpm = ExAllocatePoolZero(NonPagedPool, msrpm_size, 'msr0');
 
-	core_data->guest_vmcb.control_area.MsrpmBasePa = MmGetPhysicalAddress(msrpm).QuadPart;
+	core_data->guest_vmcb.control_area.msrpm_base_pa = MmGetPhysicalAddress(msrpm).QuadPart;
 
 	RTL_BITMAP bitmap;
 
@@ -173,7 +173,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->self = core_data;
 
 	core_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[NCR3_DIRECTORIES::primary];
-	core_data->guest_vmcb.control_area.NpEnable = (1UL << 0);
+	core_data->guest_vmcb.control_area.np_enable = (1UL << 0);
 
 	DescriptorTableRegister	gdtr, idtr;
 
@@ -185,48 +185,48 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	intercept_vector4.intercept_vmmcall = 1;
 	intercept_vector4.intercept_vmrun = 1;
 
-	core_data->guest_vmcb.control_area.InterceptVec4 = intercept_vector4.as_int32;
+	core_data->guest_vmcb.control_area.intercept_vec4 = intercept_vector4.as_int32;
 
 	InterceptVector2 intercept_vector2 = {0};
 
 	/*	intercept MSR access	*/
-	core_data->guest_vmcb.control_area.InterceptVec3 |= (1UL << 28);
+	core_data->guest_vmcb.control_area.intercept_vec3 |= (1UL << 28);
 
-	core_data->guest_vmcb.control_area.InterceptException = intercept_vector2.as_int32;
+	core_data->guest_vmcb.control_area.intercept_exception = intercept_vector2.as_int32;
 	
-	core_data->guest_vmcb.control_area.GuestAsid = 1;
+	core_data->guest_vmcb.control_area.guest_asid = 1;
 
-	core_data->guest_vmcb.save_state_area.Cr0 = __readcr0();
-	core_data->guest_vmcb.save_state_area.Cr2 = __readcr2();
-	core_data->guest_vmcb.save_state_area.Cr3 = __readcr3();
-	core_data->guest_vmcb.save_state_area.Cr4 = __readcr4();
+	core_data->guest_vmcb.save_state_area.cr0 = __readcr0();
+	core_data->guest_vmcb.save_state_area.cr2 = __readcr2();
+	core_data->guest_vmcb.save_state_area.cr3 = __readcr3();
+	core_data->guest_vmcb.save_state_area.cr4 = __readcr4();
 
-	core_data->guest_vmcb.save_state_area.Rip = context_record->Rip;
-	core_data->guest_vmcb.save_state_area.Rax = context_record->Rax;
-	core_data->guest_vmcb.save_state_area.Rsp = context_record->Rsp;
-	core_data->guest_vmcb.save_state_area.Rflags.Flags = __readeflags();
-	core_data->guest_vmcb.save_state_area.Efer = __readmsr(MSR::efer);
-	core_data->guest_vmcb.save_state_area.GPat = __readmsr(MSR::pat);
+	core_data->guest_vmcb.save_state_area.rip = context_record->Rip;
+	core_data->guest_vmcb.save_state_area.rax = context_record->Rax;
+	core_data->guest_vmcb.save_state_area.rsp = context_record->Rsp;
+	core_data->guest_vmcb.save_state_area.rflags.Flags = __readeflags();
+	core_data->guest_vmcb.save_state_area.efer = __readmsr(MSR::efer);
+	core_data->guest_vmcb.save_state_area.guest_pat = __readmsr(MSR::pat);
 
-	core_data->guest_vmcb.save_state_area.GdtrLimit = gdtr.limit;
-	core_data->guest_vmcb.save_state_area.GdtrBase = gdtr.base;
-	core_data->guest_vmcb.save_state_area.IdtrLimit = idtr.limit;
-	core_data->guest_vmcb.save_state_area.IdtrBase = idtr.base;
+	core_data->guest_vmcb.save_state_area.gdtr_limit = gdtr.limit;
+	core_data->guest_vmcb.save_state_area.gdtr_base = gdtr.base;
+	core_data->guest_vmcb.save_state_area.idtr_limit = idtr.limit;
+	core_data->guest_vmcb.save_state_area.idtr_base = idtr.base;
 
-	core_data->guest_vmcb.save_state_area.CsLimit = GetSegmentLimit(context_record->SegCs);
-	core_data->guest_vmcb.save_state_area.DsLimit = GetSegmentLimit(context_record->SegDs);
-	core_data->guest_vmcb.save_state_area.EsLimit = GetSegmentLimit(context_record->SegEs);
-	core_data->guest_vmcb.save_state_area.SsLimit = GetSegmentLimit(context_record->SegSs);
+	core_data->guest_vmcb.save_state_area.cs_limit = GetSegmentLimit(context_record->SegCs);
+	core_data->guest_vmcb.save_state_area.ds_limit = GetSegmentLimit(context_record->SegDs);
+	core_data->guest_vmcb.save_state_area.es_limit = GetSegmentLimit(context_record->SegEs);
+	core_data->guest_vmcb.save_state_area.ss_limit = GetSegmentLimit(context_record->SegSs);
 
-	core_data->guest_vmcb.save_state_area.CsSelector = context_record->SegCs;
-	core_data->guest_vmcb.save_state_area.DsSelector = context_record->SegDs;
+	core_data->guest_vmcb.save_state_area.cs_selector = context_record->SegCs;
+	core_data->guest_vmcb.save_state_area.ds_selector = context_record->SegDs;
 	core_data->guest_vmcb.save_state_area.es_selector = context_record->SegEs;
-	core_data->guest_vmcb.save_state_area.SsSelector = context_record->SegSs;
+	core_data->guest_vmcb.save_state_area.ss_selector = context_record->SegSs;
 
-	core_data->guest_vmcb.save_state_area.CsAttrib = GetSegmentAttributes(context_record->SegCs, gdtr.base).as_uint16;
-	core_data->guest_vmcb.save_state_area.DsAttrib = GetSegmentAttributes(context_record->SegDs, gdtr.base).as_uint16;
-	core_data->guest_vmcb.save_state_area.EsAttrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).as_uint16;
-	core_data->guest_vmcb.save_state_area.SsAttrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).as_uint16;
+	core_data->guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base).as_uint16;
+	core_data->guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base).as_uint16;
+	core_data->guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).as_uint16;
+	core_data->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).as_uint16;
 
 	SetupMSRPM(core_data);
 

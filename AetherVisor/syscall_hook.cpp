@@ -7,16 +7,12 @@ namespace SyscallHook
     {
         if (EnableEFERSyscallHook)
         {
-            vcpu->guest_vmcb.save_state_area.efer.syscall = FALSE;
+           // vcpu->guest_vmcb.save_state_area.efer.syscall = FALSE;
         }
         else
         {
-            vcpu->guest_vmcb.save_state_area.efer.syscall = TRUE;
+          //  vcpu->guest_vmcb.save_state_area.efer.syscall = TRUE;
 
-            //
-            // unset the exception to not cause vm-exit on #UDs
-            //
-          //  ProtectedHvRemoveUndefinedInstructionForDisablingSyscallSysretCommands();
         }
     }
 
@@ -45,28 +41,28 @@ namespace SyscallHook
         vcpu->guest_vmcb.save_state_area.cs_base = 0;               // Flat segment
         vcpu->guest_vmcb.save_state_area.cs_limit = UINT32_MAX;     // 4GB limit
                                                                     
-        // as uint16 = 0xAFB; // L+DB+P+S+DPL3+Code
+        // as uint16 = 0xAFB, L+DB+P+S+DPL3+Code
 
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type = 0xB;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.dpl = 3;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.present = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.long_mode = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.granularity = 1;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type = 0xB;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.dpl = 3;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.present = 1;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.long_mode = 1;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system = 1;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.granularity = 1;
 
 
         vcpu->guest_vmcb.save_state_area.ss_selector = (UINT16)(((star_msr >> 48) + 8) | 3); // (STAR[63:48]+8) | 3 (* RPL forced to 3 *)
         vcpu->guest_vmcb.save_state_area.ss_base = 0;               // Flat segment
         vcpu->guest_vmcb.save_state_area.ss_limit = UINT32_MAX;     // 4GB limit
 
-         // as uint16 = 0xCF3;   // G+DB+P+S+DPL3+Data
+         // as uint16 = 0xCF3, G+DB+P+S+DPL3+Data
        
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 3;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.system = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.present = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.default_bit = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 3;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.system = 1;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.present = 1;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.default_bit = 1;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
 
         return true;
     }
@@ -110,12 +106,12 @@ namespace SyscallHook
 
         //  0xA9B, L+DB+P+S+DPL0+Code
 
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type = 0xB;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.dpl = 0;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.present = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.long_mode = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.granularity = 1;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type = 0xB;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.dpl = 0;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.present = 1;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.long_mode = 1;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system = 1;
+        //vcpu->guest_vmcb.save_state_area.cs_attrib.fields.granularity = 1;
 
 
         vcpu->guest_vmcb.save_state_area.ss_selector = (uint16_t)(((star >> 32) & ~3) + 8); // STAR[47:32] + 8
@@ -124,12 +120,12 @@ namespace SyscallHook
                                                                                              
         // 0xC93 G+DB+P+S+DPL0+Data
         
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 0;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.system = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.present = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.default_bit = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 0;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.system = 1;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.present = 1;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.default_bit = 1;
+        //vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
 
         return true;
     }

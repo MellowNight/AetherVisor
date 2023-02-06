@@ -20,7 +20,7 @@ void VcpuData::MsrExitHandler(GuestRegisters* guest_regs)
     {
     case MSR::efer:
     {
-        auto efer = (EferMsr*)&msr_value.QuadPart;
+        auto efer = (MsrEfer*)&msr_value.QuadPart;
 
         Logger::Get()->Log(" MSR::EFER caught, msr_value.QuadPart = %p \n", msr_value.QuadPart);
 
