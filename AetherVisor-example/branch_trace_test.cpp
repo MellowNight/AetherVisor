@@ -3,7 +3,7 @@
 using namespace AetherVisor;
 using namespace AetherVisor::BranchTracer;
 
-/*  branch_trace_test.cpp:  ???  */
+/*  branch_trace_test.cpp:  waht  to do here ???  */
 
 
 std::vector<BranchLog::LogEntry> traced_branches;
