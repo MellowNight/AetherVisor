@@ -4,6 +4,8 @@
 
 bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* physical_mem)
 {
+    DbgPrint("VcpuData::InvalidOpcodeHandler!! ! \n");
+
     auto guest_rip = guest_vmcb.save_state_area.rip;
 
     uintptr_t vmroot_cr3 = __readcr3();

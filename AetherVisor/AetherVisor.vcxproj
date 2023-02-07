@@ -128,7 +128,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <IncludePath>$(SolutionDir)dependencies\Zydis\include;%(AdditionalIncludeDirectories);$(IncludePath)</IncludePath>
-    <EnableInf2cat>false</EnableInf2cat>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
@@ -154,22 +153,21 @@
     </ClCompile>
     <Link>
       <EntryPointSymbol>EntryPoint</EntryPointSymbol>
-      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\Zydis\lib\DebugKernel;$(SolutionDir)dependencies\ForteVisor\lib\Kernel\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Zycore.lib;Zydis.lib;ForteVisorKernelApi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Zycore.lib;Zydis.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\Zydis\include;$(SolutionDir)dependencies\ForteVisor\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\Zydis\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <PreprocessorDefinitions>ZYCORE_STATIC_BUILD;ZYDIS_STATIC_BUILD;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZYCORE_STATIC_BUILD;ZYDIS_STATIC_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\Zydis\lib\ReleaseKernel\;$(SolutionDir)dependencies\AetherVisor\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Zycore.lib;Zydis.lib;AetherVisor-lib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\Zydis\lib\ReleaseKernel\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Zycore.lib;Zydis.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>EntryPoint</EntryPointSymbol>
       <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
     </Link>
@@ -179,7 +177,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="amd.h" />
-    <ClInclude Include="svm.h" />
     <ClInclude Include="branch_tracer.h" />
     <ClInclude Include="disassembly.h" />
     <ClInclude Include="hypervisor.h" />
@@ -190,12 +187,13 @@
     <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="npthook_safety.h" />
-    <ClInclude Include="npt_sandbox.h" />
-    <ClInclude Include="paging_utils.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt.h" />
+    <ClInclude Include="npt_sandbox.h" />
+    <ClInclude Include="paging_utils.h" />
     <ClInclude Include="portable_executable.h" />
     <ClInclude Include="shellcode.h" />
+    <ClInclude Include="svm.h" />
     <ClInclude Include="syscall_hook.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="prepare_vm.h" />
@@ -212,10 +210,10 @@
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="msr.cpp" />
     <ClCompile Include="npthook_safety.cpp" />
-    <ClCompile Include="npt_sandbox.cpp" />
-    <ClCompile Include="paging_utils.cpp" />
     <ClCompile Include="npt_hook.cpp" />
     <ClCompile Include="npt.cpp" />
+    <ClCompile Include="npt_sandbox.cpp" />
+    <ClCompile Include="paging_utils.cpp" />
     <ClCompile Include="syscall_hook.cpp" />
     <ClCompile Include="ud_exception.cpp" />
     <ClCompile Include="utils.cpp" />

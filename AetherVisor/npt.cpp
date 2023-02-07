@@ -284,9 +284,9 @@ uintptr_t BuildNestedPagingTables(uintptr_t* ncr3, PTEAccess flags)
 
 	/*	APIC range isn't covered by system physical memory ranges, but it still needs to be visible	*/
 
-	ApicBarMsr apic_bar;
+	APIC_BAR_MSR apic_bar;
 
-	apic_bar.flags = __readmsr(MSR::apic_bar);
+	apic_bar.value = __readmsr(MSR::apic_bar);
 
 	AssignNptEntry(npml4_virtual, apic_bar.apic_base << PAGE_SHIFT, flags);
 

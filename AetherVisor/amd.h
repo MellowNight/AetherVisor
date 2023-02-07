@@ -22,60 +22,11 @@ enum MSR : uint64_t
     vm_hsave_pa = 0xC0010117
 };
 
-
-/*	AMD EFER (Extended Feature Enable Register) MSR     */
-
-struct EferMsr
-{
-    union
-    {
-        __int64	flags;
-        struct
-        {
-            uint32_t    syscall : 1;
-            uint32_t    reserved : 7;
-            uint32_t    long_mode_enable : 1;
-            uint32_t    reserved2 : 1;
-            uint32_t    long_mode_active : 1;
-            uint32_t    nxe : 1;
-            uint32_t    svme : 1;
-            uint32_t    lmsle : 1;
-            uint32_t    ffxse : 1;
-            uint32_t    tce : 1;
-            uint32_t    reserved3 : 1;
-            uint32_t    m_commit : 1;
-            uint32_t    intwb : 1;
-            __int64     reserved4 : 45;
-        };
-    };
-};
-
-/*	 Advanced Programmable Interrupt Controller Base Address Register MSR	*/
-
-struct ApicBarMsr
-{
-    union
-    {
-        uint64_t flags;
-        struct
-        {
-            uint64_t reserved1 : 8;             // [0:7]
-            uint64_t bootstrap_processor : 1;   // [8]
-            uint64_t reserved2 : 1;             // [9]
-            uint64_t enable_x2apic_mode : 1;    // [10]
-            uint64_t enable_xapic_global : 1;   // [11]
-            uint64_t apic_base : 24;            // [12:35]
-        };
-    };
-};
-
-/* Struct to store x86 long mode segment descriptor fields.  */
-
 struct SegmentDescriptor
 {
     union
     {
-        uint64_t as_int64;
+        uint64_t value;
         struct
         {
             uint16_t LimitLow;        // [0:15]
@@ -96,13 +47,111 @@ struct SegmentDescriptor
 };
 static_assert(sizeof(SegmentDescriptor) == 8, "SegmentDescriptor Size Mismatch");
 
-/* Struct to store the segment descriptor fields used by the VMCB.  */
+
+/*	Core::X86::MSR::efer	*/
+
+union EFER_MSR
+{
+    struct 
+    {
+        uint64_t syscall : 1;
+        uint64_t reserved1 : 7;
+        uint64_t long_mode_enable : 1;
+        uint64_t reserved2 : 1;
+        uint64_t long_mode_active : 1;
+        uint64_t nx_page : 1;
+        uint64_t svme : 1;
+        uint64_t lmsle : 1;
+        uint64_t ffxse : 1;
+        uint64_t reserved3 : 1;
+        uint64_t reserved4 : 47;
+    };
+    uint64_t value;
+};
+
+static_assert(sizeof(EFER_MSR) == 8, "EFER MSR Size Mismatch");
+
+
+/*	 Core::X86::Msr::APIC_BAR	*/
+struct APIC_BAR_MSR
+{
+    union
+    {
+        uint64_t value;
+        struct
+        {
+            uint64_t reserved1 : 8;           // [0:7]
+            uint64_t bootstrap_processor : 1;  // [8]
+            uint64_t reserved2 : 1;           // [9]
+            uint64_t x2apic_mode : 1;    // [10]
+            uint64_t xapic_global : 1;   // [11]
+            uint64_t apic_base : 24;           // [12:35]
+        };
+    };
+};
+
+
+
+/*	 Core::X86::MSR::vm_cr	*/
+union VM_CR_MSR
+{
+    struct 
+    {
+        int		reserved1 : 1;
+        int		intercept_init : 1;
+        int		reserved2 : 1;
+        int		svm_lock : 1;
+        int		svme_disable : 1;
+        int		reserved3 : 27;
+        int		reserved4 : 32;
+    };
+    int64_t	value;
+};
+
+
+union InterceptVector4
+{
+    struct 
+    {
+        uint32_t vmrun_intercept : 1;
+        uint32_t vmmcall_intercept : 1;
+        uint32_t vmload_intercept : 1;
+        uint32_t vmsave_intercept : 1;
+        uint32_t stgi_intercept : 1;
+        uint32_t clgi_intercept : 1;
+        uint32_t skinit_intercept : 1;
+        uint32_t rdtscp_intercept : 1;
+        uint32_t icebp_intercept : 1;
+        uint32_t wbinvd_intercept : 1;
+        uint32_t monitor_intercept : 1;
+        uint32_t mwait_intercept_unconditional : 1;
+        uint32_t mwait_intercept_armed : 1;
+        uint32_t xsetbv_intercept : 1;
+        uint32_t rdpru_intercept : 1;
+        uint32_t efer_write_intercept : 1;
+        uint32_t cr_write_intercept : 16;
+    };
+    uint32_t value;
+};
+static_assert(sizeof(InterceptVector4) == 0x4, "InterceptVector4 Size Mismatch");
+
+
+/*	#include <pshpack1.h> to remove struct alignment, so we wont have GDTR value issues	*/
+#include <pshpack1.h>
+struct DescriptorTableRegister
+{
+    uint16_t limit;
+    uintptr_t base;
+};
+
+static_assert(sizeof(DescriptorTableRegister) == 0xA, "DESCRIPTOR_TABLE_REGISTER Size Mismatch");
+
 
 struct SegmentAttribute
 {
     union
     {
-        uint16_t as_uint16;
+        uint16_t value;
         struct
         {
             uint16_t type : 4;        // [0:3]
@@ -117,25 +166,36 @@ struct SegmentAttribute
         } fields;
     };
 };
+static_assert(sizeof(uint16_t) == sizeof(SegmentAttribute), "SegmentAttribute Size Mismatch");
 
-
-/*	 Core::X86::Msr::VM_CR	*/
-
-union MsrVmcr
+union ADDRESS_TRANSLATION_HELPER
 {
+    //
+    // Indexes to locate paging-structure entries corresponds to this virtual
+    // address.
+    //
     struct
     {
-        int		reserved1 : 1;
-        int		intercept_init : 1;
-        int		reserved2 : 1;
-        int		svm_lock : 1;
-        int		svme_disable : 1;
-        int		reserved3 : 27;
-        int		reserved4 : 32;
-    };
-    int64_t	flags;
-};
+        uint64_t Unused : 12;         //< [11:0]
+        uint64_t Pt : 9;              //< [20:12]
+        uint64_t Pd : 9;              //< [29:21]
+        uint64_t Pdpt : 9;            //< [38:30]
+        uint64_t Pml4 : 9;            //< [47:39]
+    } AsIndex;
 
+    //
+    // The page offset for each type of pages. For example, for 4KB pages, bits
+    // [11:0] are treated as the page offset and Mapping4Kb can be used for it.
+    //
+    union
+    {
+        uint64_t Mapping4Kb : 12;     //< [11:0]
+        uint64_t Mapping2Mb : 21;     //< [20:0]
+        uint64_t Mapping1Gb : 30;     //< [29:0]
+    } AsPageOffset;
+
+    uint64_t AsUInt64;
+};
 
 union AddressTranslationHelper
 {
@@ -155,7 +215,3 @@ union AddressTranslationHelper
 };
 
 extern "C" void _sgdt(void* Descriptor);
-
-extern "C" int16_t __readtr();
-
-

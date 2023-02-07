@@ -59,8 +59,6 @@ namespace NptHooks
 
 	NptHook* SetNptHook(VcpuData* vmcb_data, void* address, uint8_t* patch, size_t patch_len, int32_t ncr3_id)
 	{
-		DbgPrint("vmcb_data %p, address %p, patch %p, patch_len %i, ncr3_id  %i \n", vmcb_data, address, patch, patch_len, ncr3_id);
-
 		/*	First, switch to guest process context	*/
 	
 		auto vmroot_cr3 = __readcr3();

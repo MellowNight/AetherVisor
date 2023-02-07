@@ -5,7 +5,7 @@
 
 void VcpuData::InjectException(int vector, bool push_error, int error_code)
 {
-    EventInject event_inject = { 0 };
+    EventInjection event_inject = { 0 };
 
     event_inject.vector = vector;
     event_inject.type = 3;
@@ -13,7 +13,7 @@ void VcpuData::InjectException(int vector, bool push_error, int error_code)
 
     if (push_error)
     {
-        event_inject.push_error = 1;
+        event_inject.push_error_code = 1;
         event_inject.error_code = error_code;
     }
 
@@ -83,7 +83,9 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
         break;
     }
     default:
-    {
+    {        
+        DbgPrint("unknown VMEXIT 0x%p \n", vcpu->guest_vmcb.control_area.exit_code);
+
         KeBugCheckEx(MANUALLY_INITIATED_CRASH, vcpu->guest_vmcb.control_area.exit_code, 
             vcpu->guest_vmcb.control_area.exit_info1, vcpu->guest_vmcb.control_area.exit_info2, vcpu->guest_vmcb.save_state_area.rip);
 
@@ -105,13 +107,13 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
         // 4. Disable interrupt flag in EFLAGS (to safely disable SVM)
         _disable();
 
-        EferMsr msr;
+        EFER_MSR msr;
 
-        msr.flags = __readmsr(MSR::efer);
+        msr.value = __readmsr(MSR::efer);
         msr.svme = 0;
 
         // 5. disable SVM
-        __writemsr(MSR::efer, msr.flags);
+        __writemsr(MSR::efer, msr.value);
 
         // 6. load the guest value of EFLAGS
         __writeeflags(vcpu->guest_vmcb.save_state_area.rflags.Flags);

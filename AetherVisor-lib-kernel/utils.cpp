@@ -13,6 +13,22 @@ namespace Util
         return start;
     }
 
+    int ForEachCore(void(*callback)(void* params), void* params)
+    {
+        auto core_count = KeQueryActiveProcessorCount(0);
+
+        for (auto idx = 0; idx < core_count; ++idx)
+        {
+            KAFFINITY affinity = Exponent(2, idx);
+
+            KeSetSystemAffinityThread(affinity);
+
+            callback(params);
+        }
+
+        return 0;
+    }
+
     void WriteToReadOnly(void* address, uint8_t* bytes, size_t len)
     {
         DWORD old_prot, old_prot2 = 0;

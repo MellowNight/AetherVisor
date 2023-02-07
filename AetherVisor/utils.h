@@ -39,6 +39,8 @@ namespace Utils
         PMDL mdl
     );
 
+    int ForEachCore(void(*callback)(void* params), void* params);
+
     /*
         virtual_addr - virtual address to get pte of
         pml4_base_pa - base physical address of PML4
