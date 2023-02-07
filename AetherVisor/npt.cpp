@@ -127,7 +127,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 		{
 			/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
-			auto is_system_page = (guest_vmcb.save_state_area.cr3.Flags	 == __readcr3()) ? true : false;
+			auto is_system_page = (guest_vmcb.save_state_area.cr3.Flags == __readcr3()) ? true : false;
 
 			Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute, is_system_page);
 		}
@@ -284,11 +284,11 @@ uintptr_t BuildNestedPagingTables(uintptr_t* ncr3, PTEAccess flags)
 
 	/*	APIC range isn't covered by system physical memory ranges, but it still needs to be visible	*/
 
-	ApicBarMsr apic_bar;
+	APIC_BAR_MSR apic_bar;
 
 	apic_bar.value = __readmsr(MSR::apic_bar);
 
-	AssignNptEntry(npml4_virtual, apic_bar.ApicBase << PAGE_SHIFT, flags);
+	AssignNptEntry(npml4_virtual, apic_bar.apic_base << PAGE_SHIFT, flags);
 
 	return *ncr3;
 }

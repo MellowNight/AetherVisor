@@ -1,32 +1,33 @@
 #include "npt_hook.h"
+#include "npthook_safety.h"
 #include "logging.h"
 #include "disassembly.h"
 #include "prepare_vm.h"
 #include "vmexit.h"
 #include "paging_utils.h"
+#include "npt_sandbox.h"
 
 extern "C" void __stdcall LaunchVm(void* vm_launch_params);
-extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 
 bool VirtualizeAllProcessors()
 {
 	if (!IsSvmSupported())
 	{
-		DbgPrint("[SETUP] SVM isn't supported on this processor! \n");
+		Logger::Get()->Log("[SETUP] SVM isn't supported on this processor! \n");
 		return false;
 	}
-	
+
 	if (!IsSvmUnlocked())
 	{
-		DbgPrint("[SETUP] SVM operation is locked off in BIOS! \n");
+		Logger::Get()->Log("[SETUP] SVM operation is locked off in BIOS! \n");
 		return false;
 	}
 
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[primary], PTEAccess{ true, true, true });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[shadow], PTEAccess{ true, true, false });
-
-	DbgPrint("[SETUP] hypervisor->noexecute_ncr3 %p \n", Hypervisor::Get()->ncr3_dirs[shadow]);
-	DbgPrint("[SETUP] hypervisor->normal_ncr3 %p \n", Hypervisor::Get()->ncr3_dirs[primary]);
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], PTEAccess{ true, true, false });
+	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox_single_step], PTEAccess{ true, true, true });
+    
 
 	Hypervisor::Get()->core_count = KeQueryActiveProcessorCount(0);
 
@@ -50,17 +51,17 @@ bool VirtualizeAllProcessors()
 
 			auto vcpu_data = Hypervisor::Get()->vcpus;
 
-			vcpu_data[idx] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'VMCB');
+			vcpu_data[idx] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
 
 			ConfigureProcessor(vcpu_data[idx], reg_context);
 
 			SegmentAttribute cs_attrib;
 
-			cs_attrib.value = vcpu_data[idx]->guest_vmcb.save_state_area.cs_attrib;
+			cs_attrib = vcpu_data[idx]->guest_vmcb.save_state_area.cs_attrib;
 
-			if (IsProcessorReadyForVmrun(&vcpu_data[idx]->guest_vmcb, cs_attrib))
+			if (IsCoreReadyForVmrun(&vcpu_data[idx]->guest_vmcb, cs_attrib))
 			{
-				DbgPrint("address of guest VMCB save state area = %p \n", &vcpu_data[idx]->guest_vmcb.save_state_area.rip);
+				DbgPrint("address of guest vmcb save state area = %p \n", &vcpu_data[idx]->guest_vmcb.save_state_area.rip);
 
 				LaunchVm(&vcpu_data[idx]->guest_vmcb_physicaladdr);
 			}
@@ -74,15 +75,23 @@ bool VirtualizeAllProcessors()
 		{
 			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 		}
-	}    
+	}
+
+
+	NptHooks::CleanupOnProcessExit();
 }
 
 
-void Initialize()
+int Initialize()
 {
 	Logger::Get()->Start();
+
 	Disasm::Init();
+
+	Sandbox::Init();
 	NptHooks::Init();
+
+	return 0;
 }
 
 NTSTATUS DriverUnload(PDRIVER_OBJECT DriverObject)
@@ -97,22 +106,12 @@ NTSTATUS EntryPoint(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	HANDLE init_thread;
 
 	PsCreateSystemThread(
-		&init_thread,
-		GENERIC_ALL, NULL, NULL, NULL,
-		(PKSTART_ROUTINE)Initialize,
-		NULL
-	);
+		&init_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)Initialize, NULL);
 
-	Logger::Get()->Log("EntryPoint \n");
-
-	HANDLE thread_handle;
+	HANDLE hv_startup_thread;
 
 	PsCreateSystemThread(
-		&thread_handle, 
-		GENERIC_ALL, NULL, NULL, NULL,
-		(PKSTART_ROUTINE)VirtualizeAllProcessors,
-		NULL
-	);
+		&hv_startup_thread, GENERIC_ALL, NULL, NULL, NULL, (PKSTART_ROUTINE)VirtualizeAllProcessors, NULL);
 
 	return STATUS_SUCCESS;
 }

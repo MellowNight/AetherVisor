@@ -68,7 +68,7 @@ namespace BranchTracer
 
 	void Start(VcpuData* vcpu)
 	{
-		process_cr3.Flags = vcpu->guest_vmcb.save_state_area.cr3.Flags;
+		process_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
 		thread_id = PsGetCurrentThreadId();
 
 		if (stop_address == NULL)
@@ -84,7 +84,7 @@ namespace BranchTracer
 
 		KeSetSystemAffinityThread(affinity);
 
-		// DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+		// DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
 
 		active = true;
 
@@ -96,7 +96,7 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-		//	DbgPrint("BranchTracer::Resume guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+		//	DbgPrint("BranchTracer::Resume guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.Rip);
 
 			int cpuinfo[4];
 

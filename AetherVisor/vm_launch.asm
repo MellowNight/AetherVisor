@@ -1,5 +1,5 @@
-
 .const
+
 	KTRAP_FRAME_SIZE            equ     190h
 	MACHINE_FRAME_SIZE          equ     28h
 
@@ -62,9 +62,9 @@ EnterVm:
 
 	PUSHAQ			; save all guest general registers
 
-	mov rcx, [rsp + 8 * 16 + 2 * 8]		; pass reference to Virtual Processor data in arg 1
+	mov rcx, [rsp + 8 * 16 + 2 * 8]		; pass ptr to Virtual Processor data in arg 1
 	mov rdx, rsp					    ; pass guest registers in arg 2
-
+    ; mov r8, [rsp + 8 * 16 + 2 * 8]		; pass ptr to physical memory reader in arg 3
 
     sub rsp, 80h
     movaps xmmword ptr [rsp + 20h], xmm0

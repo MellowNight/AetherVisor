@@ -1,4 +1,3 @@
-#include "svm.h"
 #include "vmexit.h"
 #include "npt_sandbox.h"
 #include "vmexit.h"
@@ -76,16 +75,16 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
     case VMEXIT::INVALID:
     {
         DbgPrint("VMEXIT::INVALID!! ! \n");
-        // auto cs_attrib = vcpu->guest_vmcb.save_state_area.cs_attrib;
+       // auto cs_attrib = vcpu->guest_vmcb.save_state_area.cs_attrib;
 
-         // IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
+        // IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
         vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
 
         break;
     }
     default:
     {
-        KeBugCheckEx(MANUALLY_INITIATED_CRASH, vcpu->guest_vmcb.control_area.exit_code,
+        KeBugCheckEx(MANUALLY_INITIATED_CRASH, vcpu->guest_vmcb.control_area.exit_code, 
             vcpu->guest_vmcb.control_area.exit_info1, vcpu->guest_vmcb.control_area.exit_info2, vcpu->guest_vmcb.save_state_area.rip);
 
         break;

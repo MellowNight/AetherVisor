@@ -35,7 +35,7 @@ namespace Sandbox
 	);
 
 	SandboxPage* ForEachHook(
-		bool(HookCallback)(SandboxPage* hook_entry, void* data),
+		bool(HookCallback)(SandboxPage* hook_entry, void* data), 
 		void* callback_data
 	);
 

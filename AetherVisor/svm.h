@@ -78,9 +78,9 @@ struct VmcbControlArea
     uint16_t intercept_cr_write;            // +0x002
     uint16_t intercept_dr_read;             // +0x004
     uint16_t intercept_dr_write;            // +0x006
-    uint32_t intercept_exception;           // +0x008
+    InterceptVector2 intercept_exception;           // +0x008
     uint32_t intercept_vec3;                // +0x00c
-    uint32_t intercept_vec4;                // +0x010
+    InterceptVector4 intercept_vec4;                // +0x010
     uint8_t reserved1[0x03c - 0x014];       // +0x014 there should be intercept vector 5 here
     uint16_t pause_filter_threshold;        // +0x03c
     uint16_t pause_filter_count;            // +0x03e
@@ -121,19 +121,19 @@ static_assert(sizeof(VmcbControlArea) == 0x400, "VmcbControlArea Size Mismatch")
 typedef struct VmcbSaveStateArea
 {
     uint16_t es_selector;                  // +0x000
-    uint16_t es_attrib;                    // +0x002
+    SegmentAttribute es_attrib;                    // +0x002
     uint32_t es_limit;                     // +0x004
     uint64_t es_base;                      // +0x008
     uint16_t cs_selector;                  // +0x010
-    uint16_t cs_attrib;                    // +0x012
+    SegmentAttribute cs_attrib;                    // +0x012
     uint32_t cs_limit;                     // +0x014
     uint64_t cs_base;                      // +0x018
     uint16_t ss_selector;                  // +0x020
-    uint16_t ss_attrib;                    // +0x022
+    SegmentAttribute ss_attrib;                    // +0x022
     uint32_t ss_limit;                     // +0x024
     uint64_t ss_base;                      // +0x028
     uint16_t ds_selector;                  // +0x030
-    uint16_t ds_attrib;                    // +0x032
+    SegmentAttribute ds_attrib;                    // +0x032
     uint32_t ds_limit;                     // +0x034
     uint64_t ds_base;                      // +0x038
     uint16_t fs_selector;                  // +0x040

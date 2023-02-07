@@ -1,131 +1,11 @@
 #include "prepare_vm.h"
 #include "logging.h"
 
-extern "C" void _sgdt(
-	OUT void* Descriptor
-);
-
-extern "C" int16_t __readtr();
-
-bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
-{
-	if (cs_attribute.fields.long_mode == 1)
-	{
-		DbgPrint("Long mode enabled\n");
-	}
-	else
-	{
-		DbgPrint("Long mode disabled\n");
-
-	}
-
-	EFER_MSR efer_msr = { 0 };
-	efer_msr.value = __readmsr(MSR::efer);
-
-	if (efer_msr.svme == (uint32_t)0)
-	{
-		Logger::Get()->Log("SVME is %p, invalid state! \n", efer_msr.svme);
-		return false;
-	}
-
-	if ((efer_msr.reserved2 != 0) || (efer_msr.reserved3 != 0) || (efer_msr.reserved4 != 0))
-	{
-		Logger::Get()->Log("MBZ bit of EFER is set, Invalid state! \n");
-		return false;
-	}
-
-	CR0	cr0;
-	cr0.Flags = __readcr0();
-
-	if ((cr0.CacheDisable == 0) && (cr0.NotWriteThrough == 1))
-	{
-		Logger::Get()->Log("CR0.CD is zero and CR0.NW is set. \n");
-		return false;
-	}
-
-	if (cr0.Reserved4 != 0)
-	{
-		Logger::Get()->Log("CR0[63:32] are not zero. \n");
-		return false;
-	}
-	
-	RFLAGS rflags;
-	rflags.Flags = __readeflags();
-
-	CR3	cr3;
-	CR4	cr4;
-
-	cr3.Flags = __readcr3();
-	cr4.Flags = __readcr4();
-
-	if (rflags.Virtual8086ModeFlag == 1 && (cr4.Flags << 23 & 1))
-	{
-		Logger::Get()->Log("CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
-	}
-
-	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
-		|| (cr4.Reserved2 != 0) || (cr4.Reserved3 != 0) || (cr4.Reserved4 != 0))
-	{
-		Logger::Get()->Log("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
-		return false;
-	}
-
-	DR6	dr6;
-	DR7 dr7;
-
-	dr6.Flags = __readdr(6);
-	dr7.Flags = __readdr(7);
-
-	if ((dr6.Flags & (0xFFFFFFFF00000000)) || (dr7.Reserved4 != 0))
-	{
-		Logger::Get()->Log("DR6[63:32] are not zero, or DR7[63:32] are not zero.Invalid State!\n");
-		return false;
-	}
-
-	if (cr0.PagingEnable == 0)
-	{
-		Logger::Get()->Log("Paging disabled, Invalid state! \n");
-		return false;
-	}
-
-	if (efer_msr.long_mode_enable == 1 && cr0.PagingEnable == 1)
-	{
-		if (cr4.PhysicalAddressExtension == 0)
-		{
-			Logger::Get()->Log("EFER.LME and CR0.PG are both set and CR4.PAE is zero, Invalid state! \n");
-			return false;
-		}
-
-		if (cr0.ProtectionEnable == 0)
-		{
-			Logger::Get()->Log("EFER.LME and CR0.PG are both non-zero and CR0.PE is zero, Invalid state! \n");
-			return false;
-		}
-	}
-
-	if (guest_vmcb->control_area.guest_asid == 0)
-	{
-		Logger::Get()->Log("ASID is equal to zero. Invalid guest state \n");
-		return false;
-	}
-
-	if (!(guest_vmcb->control_area.intercept_vec4 & 1))
-	{
-		Logger::Get()->Log("The VMRUN intercept bit is clear. Invalid state! \n");
-		return false;
-	}
-
-	Logger::Get()->Log("consistency checks passed \n");
-	return true;
-
-	/*	to do: msr and IOIO map address checks, and some more. */
-}
 
 /*	Copy bits bits 55:52 and 47:40 from segment descriptor	*/
 SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_base)
 {
-	SEGMENT_SELECTOR selector;
-	selector.Flags = segment_selector;
+	SEGMENT_SELECTOR selector; selector.Flags = segment_selector;
 
 	SegmentDescriptor seg_descriptor = ((SegmentDescriptor*)gdt_base)[selector.Index];
 
@@ -144,6 +24,93 @@ SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_b
 	return attribute;
 }
 
+
+
+
+//void ConfigureProcessor(VcpuData* vcpu, CONTEXT* context_record)
+//{
+//	vcpu->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&vcpu->guest_vmcb).QuadPart;
+//	vcpu->host_vmcb_physicaladdr = MmGetPhysicalAddress(&vcpu->host_vmcb).QuadPart;
+//
+//	vcpu->self = vcpu;
+//
+//	vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
+//	vcpu->guest_vmcb.control_area.np_enable = (1UL << 0);
+//	vcpu->guest_vmcb.control_area.lbr_virtualization_enable |= (1UL << 0);
+//
+//	DescriptorTableRegister	gdtr, idtr;
+//
+//	_sgdt(&gdtr);
+//	__sidt(&idtr);
+//
+//	InterceptVector4 intercept_vector4;
+//
+//	intercept_vector4.intercept_vmmcall = 1;
+//	intercept_vector4.intercept_vmrun = 1;
+//
+//	vcpu->guest_vmcb.control_area.intercept_vec4 = intercept_vector4.as_int32;
+//
+//	InterceptVector2 intercept_vector2 = { 0 };
+//
+//	intercept_vector2.intercept_bp = 1;
+//	intercept_vector2.intercept_db = 1;
+//
+//	vcpu->guest_vmcb.control_area.intercept_exception = intercept_vector2.as_int32;
+//
+//	/*	intercept MSR access	*/
+//	
+//	vcpu->guest_vmcb.control_area.intercept_vec3 |= (1UL << 28);
+//
+//	vcpu->guest_vmcb.control_area.guest_asid = 1;
+//
+//	vcpu->guest_vmcb.save_state_area.cr0.Flags = __readcr0();
+//	vcpu->guest_vmcb.save_state_area.cr2 = __readcr2();
+//	vcpu->guest_vmcb.save_state_area.cr3.Flags = __readcr3();
+//	vcpu->guest_vmcb.save_state_area.cr4.Flags = __readcr4();
+//
+//	vcpu->guest_vmcb.save_state_area.rip = context_record->Rip;
+//	vcpu->guest_vmcb.save_state_area.rax = context_record->Rax;
+//	vcpu->guest_vmcb.save_state_area.rsp = context_record->Rsp;
+//
+//	vcpu->guest_vmcb.save_state_area.efer.flags = __readmsr(MSR::efer);
+//	vcpu->guest_vmcb.save_state_area.guest_pat = __readmsr(MSR::pat);
+//
+//	vcpu->guest_vmcb.save_state_area.gdtr_limit = gdtr.limit;
+//	vcpu->guest_vmcb.save_state_area.gdtr_base = gdtr.base;
+//	vcpu->guest_vmcb.save_state_area.idtr_limit = idtr.limit;
+//	vcpu->guest_vmcb.save_state_area.idtr_base = idtr.base;
+//
+//	vcpu->guest_vmcb.save_state_area.cs_limit = GetSegmentLimit(context_record->SegCs);
+//	vcpu->guest_vmcb.save_state_area.ds_limit = GetSegmentLimit(context_record->SegDs);
+//	vcpu->guest_vmcb.save_state_area.es_limit = GetSegmentLimit(context_record->SegEs);
+//	vcpu->guest_vmcb.save_state_area.ss_limit = GetSegmentLimit(context_record->SegSs);
+//	
+//	vcpu->guest_vmcb.save_state_area.cs_selector = context_record->SegCs;
+//	vcpu->guest_vmcb.save_state_area.ds_selector = context_record->SegDs;
+//	vcpu->guest_vmcb.save_state_area.es_selector = context_record->SegEs;
+//	vcpu->guest_vmcb.save_state_area.ss_selector = context_record->SegSs;
+//
+//	vcpu->guest_vmcb.save_state_area.rflags.Flags = __readeflags();
+//	vcpu->guest_vmcb.save_state_area.dr7.Flags = __readdr(7);
+//	vcpu->guest_vmcb.save_state_area.dbg_ctl.Flags = __readmsr(IA32_DEBUGCTL);
+//
+//	vcpu->guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base);
+//	vcpu->guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base);
+//	vcpu->guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base);
+//	vcpu->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base);
+//
+//	SetupMSRPM(vcpu);
+//
+//	// SetupTssIst();
+//	
+//	__svm_vmsave(vcpu->guest_vmcb_physicaladdr);
+//
+//	__writemsr(vm_hsave_pa, MmGetPhysicalAddress(&vcpu->host_save_area).QuadPart);
+//
+//	__svm_vmsave(vcpu->host_vmcb_physicaladdr);
+//}
+//
+
 void SetupMSRPM(VcpuData* core_data)
 {
 	size_t bits_per_msr = 16000 / 8000;
@@ -156,8 +123,8 @@ void SetupMSRPM(VcpuData* core_data)
 
 	RTL_BITMAP bitmap;
 
-    RtlInitializeBitMap(&bitmap, (PULONG)msrpm, msrpm_size * 8);
-    RtlClearAllBits(&bitmap);
+	RtlInitializeBitMap(&bitmap, (PULONG)msrpm, msrpm_size * 8);
+	RtlClearAllBits(&bitmap);
 
 	auto section2_offset = (0x800 * bits_per_byte);
 	auto efer_offset = section2_offset + (bits_per_msr * (MSR::efer - 0xC0000000));
@@ -172,7 +139,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
 	core_data->self = core_data;
 
-	core_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[NCR3_DIRECTORIES::primary];
+	core_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
 	core_data->guest_vmcb.control_area.np_enable = (1UL << 0);
 
 	DescriptorTableRegister	gdtr, idtr;
@@ -185,15 +152,18 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	intercept_vector4.intercept_vmmcall = 1;
 	intercept_vector4.intercept_vmrun = 1;
 
-	core_data->guest_vmcb.control_area.intercept_vec4 = intercept_vector4.value;
+	core_data->guest_vmcb.control_area.intercept_vec4 = intercept_vector4;
 
-	InterceptVector2 intercept_vector2 = {0};
+	//InterceptVector2 intercept_vector2;
+
+	//intercept_vector2.intercept_pf = 1;
+	// intercept_vector2.intercept_bp = 1;
 
 	/*	intercept MSR access	*/
 	core_data->guest_vmcb.control_area.intercept_vec3 |= (1UL << 28);
 
-	core_data->guest_vmcb.control_area.intercept_exception = intercept_vector2.as_int32;
-	
+	//core_data->guest_vmcb.control_area.intercept_exception = intercept_vector2.as_int32;
+
 	core_data->guest_vmcb.control_area.guest_asid = 1;
 
 	core_data->guest_vmcb.save_state_area.cr0.Flags = __readcr0();
@@ -223,20 +193,167 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.es_selector = context_record->SegEs;
 	core_data->guest_vmcb.save_state_area.ss_selector = context_record->SegSs;
 
-	core_data->guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base).value;
-	core_data->guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base).value;
-	core_data->guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).value;
-	core_data->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).value;
+	core_data->guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base);
+	core_data->guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base);
+	core_data->guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base);
+	core_data->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base);
 
 	SetupMSRPM(core_data);
 
 	// SetupTssIst();
-	
+
 	__svm_vmsave(core_data->guest_vmcb_physicaladdr);
 
 	__writemsr(MSR::vm_hsave_pa, MmGetPhysicalAddress(&core_data->host_save_area).QuadPart);
 
 	__svm_vmsave(core_data->host_vmcb_physicaladdr);
+}
+
+bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
+{
+	if (cs_attribute.fields.long_mode == 1)
+	{
+		DbgPrint("Long mode enabled\n");
+	}
+	else
+	{
+		DbgPrint("Long mode disabled\n");
+
+	}
+
+	EFER_MSR efer_msr = { 0 };
+
+	efer_msr.value = __readmsr(MSR::efer);
+
+	if (efer_msr.svme == (uint32_t)0)
+	{
+		DbgPrint("SVME is %p, invalid state! \n", efer_msr.svme);
+		return false;
+	}
+
+	if ((efer_msr.reserved2 != 0) || (efer_msr.reserved3 != 0) || (efer_msr.reserved4 != 0))
+	{
+		DbgPrint("MBZ bit of EFER is set, Invalid state! \n");
+		return false;
+	}
+
+	CR0	cr0;
+	cr0.Flags = __readcr0();
+
+	if ((cr0.CacheDisable == 0) && (cr0.NotWriteThrough == 1))
+	{
+		DbgPrint("CR0.CD is zero and CR0.NW is set. \n");
+		return false;
+	}
+
+	if (cr0.Reserved4 != 0)
+	{
+		DbgPrint("CR0[63:32] are not zero. \n");
+		return false;
+	}
+
+	RFLAGS rflags;
+	rflags.Flags = __readeflags();
+
+	CR3	cr3;
+	CR4	cr4;
+
+	cr3.Flags = __readcr3();
+	cr4.Flags = __readcr4();
+
+	//cr4.Flags &= ~(1UL << 23);
+	__writecr4(cr4.Flags);
+
+	if (rflags.Virtual8086ModeFlag == 1 && ((cr4.Flags << 23) & 1))
+	{
+		DbgPrint("CR4.CET=1 and U_CET.SS=1 when EFLAGS.VM=1 \n");
+	}
+
+	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
+		|| (cr4.Reserved2 != 0) || (cr4.Reserved3 != 0) || (cr4.Reserved4 != 0))
+	{
+		DbgPrint("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
+
+		cr3.Reserved1 = 0;
+		cr3.Reserved2 = 0;
+		cr4.Reserved1 = 0;
+		cr4.Reserved2 = 0;
+		cr4.Reserved3 = 0;
+		cr4.Reserved4 = 0;
+
+
+		__writecr3(cr3.Flags);
+		__writecr4(cr4.Flags);
+	}
+
+	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
+		|| (cr4.Reserved2 != 0) || (cr4.Reserved3 != 0) || (cr4.Reserved4 != 0))
+	{
+		DbgPrint("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
+		return false;
+	}
+
+	DR6	dr6;
+	DR7 dr7;
+
+	dr6.Flags = __readdr(6);
+	dr7.Flags = __readdr(7);
+
+	if ((dr6.Flags & (0xFFFFFFFF00000000)) || (dr7.Reserved4 != 0))
+	{
+		DbgPrint("dr6 reserved bits aren't 0. Invalid state \n");
+
+		dr6.Reserved2 = NULL;
+		dr7.Reserved4 = NULL;
+	}
+
+	__writedr(6, dr6.Flags);
+	__writedr(7, dr7.Flags);
+
+	if ((dr6.Flags & (0xFFFFFFFF00000000)) || (dr7.Reserved4 != 0))
+	{
+		DbgPrint("DR6[63:32] are not zero, or DR7[63:32] are not zero.Invalid State!\n");
+		return false;
+	}
+
+	if (cr0.PagingEnable == 0)
+	{
+		DbgPrint("Paging disabled, Invalid state! \n");
+		return false;
+	}
+
+	if (efer_msr.long_mode_enable == 1 && cr0.PagingEnable == 1)
+	{
+		if (cr4.PhysicalAddressExtension == 0)
+		{
+			Logger::Get()->Get()->Log("EFER.LME and CR0.PG are both set and CR4.PAE is zero, Invalid state! \n");
+			return false;
+		}
+
+		if (cr0.ProtectionEnable == 0)
+		{
+			Logger::Get()->Get()->Log("EFER.LME and CR0.PG are both non-zero and CR0.PE is zero, Invalid state! \n");
+			return false;
+		}
+	}
+
+	if (guest_vmcb->control_area.guest_asid == 0)
+	{
+		DbgPrint("ASID is equal to zero. Invalid guest state \n");
+		return false;
+	}
+
+	if (!guest_vmcb->control_area.intercept_vec4.intercept_vmrun)
+	{
+		DbgPrint("The VMRUN intercept bit is clear. Invalid state! \n");
+		return false;
+	}
+
+	DbgPrint("consistency checks passed guest_vmcb at %p \n", guest_vmcb);
+
+	return true;
+
+	/*	to do: msr and IOIO map address checks, and some more. */
 }
 
 bool IsSvmSupported()
@@ -274,9 +391,9 @@ bool IsSvmSupported()
 
 bool IsSvmUnlocked()
 {
-	MsrVmcr	msr;
-	msr.value = __readmsr(MSR::vm_cr);
+	VM_CR_MSR	msr;
 
+	msr.value = __readmsr(MSR::vm_cr);
 
 	if (msr.svm_lock == 0)
 	{

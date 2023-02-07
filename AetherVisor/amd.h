@@ -73,19 +73,19 @@ static_assert(sizeof(EFER_MSR) == 8, "EFER MSR Size Mismatch");
 
 
 /*	 Core::X86::Msr::APIC_BAR	*/
-struct ApicBarMsr
+struct APIC_BAR_MSR
 {
     union
     {
         uint64_t value;
         struct
         {
-            uint64_t Reserved1 : 8;           // [0:7]
-            uint64_t BootstrapProcessor : 1;  // [8]
-            uint64_t Reserved2 : 1;           // [9]
-            uint64_t EnableX2ApicMode : 1;    // [10]
-            uint64_t EnableXApicGlobal : 1;   // [11]
-            uint64_t ApicBase : 24;           // [12:35]
+            uint64_t reserved1 : 8;           // [0:7]
+            uint64_t bootstrap_processor : 1;  // [8]
+            uint64_t reserved2 : 1;           // [9]
+            uint64_t x2apic_mode : 1;    // [10]
+            uint64_t xapic_global : 1;   // [11]
+            uint64_t apic_base : 24;           // [12:35]
         };
     };
 };
@@ -93,7 +93,7 @@ struct ApicBarMsr
 
 
 /*	 Core::X86::MSR::vm_cr	*/
-union MsrVmcr
+union VM_CR_MSR
 {
     struct 
     {
@@ -199,3 +199,5 @@ union AddressTranslationHelper
 
     uint64_t as_int64;
 };
+
+extern "C" void _sgdt(void* Descriptor);
