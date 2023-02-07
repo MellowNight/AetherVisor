@@ -27,7 +27,6 @@ bool VirtualizeAllProcessors()
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[shadow], PTEAccess{ true, true, false });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox], PTEAccess{ true, true, false });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[sandbox_single_step], PTEAccess{ true, true, true });
-    
 
 	Hypervisor::Get()->core_count = KeQueryActiveProcessorCount(0);
 
@@ -41,9 +40,9 @@ bool VirtualizeAllProcessors()
 		DbgPrint("[SETUP] amount of active processors %i \n", Hypervisor::Get()->core_count);
 		DbgPrint("[SETUP] Currently running on core %i \n", idx);
 
-		auto reg_context = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
+		auto register_ctx = (CONTEXT*)ExAllocatePoolZero(NonPagedPool, sizeof(CONTEXT), 'Cotx');
 
-		RtlCaptureContext(reg_context);
+		RtlCaptureContext(register_ctx);
 
 		if (Hypervisor::Get()->IsCoreVirtualized(idx) == false)
 		{
@@ -53,11 +52,9 @@ bool VirtualizeAllProcessors()
 
 			vcpu_data[idx] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
 
-			ConfigureProcessor(vcpu_data[idx], reg_context);
+			ConfigureProcessor(vcpu_data[idx], register_ctx);
 
-			SegmentAttribute cs_attrib;
-
-			cs_attrib = vcpu_data[idx]->guest_vmcb.save_state_area.cs_attrib;
+			auto cs_attrib = vcpu_data[idx]->guest_vmcb.save_state_area.cs_attrib;
 
 			if (IsCoreReadyForVmrun(&vcpu_data[idx]->guest_vmcb, cs_attrib))
 			{
@@ -76,7 +73,6 @@ bool VirtualizeAllProcessors()
 			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 		}
 	}
-
 
 	NptHooks::CleanupOnProcessExit();
 }

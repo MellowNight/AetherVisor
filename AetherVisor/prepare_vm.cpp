@@ -24,93 +24,6 @@ SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_b
 	return attribute;
 }
 
-
-
-
-//void ConfigureProcessor(VcpuData* vcpu, CONTEXT* context_record)
-//{
-//	vcpu->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&vcpu->guest_vmcb).QuadPart;
-//	vcpu->host_vmcb_physicaladdr = MmGetPhysicalAddress(&vcpu->host_vmcb).QuadPart;
-//
-//	vcpu->self = vcpu;
-//
-//	vcpu->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
-//	vcpu->guest_vmcb.control_area.np_enable = (1UL << 0);
-//	vcpu->guest_vmcb.control_area.lbr_virtualization_enable |= (1UL << 0);
-//
-//	DescriptorTableRegister	gdtr, idtr;
-//
-//	_sgdt(&gdtr);
-//	__sidt(&idtr);
-//
-//	InterceptVector4 intercept_vector4;
-//
-//	intercept_vector4.intercept_vmmcall = 1;
-//	intercept_vector4.intercept_vmrun = 1;
-//
-//	vcpu->guest_vmcb.control_area.intercept_vec4 = intercept_vector4.as_int32;
-//
-//	InterceptVector2 intercept_vector2 = { 0 };
-//
-//	intercept_vector2.intercept_bp = 1;
-//	intercept_vector2.intercept_db = 1;
-//
-//	vcpu->guest_vmcb.control_area.intercept_exception = intercept_vector2.as_int32;
-//
-//	/*	intercept MSR access	*/
-//	
-//	vcpu->guest_vmcb.control_area.intercept_vec3 |= (1UL << 28);
-//
-//	vcpu->guest_vmcb.control_area.guest_asid = 1;
-//
-//	vcpu->guest_vmcb.save_state_area.cr0.Flags = __readcr0();
-//	vcpu->guest_vmcb.save_state_area.cr2 = __readcr2();
-//	vcpu->guest_vmcb.save_state_area.cr3.Flags = __readcr3();
-//	vcpu->guest_vmcb.save_state_area.cr4.Flags = __readcr4();
-//
-//	vcpu->guest_vmcb.save_state_area.rip = context_record->Rip;
-//	vcpu->guest_vmcb.save_state_area.rax = context_record->Rax;
-//	vcpu->guest_vmcb.save_state_area.rsp = context_record->Rsp;
-//
-//	vcpu->guest_vmcb.save_state_area.efer.flags = __readmsr(MSR::efer);
-//	vcpu->guest_vmcb.save_state_area.guest_pat = __readmsr(MSR::pat);
-//
-//	vcpu->guest_vmcb.save_state_area.gdtr_limit = gdtr.limit;
-//	vcpu->guest_vmcb.save_state_area.gdtr_base = gdtr.base;
-//	vcpu->guest_vmcb.save_state_area.idtr_limit = idtr.limit;
-//	vcpu->guest_vmcb.save_state_area.idtr_base = idtr.base;
-//
-//	vcpu->guest_vmcb.save_state_area.cs_limit = GetSegmentLimit(context_record->SegCs);
-//	vcpu->guest_vmcb.save_state_area.ds_limit = GetSegmentLimit(context_record->SegDs);
-//	vcpu->guest_vmcb.save_state_area.es_limit = GetSegmentLimit(context_record->SegEs);
-//	vcpu->guest_vmcb.save_state_area.ss_limit = GetSegmentLimit(context_record->SegSs);
-//	
-//	vcpu->guest_vmcb.save_state_area.cs_selector = context_record->SegCs;
-//	vcpu->guest_vmcb.save_state_area.ds_selector = context_record->SegDs;
-//	vcpu->guest_vmcb.save_state_area.es_selector = context_record->SegEs;
-//	vcpu->guest_vmcb.save_state_area.ss_selector = context_record->SegSs;
-//
-//	vcpu->guest_vmcb.save_state_area.rflags.Flags = __readeflags();
-//	vcpu->guest_vmcb.save_state_area.dr7.Flags = __readdr(7);
-//	vcpu->guest_vmcb.save_state_area.dbg_ctl.Flags = __readmsr(IA32_DEBUGCTL);
-//
-//	vcpu->guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base);
-//	vcpu->guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base);
-//	vcpu->guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base);
-//	vcpu->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base);
-//
-//	SetupMSRPM(vcpu);
-//
-//	// SetupTssIst();
-//	
-//	__svm_vmsave(vcpu->guest_vmcb_physicaladdr);
-//
-//	__writemsr(vm_hsave_pa, MmGetPhysicalAddress(&vcpu->host_save_area).QuadPart);
-//
-//	__svm_vmsave(vcpu->host_vmcb_physicaladdr);
-//}
-//
-
 void SetupMSRPM(VcpuData* core_data)
 {
 	size_t bits_per_msr = 16000 / 8000;
@@ -154,15 +67,17 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 
 	core_data->guest_vmcb.control_area.intercept_vec4 = intercept_vector4;
 
-	//InterceptVector2 intercept_vector2;
+	InterceptVector2 intercept_vector2;
 
-	//intercept_vector2.intercept_pf = 1;
-	// intercept_vector2.intercept_bp = 1;
+	intercept_vector2.intercept_bp = 1;
+	intercept_vector2.intercept_db = 1;
+	intercept_vector2.intercept_ud = 1;
 
 	/*	intercept MSR access	*/
+
 	core_data->guest_vmcb.control_area.intercept_vec3 |= (1UL << 28);
 
-	//core_data->guest_vmcb.control_area.intercept_exception = intercept_vector2.as_int32;
+	core_data->guest_vmcb.control_area.intercept_exception = intercept_vector2;
 
 	core_data->guest_vmcb.control_area.guest_asid = 1;
 
@@ -199,8 +114,6 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base);
 
 	SetupMSRPM(core_data);
-
-	// SetupTssIst();
 
 	__svm_vmsave(core_data->guest_vmcb_physicaladdr);
 
