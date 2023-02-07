@@ -163,11 +163,11 @@ typedef struct VmcbSaveStateArea
     uint8_t reserved1[0x0cb - 0x0a0];     // +0x0a0
     uint8_t cpl;                          // +0x0cb
     uint32_t reserved2;                   // +0x0cc
-    uint64_t efer;                        // +0x0d0
+    EFER_MSR efer;                        // +0x0d0
     uint8_t reserved3[0x148 - 0x0d8];     // +0x0d8
-    uint64_t cr4;                         // +0x148
-    uint64_t cr3;                         // +0x150
-    uint64_t cr0;                         // +0x158
+    CR4 cr4;                         // +0x148
+    CR3 cr3;                         // +0x150
+    CR0 cr0;                         // +0x158
     DR7 dr7;                         // +0x160
     DR6 dr6;                         // +0x168
     RFLAGS rflags;                      // +0x170
@@ -192,7 +192,9 @@ typedef struct VmcbSaveStateArea
     uint64_t br_to;                        // +0x280
     uint64_t last_excep_from;               // +0x288
     uint64_t last_excep_to;                 // +0x290
+    uint8_t reserved7[0x7C8 - 0x298];
 };
+static_assert(sizeof(VmcbSaveStateArea) == 0x7C8, "VmcbSaveStateArea Size Mismatch");
 
 /*  must be 4KB aligned     */
 

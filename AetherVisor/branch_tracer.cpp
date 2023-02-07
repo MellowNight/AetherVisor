@@ -29,7 +29,7 @@ namespace BranchTracer
 	{
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vcpu->guest_vmcb.save_state_area.cr3);
+		__writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
 
 		initialized = true;
 		range_base = trace_range_base;
@@ -37,7 +37,7 @@ namespace BranchTracer
 
 		log_buffer = (BranchLog*)out_buffer;
 
-		is_system = (vcpu->guest_vmcb.save_state_area.cr3 == __readcr3()) ? true : false;
+		is_system = (vcpu->guest_vmcb.save_state_area.cr3.Flags == __readcr3()) ? true : false;
 
 		// DbgPrint("log_buffer  = %p \n", log_buffer);
 
@@ -68,7 +68,7 @@ namespace BranchTracer
 
 	void Start(VcpuData* vcpu)
 	{
-		process_cr3.Flags = vcpu->guest_vmcb.save_state_area.cr3;
+		process_cr3.Flags = vcpu->guest_vmcb.save_state_area.cr3.Flags;
 		thread_id = PsGetCurrentThreadId();
 
 		if (stop_address == NULL)

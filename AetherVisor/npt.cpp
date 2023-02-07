@@ -40,7 +40,7 @@ bool HandleSplitInstruction(VcpuData* vcpu, uintptr_t guest_rip, PHYSICAL_ADDRES
 			switch_ncr3 = false;
 		}
 
-		auto guest_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
+		auto guest_cr3 = vcpu->guest_vmcb.save_state_area.cr3.Flags;
 
 		auto page1_physical = faulting_physical.QuadPart;
 		auto page2_physical = Utils::GetPte((void*)(guest_rip + insn_len), guest_cr3)->PageFrameNumber << PAGE_SHIFT;
@@ -127,7 +127,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 		{
 			/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
-			auto is_system_page = (guest_vmcb.save_state_area.cr3	 == __readcr3()) ? true : false;
+			auto is_system_page = (guest_vmcb.save_state_area.cr3.Flags	 == __readcr3()) ? true : false;
 
 			Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute, is_system_page);
 		}
@@ -286,7 +286,7 @@ uintptr_t BuildNestedPagingTables(uintptr_t* ncr3, PTEAccess flags)
 
 	ApicBarMsr apic_bar;
 
-	apic_bar.Flags = __readmsr(MSR::apic_bar);
+	apic_bar.value = __readmsr(MSR::apic_bar);
 
 	AssignNptEntry(npml4_virtual, apic_bar.ApicBase << PAGE_SHIFT, flags);
 

@@ -6,7 +6,7 @@ void VcpuData::BreakpointHandler(GuestRegisters* guest_ctx)
 {
     auto vmroot_cr3 = __readcr3();
 
-    __writecr3(guest_vmcb.save_state_area.cr3);
+    __writecr3(guest_vmcb.save_state_area.cr3.Flags);
 
     auto guest_rip = guest_vmcb.save_state_area.rip;
 

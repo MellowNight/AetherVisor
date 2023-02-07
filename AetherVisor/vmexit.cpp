@@ -95,7 +95,7 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
     if (end_hypervisor)
     {
         // 1. Load guest CR3 context
-        __writecr3(vcpu->guest_vmcb.save_state_area.cr3);
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
 
         // 2. Load guest hidden context
         __svm_vmload(vcpu->guest_vmcb_physicaladdr);
@@ -106,13 +106,13 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
         // 4. Disable interrupt flag in EFLAGS (to safely disable SVM)
         _disable();
 
-        MsrEfer msr;
+        EFER_MSR msr;
 
-        msr.flags = __readmsr(MSR::efer);
+        msr.value = __readmsr(MSR::efer);
         msr.svme = 0;
 
         // 5. disable SVM
-        __writemsr(MSR::efer, msr.flags);
+        __writemsr(MSR::efer, msr.value);
 
         // 6. load the guest value of EFLAGS
         __writeeflags(vcpu->guest_vmcb.save_state_area.rflags.Flags);

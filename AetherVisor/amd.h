@@ -26,7 +26,7 @@ struct SegmentDescriptor
 {
     union
     {
-        uint64_t flags;
+        uint64_t value;
         struct
         {
             uint16_t LimitLow;        // [0:15]
@@ -45,42 +45,39 @@ struct SegmentDescriptor
         };
     };
 };
-static_assert(sizeof(SegmentDescriptor) == 8,
-    "SEGMENT_DESCRIPTOR Size Mismatch");
+static_assert(sizeof(SegmentDescriptor) == 8, "SegmentDescriptor Size Mismatch");
 
 
 /*	Core::X86::MSR::efer	*/
-struct  MsrEfer
+
+union EFER_MSR
 {
-    union 
+    struct 
     {
-        __int64	flags;
-        struct
-        {
-            uint32_t    syscall : 1;
-            uint32_t    reserved : 7;
-            uint32_t    long_mode_enable : 1;
-            uint32_t    reserved2 : 1;
-            uint32_t    long_mode_active : 1;
-            uint32_t    nxe : 1;
-            uint32_t    svme : 1;
-            uint32_t    lmsle : 1;
-            uint32_t    ffxse : 1;
-            uint32_t    tce : 1;
-            uint32_t    reserved3 : 1;
-            uint32_t    m_commit : 1;
-            uint32_t    intwb : 1;
-            __int64	 reserved4 : 45;
-        };
+        uint64_t syscall : 1;
+        uint64_t reserved1 : 7;
+        uint64_t long_mode_enable : 1;
+        uint64_t reserved2 : 1;
+        uint64_t long_mode_active : 1;
+        uint64_t nx_page : 1;
+        uint64_t svme : 1;
+        uint64_t lmsle : 1;
+        uint64_t ffxse : 1;
+        uint64_t reserved3 : 1;
+        uint64_t reserved4 : 47;
     };
+    uint64_t value;
 };
+
+static_assert(sizeof(EFER_MSR) == 8, "EFER MSR Size Mismatch");
+
 
 /*	 Core::X86::Msr::APIC_BAR	*/
 struct ApicBarMsr
 {
     union
     {
-        uint64_t Flags;
+        uint64_t value;
         struct
         {
             uint64_t Reserved1 : 8;           // [0:7]
@@ -108,7 +105,7 @@ union MsrVmcr
         int		reserved3 : 27;
         int		reserved4 : 32;
     };
-    int64_t	flags;
+    int64_t	value;
 };
 
 
@@ -120,7 +117,7 @@ union InterceptVector4
         int32_t  intercept_vmmcall : 1;  // Intercept VMMCALL
         int32_t  pad : 30;
     };
-    int32_t	as_int32;
+    int32_t	value;
 };
 static_assert(sizeof(InterceptVector4) == 0x4, "InterceptVector4 Size Mismatch");
 
@@ -140,7 +137,7 @@ struct SegmentAttribute
 {
     union
     {
-        uint16_t as_uint16;
+        uint16_t value;
         struct
         {
             uint16_t type : 4;        // [0:3]

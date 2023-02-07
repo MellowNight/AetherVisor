@@ -8,7 +8,7 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
 
     uintptr_t vmroot_cr3 = __readcr3();
 
-    __writecr3(guest_vmcb.save_state_area.cr3);
+    __writecr3(guest_vmcb.save_state_area.cr3.Flags);
 
     uint8_t insn_bytes[3] = { 0 };
 

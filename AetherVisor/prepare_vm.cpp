@@ -19,8 +19,8 @@ bool IsProcessorReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 
 	}
 
-	MsrEfer efer_msr = { 0 };
-	efer_msr.flags = __readmsr(MSR::efer);
+	EFER_MSR efer_msr = { 0 };
+	efer_msr.value = __readmsr(MSR::efer);
 
 	if (efer_msr.svme == (uint32_t)0)
 	{
@@ -185,7 +185,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	intercept_vector4.intercept_vmmcall = 1;
 	intercept_vector4.intercept_vmrun = 1;
 
-	core_data->guest_vmcb.control_area.intercept_vec4 = intercept_vector4.as_int32;
+	core_data->guest_vmcb.control_area.intercept_vec4 = intercept_vector4.value;
 
 	InterceptVector2 intercept_vector2 = {0};
 
@@ -196,16 +196,16 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	
 	core_data->guest_vmcb.control_area.guest_asid = 1;
 
-	core_data->guest_vmcb.save_state_area.cr0 = __readcr0();
+	core_data->guest_vmcb.save_state_area.cr0.Flags = __readcr0();
 	core_data->guest_vmcb.save_state_area.cr2 = __readcr2();
-	core_data->guest_vmcb.save_state_area.cr3 = __readcr3();
-	core_data->guest_vmcb.save_state_area.cr4 = __readcr4();
+	core_data->guest_vmcb.save_state_area.cr3.Flags = __readcr3();
+	core_data->guest_vmcb.save_state_area.cr4.Flags = __readcr4();
 
 	core_data->guest_vmcb.save_state_area.rip = context_record->Rip;
 	core_data->guest_vmcb.save_state_area.rax = context_record->Rax;
 	core_data->guest_vmcb.save_state_area.rsp = context_record->Rsp;
 	core_data->guest_vmcb.save_state_area.rflags.Flags = __readeflags();
-	core_data->guest_vmcb.save_state_area.efer = __readmsr(MSR::efer);
+	core_data->guest_vmcb.save_state_area.efer.value = __readmsr(MSR::efer);
 	core_data->guest_vmcb.save_state_area.guest_pat = __readmsr(MSR::pat);
 
 	core_data->guest_vmcb.save_state_area.gdtr_limit = gdtr.limit;
@@ -223,10 +223,10 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.es_selector = context_record->SegEs;
 	core_data->guest_vmcb.save_state_area.ss_selector = context_record->SegSs;
 
-	core_data->guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base).as_uint16;
-	core_data->guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base).as_uint16;
-	core_data->guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).as_uint16;
-	core_data->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).as_uint16;
+	core_data->guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base).value;
+	core_data->guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base).value;
+	core_data->guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base).value;
+	core_data->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base).value;
 
 	SetupMSRPM(core_data);
 
@@ -275,14 +275,14 @@ bool IsSvmSupported()
 bool IsSvmUnlocked()
 {
 	MsrVmcr	msr;
-	msr.flags = __readmsr(MSR::vm_cr);
+	msr.value = __readmsr(MSR::vm_cr);
 
 
 	if (msr.svm_lock == 0)
 	{
 		msr.svme_disable = 0;
 		msr.svm_lock = 1;
-		__writemsr(MSR::vm_cr, msr.flags);
+		__writemsr(MSR::vm_cr, msr.value);
 	}
 	else if (msr.svme_disable == 1)
 	{
@@ -294,8 +294,8 @@ bool IsSvmUnlocked()
 
 void EnableSvme()
 {
-	MsrEfer	msr;
-	msr.flags = __readmsr(MSR::efer);
+	EFER_MSR	msr;
+	msr.value = __readmsr(MSR::efer);
 	msr.svme = 1;
-	__writemsr(MSR::efer, msr.flags);
+	__writemsr(MSR::efer, msr.value);
 }

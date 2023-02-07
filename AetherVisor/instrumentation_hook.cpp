@@ -8,7 +8,7 @@ namespace Instrumentation
 	{
 		auto vmroot_cr3 = __readcr3();
 
-		__writecr3(vcpu->guest_vmcb.save_state_area.cr3);
+		__writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
 
 		auto guest_rip = vcpu->guest_vmcb.save_state_area.rip;
 

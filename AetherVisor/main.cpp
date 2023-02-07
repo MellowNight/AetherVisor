@@ -15,13 +15,12 @@ bool VirtualizeAllProcessors()
 		DbgPrint("[SETUP] SVM isn't supported on this processor! \n");
 		return false;
 	}
-
+	
 	if (!IsSvmUnlocked())
 	{
 		DbgPrint("[SETUP] SVM operation is locked off in BIOS! \n");
 		return false;
 	}
-	DbgPrint("[SETUP] asdasdasdasd %p \n", 00000);
 
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[primary], PTEAccess{ true, true, true });
 	BuildNestedPagingTables(&Hypervisor::Get()->ncr3_dirs[shadow], PTEAccess{ true, true, false });
@@ -57,7 +56,7 @@ bool VirtualizeAllProcessors()
 
 			SegmentAttribute cs_attrib;
 
-			cs_attrib.as_uint16 = vcpu_data[idx]->guest_vmcb.save_state_area.cs_attrib;
+			cs_attrib.value = vcpu_data[idx]->guest_vmcb.save_state_area.cs_attrib;
 
 			if (IsProcessorReadyForVmrun(&vcpu_data[idx]->guest_vmcb, cs_attrib))
 			{
