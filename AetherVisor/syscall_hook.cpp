@@ -5,6 +5,8 @@ namespace SyscallHook
 {
     void Init(VcpuData* vcpu, BOOLEAN EnableEFERSyscallHook)
     {
+        process_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
+
         if (EnableEFERSyscallHook)
         {
             vcpu->guest_vmcb.save_state_area.efer.syscall = FALSE;
@@ -22,6 +24,11 @@ namespace SyscallHook
 
     bool EmulateSysret(VcpuData* vcpu, GuestRegisters* guest_ctx)
     {
+        if (vcpu->guest_vmcb.save_state_area.cr3 != saved_cr3)
+        {
+            return false;
+        }
+
         vcpu->guest_vmcb.save_state_area.rip = guest_ctx->rcx;
 
         //
@@ -73,6 +80,11 @@ namespace SyscallHook
 
     bool EmulateSyscall(VcpuData* vcpu, GuestRegisters* guest_ctx)
     {
+        if (vcpu->guest_vmcb.save_state_area.cr3 != saved_cr3)
+        {
+            return false;
+        }
+
         uintptr_t guest_rip = vcpu->guest_vmcb.save_state_area.rip;
 
         ZydisDecodedOperand operands[5];

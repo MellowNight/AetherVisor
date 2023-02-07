@@ -1,5 +1,9 @@
 #include "aethervisor_test.h"
 
+/*	sandbox_test.cpp: Catch out-of-module executes/reads/writes from BEService.exe. 
+*	Let's find out what functions BEService uses to verify DLL certificates! 
+*/
+
 /*	log out-of-module function calls and jmps		*/
 
 void ExecuteHook(GuestRegisters* registers, void* return_address, void* o_guest_rip)

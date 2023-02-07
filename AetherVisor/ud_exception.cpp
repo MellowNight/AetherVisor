@@ -12,6 +12,7 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
 
     __writecr3(guest_vmcb.save_state_area.cr3.Flags);
 
+
     uint8_t insn_bytes[3] = { 0 };
 
     physical_mem->ReadVirtual((void*)guest_rip, insn_bytes, 3);
