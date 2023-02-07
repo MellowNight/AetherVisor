@@ -25,7 +25,6 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
             tls_saved_rsp = rsp;
             tls_saved_rip = rip;
             tls_thread_is_handling_syscall = true;
-          //  SyscallHook::Init(false);
             Instrumentation::InvokeHook(this, HOOK_ID::syscall);
         }
         else if (rsp == tls_saved_rsp && rip == tls_saved_rip)
