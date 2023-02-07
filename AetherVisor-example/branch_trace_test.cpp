@@ -38,11 +38,11 @@ void BranchTraceFinished()
 
 void BranchTraceTest()
 {
-	auto beclient = (uintptr_t)GetModuleHandle(L"BEClient.dll");
+	auto beservice = (uintptr_t)GetModuleHandle(L"BEService.exe");
 
 	AetherVisor::SetCallback(AetherVisor::branch_log_full, BranchLogFullHook);
 	AetherVisor::SetCallback(AetherVisor::branch_trace_finished, BranchTraceFinished);
 
 	BranchTracer::Trace(
-		(uint8_t*)GetModuleHandleA(NULL) + 0x1100, beclient, PeHeader(beclient)->OptionalHeader.SizeOfImage);
+		(uint8_t*)GetModuleHandleA(NULL) + 0x1100, beservice, PeHeader(beservice)->OptionalHeader.SizeOfImage);
 }

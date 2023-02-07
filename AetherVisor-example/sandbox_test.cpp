@@ -52,12 +52,12 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 void SandboxTest()
 {
-	auto beclient = (uintptr_t)GetModuleHandle(L"BEClient.dll");
+	auto beservice = (uintptr_t)GetModuleHandle(L"BEService.exe");
 
     AetherVisor::SetCallback(AetherVisor::sandbox_readwrite, ReadWriteHook);
 	AetherVisor::SetCallback(AetherVisor::sandbox_execute, ExecuteHook);
 
-	AetherVisor::Sandbox::SandboxRegion(beclient, PeHeader(beclient)->OptionalHeader.SizeOfImage);
+	AetherVisor::Sandbox::SandboxRegion(beservice, PeHeader(beservice)->OptionalHeader.SizeOfImage);
 
 	AetherVisor::Sandbox::DenyRegionAccess((void*)Global::dll_params->dll_base, Global::dll_params->dll_size, false);
 }

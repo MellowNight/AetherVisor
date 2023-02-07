@@ -2,13 +2,13 @@
 #include "aethervisor.h"
 #include "utils.h"
 
-void (*sandbox_execute_handler)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
+void (*sandbox_execute_event)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
 
-void (*sandbox_mem_access_handler)(GuestRegisters* registers, void* o_guest_rip);
+void (*sandbox_mem_access_event)(GuestRegisters* registers, void* o_guest_rip);
 
-void (*branch_log_full_handler)();
+void (*branch_log_full_event)();
 
-void (*branch_trace_finish_handler)();
+void (*branch_trace_finish_event)();
 
 void (*syscall_callback)();
 
@@ -25,16 +25,19 @@ namespace AetherVisor
 
     Callback instrumentation_hooks[] = {
         // Invoked when sandboxed code reads/writes from a page that denies read/write access.
-        {sandbox_readwrite, (void**)&sandbox_mem_access_handler, rw_handler_wrap},
+        {sandbox_readwrite, (void**)&sandbox_mem_access_event, rw_handler_wrap},
 
         // Invoked every time RIP leaves a sandbox memory region
-        {sandbox_execute, (void**)&sandbox_execute_handler, execute_handler_wrap},
+        {sandbox_execute, (void**)&sandbox_execute_event, execute_handler_wrap},
 
         // Invoked when branch trace buffer is full
-        {branch_log_full, (void**)&branch_log_full_handler, branch_log_full_handler_wrap},
+        {branch_log_full, (void**)&branch_log_full_event, branch_log_full_event_wrap},
 
         // Invoked when the branch tracer has reached the stop address
-        {branch_trace_finished, (void**)&branch_trace_finish_handler, branch_trace_finish_handler_wrap}
+        {branch_trace_finished, (void**)&branch_trace_finish_event, branch_trace_finish_event_wrap},
+
+        // EFER MSR Syscall hook handler
+        {syscall, (void**)&syscall_hook, syscall_hook_wrap}
     };
 
     void SetCallback(CALLBACK_ID handler_id, void* address)

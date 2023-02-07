@@ -20,14 +20,26 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
 
     if (rip_privilege == 3 && insn_bytes[0] == 0x0F && insn_bytes[1] == 0x05)
     {
+        if (!tls_thread_is_handling_syscall)
+        {
+            tls_saved_rsp = rsp;
+            tls_saved_rip = rip;
+            tls_thread_is_handling_syscall = true;
+          //  SyscallHook::Init(false);
+            Instrumentation::InvokeHook(this, HOOK_ID::syscall);
+        }
+        else if (rsp == tls_saved_rsp && rip == tls_saved_rip)
+        {
+            tls_thread_is_handling_syscall = false;
+        }
+        
         SyscallHook::EmulateSyscall(this, guest_ctx);
 
         return true;
     }
-    else if (rip_privilege == 0 && insn_bytes[0] == 0x48 &&
-        insn_bytes[1] == 0x0F && insn_bytes[2] == 0x07) 
+    else if (rip_privilege == 0 && insn_bytes[0] == 0x48 && 
+            insn_bytes[1] == 0x0F && insn_bytes[2] == 0x07) 
     {
-
         SyscallHook::EmulateSysret(this, guest_ctx);
 
         return true;

@@ -10,18 +10,18 @@ void StartTests()
 
 	Utils::Log("Symbols::GetSymFromAddr((uintptr_t)GetProcAddress); %s \n", Symbols::GetSymFromAddr((uintptr_t)GetProcAddress).c_str());
 
-	/*	Sandbox all BEClient.dll pages 	*/
+	/*	Sandbox all BEService.exe pages 	*/
 
-	uintptr_t beclient = NULL;
+	uintptr_t beservice = NULL;
 
-	while (!beclient)
+	while (!beservice)
 	{
 		Sleep(500);
-		beclient = (uintptr_t)GetModuleHandle(L"BEClient.dll");
+		beservice = (uintptr_t)GetModuleHandle(L"BEService.exe");
 	}
 
 	SandboxTest();
-	BranchTraceTest();
-	NptHookTest();
+	//BranchTraceTest();
+	//NptHookTest();
 	EferSyscallHookTest();
 }

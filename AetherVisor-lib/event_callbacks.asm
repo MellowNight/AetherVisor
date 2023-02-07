@@ -1,7 +1,8 @@
-extern sandbox_execute_handler : qword
-extern sandbox_mem_access_handler : qword
-extern branch_log_full_handler : qword
-extern branch_trace_finish_handler : qword
+extern sandbox_execute_event : qword
+extern sandbox_mem_access_event : qword
+extern branch_log_full_event : qword
+extern branch_trace_finish_event : qword
+extern syscall_hook : qword
 
 .code
 
@@ -53,7 +54,7 @@ execute_handler_wrap proc frame
     mov rdx, [rsp + 8 * 16 + 8]       ; pass the return address
     mov r8, [rsp + 8 * 16]    ; pass the original guest RIP
     
-    call sandbox_execute_handler
+    call sandbox_execute_event
 
     POPAQ
 
@@ -70,7 +71,7 @@ rw_handler_wrap proc frame
     mov rcx, rsp                ; pass the registers
     mov rdx, [rsp + 8 * 16]     ; pass the original guest RIP
     
-    call sandbox_mem_access_handler
+    call sandbox_mem_access_event
 
     POPAQ
 
@@ -78,32 +79,47 @@ rw_handler_wrap proc frame
 	
 rw_handler_wrap endp
 
-branch_log_full_handler_wrap proc frame
+branch_log_full_event_wrap proc frame
 	
     .endprolog
 
     PUSHAQ
     
-    call branch_log_full_handler
+    call branch_log_full_event
 
     POPAQ
 
     ret
 	
-branch_log_full_handler_wrap endp
+branch_log_full_event_wrap endp
 
-branch_trace_finish_handler_wrap proc frame
+branch_trace_finish_event_wrap proc frame
 	
     .endprolog
 
     PUSHAQ
     
-    call branch_trace_finish_handler
+    call branch_trace_finish_event
 
     POPAQ
 
     ret
 	
-branch_trace_finish_handler_wrap endp
+branch_trace_finish_event_wrap endp
+
+syscall_hook_wrap proc frame
+	
+    .endprolog
+
+    PUSHAQ
+    
+    call syscall_hook
+
+    POPAQ
+
+    ret
+	
+syscall_hook_wrap endp
+
 
 end

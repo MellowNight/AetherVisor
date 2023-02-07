@@ -4,7 +4,7 @@ namespace Instrumentation
 {
 	void* callbacks[4];
 
-	bool InvokeHook(VcpuData* vcpu, HOOK_ID handler, bool is_kernel)
+	bool InvokeHook(VcpuData* vcpu, HOOK_ID handler)
 	{
 		auto vmroot_cr3 = __readcr3();
 
@@ -12,7 +12,7 @@ namespace Instrumentation
 
 		auto guest_rip = vcpu->guest_vmcb.save_state_area.rip;
 
-		DbgPrint("guest_rip %p is_kernel %i \n", guest_rip, is_kernel);
+		DbgPrint("guest_rip %p \n", guest_rip);
 
 		int callback_cpl = ((uintptr_t)callbacks[handler] > 0x7FFFFFFFFFFF) ? 3 : 0;
 
