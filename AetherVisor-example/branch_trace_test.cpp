@@ -12,11 +12,11 @@ void BranchLogFullHook()
 {
 	Utils::Log(
 		"BranchLogFullHook(), AetherVisor::log_buffer->info.buffer 0x%p, AetherVisor::log_buffer->info.buffer_idx %i \n",
-		BranchTracer::log_buffer->info.buffer, BranchTracer::log_buffer->info.buffer_idx
+		log_buffer->info.buffer, log_buffer->info.buffer_idx
 	);
 
-	traced_branches.insert(traced_branches.end(), BranchTracer::log_buffer->info.buffer,
-		BranchTracer::log_buffer->info.buffer + BranchTracer::log_buffer->info.buffer_idx);
+	traced_branches.insert(traced_branches.end(), log_buffer->info.buffer,
+		log_buffer->info.buffer + log_buffer->info.buffer_idx);
 }
 
 void BranchTraceFinished()
