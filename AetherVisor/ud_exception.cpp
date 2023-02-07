@@ -20,6 +20,8 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
 
     if (rip_privilege == 3 && insn_bytes[0] == 0x0F && insn_bytes[1] == 0x05)
     {
+        /*  prevent infinite loops caused by syscalling from a syscall hook */
+
         if (!tls_thread_is_handling_syscall)
         {
             tls_saved_rsp = rsp;
