@@ -10,7 +10,7 @@ void (*branch_log_full_event)();
 
 void (*branch_trace_finish_event)();
 
-void (*syscall_callback)();
+void (*syscall_hook)(GuestRegisters* registers, void* guest_rip);
 
 /*  vmmcall parameter order: rcx, rdx, r8, r9, r12, r11  */
 
@@ -37,7 +37,7 @@ namespace AetherVisor
         {branch_trace_finished, (void**)&branch_trace_finish_event, branch_trace_finish_event_wrap},
 
         // EFER MSR Syscall hook handler
-        {branch_trace_finished, (void**)&branch_trace_finish_event, branch_trace_finish_event_wrap}
+        {syscall, (void**)&branch_trace_finish_event, branch_trace_finish_event_wrap}
     };
 
     void SetCallback(CALLBACK_ID handler_id, void* address)

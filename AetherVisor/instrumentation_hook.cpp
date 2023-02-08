@@ -2,9 +2,9 @@
 
 namespace Instrumentation
 {
-	void* callbacks[4];
+	void* callbacks[max_id];
 
-	bool InvokeHook(VcpuData* vcpu, HOOK_ID handler)
+	bool InvokeHook(VcpuData* vcpu, CALLBACK_ID handler)
 	{
 		auto vmroot_cr3 = __readcr3();
 

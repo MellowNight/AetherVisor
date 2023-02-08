@@ -39,7 +39,7 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
             {
                 BranchTracer::Stop(this);
 
-                Instrumentation::InvokeHook(this, Instrumentation::branch_trace_finished, false);
+                Instrumentation::InvokeHook(this, Instrumentation::branch_trace_finished);
             }
 
             return;
@@ -55,7 +55,7 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
             DbgPrint("Finished single stepping %p \n", guest_vmcb.save_state_area.rip);
 
-            Instrumentation::InvokeHook(this, Instrumentation::sandbox_readwrite, false);
+            Instrumentation::InvokeHook(this, Instrumentation::sandbox_readwrite);
         }
     }
     else

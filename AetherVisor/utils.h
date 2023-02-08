@@ -54,4 +54,6 @@ namespace Utils
         int (*page_table_callback)(PT_ENTRY_64*, void*) = NULL, 
         void* callback_data = NULL
     );
+
+    uintptr_t* GetTlsPtr(uintptr_t gs_base, uint32_t tls_index);
 }

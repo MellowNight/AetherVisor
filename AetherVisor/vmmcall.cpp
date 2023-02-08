@@ -102,9 +102,7 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     }
     case VMMCALL_ID::hook_efer_syscall:
     {
-        SyscallHook::Init(this, TRUE);
-
-
+        SyscallHook::Init(this, TRUE, guest_ctx->rdx);
 
         break;
     }

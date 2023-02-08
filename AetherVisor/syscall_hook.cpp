@@ -1,11 +1,20 @@
 #include "syscall_hook.h"
 #include "disassembly.h"
+#include "instrumentation_hook.h"
 
 namespace SyscallHook
 {
-    void Init(VcpuData* vcpu, BOOLEAN EnableEFERSyscallHook)
+    CR3 process_cr3;
+
+    uint32_t tls_index;
+
+    uintptr_t captured_rsp;
+    uintptr_t captured_rip;
+
+    void Init(VcpuData* vcpu, BOOLEAN EnableEFERSyscallHook, uint32_t _tls_index)
     {
         process_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
+        tls_index = _tls_index;
 
         if (EnableEFERSyscallHook)
         {
@@ -24,7 +33,7 @@ namespace SyscallHook
 
     bool EmulateSysret(VcpuData* vcpu, GuestRegisters* guest_ctx)
     {
-        if (vcpu->guest_vmcb.save_state_area.cr3 != saved_cr3)
+        if (vcpu->guest_vmcb.save_state_area.cr3.Flags != process_cr3.Flags)
         {
             return false;
         }
@@ -80,9 +89,29 @@ namespace SyscallHook
 
     bool EmulateSyscall(VcpuData* vcpu, GuestRegisters* guest_ctx)
     {
-        if (vcpu->guest_vmcb.save_state_area.cr3 != saved_cr3)
+        if (vcpu->guest_vmcb.save_state_area.cr3.Flags != process_cr3.Flags)
         {
             return false;
+        }
+
+        /*  prevent infinite loops caused by syscalling from a syscall hook handler */
+
+        auto tls_ptr = Utils::GetTlsPtr(vcpu->guest_vmcb.save_state_area.gs_base, tls_index);
+
+        if (!*tls_ptr)
+        {
+            captured_rsp = vcpu->guest_vmcb.save_state_area.rsp;
+            captured_rip = vcpu->guest_vmcb.save_state_area.rip;
+
+            *tls_ptr = TRUE;
+
+            Instrumentation::InvokeHook(vcpu, Instrumentation::syscall);
+        }
+        else if (
+            vcpu->guest_vmcb.save_state_area.rsp == captured_rsp &&
+            vcpu->guest_vmcb.save_state_area.rip == captured_rip)
+        {
+            *tls_ptr = FALSE;
         }
 
         uintptr_t guest_rip = vcpu->guest_vmcb.save_state_area.rip;

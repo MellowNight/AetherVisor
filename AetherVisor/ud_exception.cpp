@@ -21,20 +21,6 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
 
     if (rip_privilege == 3 && insn_bytes[0] == 0x0F && insn_bytes[1] == 0x05)
     {
-        /*  prevent infinite loops caused by syscalling from a syscall hook */
-
-        if (!tls_thread_is_handling_syscall)
-        {
-            tls_saved_rsp = rsp;
-            tls_saved_rip = rip;
-            tls_thread_is_handling_syscall = true;
-            Instrumentation::InvokeHook(this, HOOK_ID::syscall);
-        }
-        else if (rsp == tls_saved_rsp && rip == tls_saved_rip)
-        {
-            tls_thread_is_handling_syscall = false;
-        }
-        
         SyscallHook::EmulateSyscall(this, guest_ctx);
 
         return true;
@@ -48,6 +34,8 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
     }
 
     __writecr3(vmroot_cr3);
+
+
 
     return false;
 }
