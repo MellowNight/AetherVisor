@@ -21,16 +21,12 @@ void BranchLogFullHook()
 
 void BranchTraceFinished()
 {
-	Utils::Log("BranchTraceFinished(), dumping branch trace to file! \n");
+	std::cout << "Finished tracing Foo()! dumping branch log! \n";
 
 	for (auto entry : traced_branches)
 	{
-		Utils::LogToFile(LOG_FILE, "branch %s -> %s", 
-			AddressInfo{ (void*)entry.branch_address }.Format().c_str(),
-			AddressInfo{ (void*)entry.branch_target }.Format().c_str()
-		);
-
-		Utils::LogToFile(LOG_FILE, "\n");
+		std::cout << "branch " < AddressInfo{ (void*)entry.branch_address }.Format()
+			" -> " << AddressInfo{ (void*)entry.branch_target }.Format() << "\n";
 	}
 }
 
