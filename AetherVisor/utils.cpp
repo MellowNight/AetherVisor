@@ -13,13 +13,13 @@ namespace Utils
 
         if (tls_index < 64)
         {
-            result = (uintptr_t*)(gs_base + 8 * tls_index + 0x1480);
+result = (uintptr_t*)(gs_base + 8 * tls_index + 0x1480);
         }
         else
         {
-            auto tls_expansion_slots = *(uintptr_t*)(gs_base + 0x1780);
+        auto tls_expansion_slots = *(uintptr_t*)(gs_base + 0x1780);
 
-            result = (uintptr_t*)(tls_expansion_slots + 8 * (tls_index - 0x40));
+        result = (uintptr_t*)(tls_expansion_slots + 8 * (tls_index - 0x40));
         }
 
         return result;
@@ -27,8 +27,8 @@ namespace Utils
 
     void* PfnToVirtualAddr(uintptr_t pfn)
     {
-        PHYSICAL_ADDRESS pa; 
-        
+        PHYSICAL_ADDRESS pa;
+
         pa.QuadPart = pfn << PAGE_SHIFT;
 
         return MmGetVirtualForPhysical(pa);
@@ -41,8 +41,7 @@ namespace Utils
 
     PMDL LockPages(void* virtual_address, LOCK_OPERATION operation, KPROCESSOR_MODE access_mode, int size)
     {
-        PMDL mdl = IoAllocateMdl(
-            virtual_address, size, FALSE, FALSE, nullptr);
+        PMDL mdl = IoAllocateMdl(virtual_address, size, FALSE, FALSE, nullptr);
 
         MmProbeAndLockPages(mdl, KernelMode, operation);
 
@@ -92,10 +91,9 @@ namespace Utils
         {
             page_table_callback((PT_ENTRY_64*)pml4e, callback_data);
         }
-
         if (pml4e->Present == FALSE)
         {
-            return (PT_ENTRY_64*)pml4e;
+            return NULL;
         }
 
         PDPTE_64* pdpt;
@@ -110,9 +108,13 @@ namespace Utils
             page_table_callback((PT_ENTRY_64*)pdpte, callback_data);
         }
 
-        if ((pdpte->Present == FALSE) || (pdpte->LargePage != FALSE))
+        if ((pdpte->LargePage == TRUE))
         {
             return (PT_ENTRY_64*)pdpte;
+        }
+        else if (pdpte->Present == FALSE)
+        {
+            return NULL;
         }
 
         PDE_64* pd;
@@ -127,9 +129,13 @@ namespace Utils
             page_table_callback((PT_ENTRY_64*)pde, callback_data);
         }
 
-        if ((pde->Present == FALSE) || pde->LargePage == TRUE)
+        if (pde->LargePage == TRUE)
         {
             return (PT_ENTRY_64*)pde;
+        }
+        else if (pde->Present == FALSE)
+        {
+            return NULL;
         }
 
         PTE_64* pt;
@@ -142,6 +148,11 @@ namespace Utils
         if (page_table_callback)
         {
             page_table_callback((PT_ENTRY_64*)pte, callback_data);
+        }
+
+        if (pte->Present == FALSE)
+        {
+            return NULL;
         }
 
         return  (PT_ENTRY_64*)pte;

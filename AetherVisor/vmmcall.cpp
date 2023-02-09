@@ -15,6 +15,8 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
 {
     auto id = guest_ctx->rcx;
 
+    bool suppress_nrip_increment = false;
+
     switch (id)
     {
     case VMMCALL_ID::start_branch_trace:
@@ -82,8 +84,8 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     }
     case VMMCALL_ID::set_npt_hook:
     {
-        NptHooks::SetNptHook(this,
-            (void*)guest_ctx->rdx, (uint8_t*)guest_ctx->r8, guest_ctx->r9, guest_ctx->r12);
+        NptHooks::SetNptHook(this, (void*)guest_ctx->rdx, 
+            (uint8_t*)guest_ctx->r8, guest_ctx->r9, guest_ctx->r12, suppress_nrip_increment);
 
         break;
     }
@@ -113,5 +115,8 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     }
     }
 
-    guest_vmcb.save_state_area.rip = guest_vmcb.control_area.nrip;
+    if (suppress_nrip_increment == false)
+    {
+        guest_vmcb.save_state_area.rip = guest_vmcb.control_area.nrip;
+    }
 }

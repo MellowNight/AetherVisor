@@ -11,7 +11,6 @@ struct DllParams
 
 	int o_present_bytes_size;
 	uint8_t original_present_bytes[20];
-	wchar_t host_dll_name[120];
 };
 
 namespace Global

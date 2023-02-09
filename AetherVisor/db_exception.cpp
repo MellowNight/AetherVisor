@@ -44,18 +44,21 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
             return;
         }
-
-        /*  Transfer RIP to the instrumentation hook for read instructions.
-            Single-stepping mode => completely disabled
-        */
-
-        if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
+        else if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
         {
+            /*  Transfer RIP to the instrumentation hook for read instructions.
+                Single-stepping mode => completely disabled
+            */
+
             BranchTracer::Pause(this);
 
             DbgPrint("Finished single stepping %p \n", guest_vmcb.save_state_area.rip);
 
             Instrumentation::InvokeHook(this, Instrumentation::sandbox_readwrite);
+        }
+        else
+        {
+            InjectException(EXCEPTION_VECTOR::Debug, FALSE, 0);
         }
     }
     else
