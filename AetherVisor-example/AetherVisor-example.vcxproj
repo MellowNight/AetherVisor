@@ -148,7 +148,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="includes.h" />
-    <ClInclude Include="address_info.h" />
+    <ClInclude Include="address_format.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="portable_executable.h" />
     <ClInclude Include="shellcode.h" />

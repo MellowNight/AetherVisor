@@ -30,8 +30,6 @@
     <ClInclude Include="global.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="aethervisor_test.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dbg_symbols.h">
       <Filter>Header Files</Filter>
@@ -45,7 +43,7 @@
     <ClInclude Include="disassembly.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="address_info.h">
+    <ClInclude Include="address_format.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="shellcode.h">

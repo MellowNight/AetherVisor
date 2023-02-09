@@ -1,10 +1,13 @@
-#include "aethervisor_test.h"
+#pragma once
+#include "utils.h"
 
-/*  syscall_hook_test.cpp:  Log process-wide syscalls   */
+/*  test_syscall_hook.h:  Log process-wide syscalls   */
 
 void SyscallHandler(GuestRegisters* registers, void* guest_rip)
 {
-    // TODO: in the wrapper function, use TLS storage to signal that a syscall hook is already being executed.
+    // TODO: use TLS variable to signal that a syscall hook is already being executed.
+
+    
 }
 
 void EferSyscallHookTest()

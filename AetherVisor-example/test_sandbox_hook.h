@@ -1,8 +1,8 @@
-#include "aethervisor_test.h"
+#pragma once
+#include "utils.h"
 
-/*	sandbox_test.cpp: Catch out-of-module executes/reads/writes from BEService.exe. 
-*	Let's find out what functions BEService uses to verify DLL certificates! 
-*/
+/* test_sandbox_hook.h: Catch out-of-module executes/reads/writes from our exe. */
+
 
 /*	log out-of-module function calls and jmps		*/
 
@@ -18,6 +18,7 @@ void ExecuteHook(GuestRegisters* registers, void* return_address, void* o_guest_
 
 	Utils::Log("\n\n");
 }
+
 
 /*	log specific reads and writes		*/
 
@@ -56,12 +57,12 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 void SandboxTest()
 {
-	auto beservice = (uintptr_t)GetModuleHandle(L"BEService.exe");
+	auto module_base = (uintptr_t)GetModuleHandle(NULL);
 
     AetherVisor::SetCallback(AetherVisor::sandbox_readwrite, ReadWriteHook);
 	AetherVisor::SetCallback(AetherVisor::sandbox_execute, ExecuteHook);
 
-	AetherVisor::Sandbox::SandboxRegion(beservice, PeHeader(beservice)->OptionalHeader.SizeOfImage);
+	AetherVisor::Sandbox::SandboxRegion(module_base, PeHeader(module_base)->OptionalHeader.SizeOfImage);
 
 	AetherVisor::Sandbox::DenyRegionAccess((void*)Global::dll_params->dll_base, Global::dll_params->dll_size, false);
 }
