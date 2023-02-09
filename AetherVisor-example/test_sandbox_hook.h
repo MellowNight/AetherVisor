@@ -55,7 +55,7 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 void SandboxTest()
 {
-	auto module_base = (uintptr_t)GetModuleHandle(NULL);
+	
 
     AetherVisor::SetCallback(AetherVisor::sandbox_readwrite, ReadWriteHook);
 	AetherVisor::SetCallback(AetherVisor::sandbox_execute, ExecuteHook);
