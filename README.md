@@ -1,7 +1,7 @@
 AetherVisor: AMD-V memory hacking library
 =========
 
-AetherVisor is a minimalistic type-2 AMD hypervisor that provides a memory hacking interface.  
+AetherVisor is a minimalistic type-1 AMD hypervisor that provides a memory hacking interface.  
 
 Here's how AetherVisor's features are implemented: https://mellownight.github.io/2023/01/19/AetherVisor.html. 
 
