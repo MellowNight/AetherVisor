@@ -1,8 +1,8 @@
-#include "aethervisor_test.h"
+#pragma once
+#include "utils.h"
 
-/*	sandbox_test.cpp: Catch out-of-module executes/reads/writes from BEService.exe. 
-*	Let's find out what functions BEService uses to verify DLL certificates! 
-*/
+/* test_sandbox_hook.h: Catch out-of-module executes/reads/writes from our exe. */
+
 
 /*	log out-of-module function calls and jmps		*/
 
@@ -11,13 +11,12 @@ void ExecuteHook(GuestRegisters* registers, void* return_address, void* o_guest_
 	AddressInfo retaddr_info = { return_address };
 	AddressInfo rip_info = { o_guest_rip };
 
-	Utils::Log("[EXECUTE]\n");  
-	Utils::Log("return address = %s \n", retaddr_info.Format());
+	std::cout << "[EXECUTE] \n";  
+	std::cout << "return address = " << retaddr_info.Format() << "\n";
 
-	Utils::Log("RIP = %s \n", rip_info.Format());
-
-	Utils::Log("\n\n");
+	std::cout << "RIP = %s \n" << rip_info.Format() << "\n\n";
 }
+
 
 /*	log specific reads and writes		*/
 
@@ -29,8 +28,8 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 	auto instruction = Disasm::Disassemble((uint8_t*)o_guest_rip, operands);
 
-	Utils::Log("[READ/WRITE]\n");
-    Utils::Log("RIP = %s \n", rip_info.Format());
+	std::cout << "[READ/WRITE] \n";
+    std::cout << "RIP = " << rip_info.Format() << "\n";
 
 	ZydisRegisterContext context;
 
@@ -43,11 +42,11 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 		if (operands[i].actions & ZYDIS_OPERAND_ACTION_MASK_WRITE)
 		{
-			Utils::Log("[write => 0x%02x]\n", mem_target);
+			std::cout << "[write => 0x"<< std::hex << mem_target << "]" << std::endl;
 		}
 		else if (operands[i].actions & ZYDIS_OPERAND_ACTION_MASK_READ)
 		{
-			Utils::Log("[read => 0x%02x]\n", mem_target);
+			std::cout << "[read => 0x"<< std::hex << mem_target << "]" << std::endl;
 		}
 	}
 
@@ -56,12 +55,12 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 void SandboxTest()
 {
-	auto beservice = (uintptr_t)GetModuleHandle(L"BEService.exe");
+	
 
     AetherVisor::SetCallback(AetherVisor::sandbox_readwrite, ReadWriteHook);
 	AetherVisor::SetCallback(AetherVisor::sandbox_execute, ExecuteHook);
 
-	AetherVisor::Sandbox::SandboxRegion(beservice, PeHeader(beservice)->OptionalHeader.SizeOfImage);
+	AetherVisor::Sandbox::SandboxRegion(module_base, PeHeader(module_base)->OptionalHeader.SizeOfImage);
 
 	AetherVisor::Sandbox::DenyRegionAccess((void*)Global::dll_params->dll_base, Global::dll_params->dll_size, false);
 }

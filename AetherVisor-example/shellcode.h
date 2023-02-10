@@ -15,7 +15,8 @@ namespace Hooks
 		void* original_bytes;
 		uint8_t* hook_code;
 
-		JmpRipCode(uintptr_t hook_address, uintptr_t jmp_target) : fn_address (hook_address), target_address(jmp_target)
+		JmpRipCode(void* hook_address, void* jmp_target) 
+		: fn_address ((uintptr_t)hook_address), target_address((uintptr_t)jmp_target)
 		{
 			hook_size = Disasm::LengthOfInstructions((void*)hook_address, 14);
 
