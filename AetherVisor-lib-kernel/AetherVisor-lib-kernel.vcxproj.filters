@@ -43,9 +43,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="sandbox_handler.asm">
-      <Filter>Source Files</Filter>
-    </MASM>
     <MASM Include="vmmcall.asm">
       <Filter>Source Files</Filter>
     </MASM>

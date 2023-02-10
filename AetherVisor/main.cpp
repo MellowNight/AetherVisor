@@ -30,8 +30,14 @@ bool VirtualizeAllProcessors()
 
 	Hypervisor::Get()->core_count = KeQueryActiveProcessorCount(0);
 
-	for (int idx = 0; idx < Hypervisor::Get()->core_count; ++idx)
-	{
+	Utils::ForEachCore([](void* params) -> void {
+
+		PROCESSOR_NUMBER processor_num;
+
+		KeGetCurrentProcessorNumberEx(&processor_num);
+
+		auto idx = KeGetProcessorIndexFromNumber(&processor_num);
+
 		KAFFINITY affinity = Utils::Exponent(2, idx);
 
 		KeSetSystemAffinityThread(affinity);
@@ -72,7 +78,9 @@ bool VirtualizeAllProcessors()
 		{
 			DbgPrint("============== Hypervisor Successfully Launched rn !! ===============\n \n");
 		}
-	}
+	}, NULL);
+
+	
 
 	NptHooks::CleanupOnProcessExit();
 }

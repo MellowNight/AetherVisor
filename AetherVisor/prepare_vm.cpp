@@ -60,22 +60,22 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	_sgdt(&gdtr);
 	__sidt(&idtr);
 
-	InterceptVector4 intercept_vector4;
+	InterceptVector4 intercept_vector4 = {0};
 
-	intercept_vector4.intercept_vmmcall = 1;
-	intercept_vector4.intercept_vmrun = 1;
+	intercept_vector4.vmmcall_intercept = 1;
+	intercept_vector4.vmrun_intercept = 1;
 
 	core_data->guest_vmcb.control_area.intercept_vec4 = intercept_vector4;
-
-	InterceptVector2 intercept_vector2;
-
-	intercept_vector2.intercept_bp = 1;
-	intercept_vector2.intercept_db = 1;
-	intercept_vector2.intercept_ud = 1;
 
 	/*	intercept MSR access	*/
 
 	core_data->guest_vmcb.control_area.intercept_vec3 |= (1UL << 28);
+
+	InterceptVector2 intercept_vector2 = {0};
+
+	intercept_vector2.intercept_bp = 1;
+	intercept_vector2.intercept_db = 1;
+	//intercept_vector2.intercept_ud = 1;
 
 	core_data->guest_vmcb.control_area.intercept_exception = intercept_vector2;
 
@@ -256,7 +256,7 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 		return false;
 	}
 
-	if (!guest_vmcb->control_area.intercept_vec4.intercept_vmrun)
+	if (!guest_vmcb->control_area.intercept_vec4.vmrun_intercept)
 	{
 		DbgPrint("The VMRUN intercept bit is clear. Invalid state! \n");
 		return false;

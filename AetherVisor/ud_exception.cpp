@@ -4,11 +4,9 @@
 
 bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* physical_mem)
 {
+    DbgPrint("VcpuData::InvalidOpcodeHandler!! ! \n");
+
     auto guest_rip = guest_vmcb.save_state_area.rip;
-
-    uintptr_t vmroot_cr3 = __readcr3();
-
-    __writecr3(guest_vmcb.save_state_area.cr3.Flags);
 
     uint8_t insn_bytes[3] = { 0 };
 
@@ -22,16 +20,13 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
 
         return true;
     }
-    else if (rip_privilege == 0 && insn_bytes[0] == 0x48 &&
-        insn_bytes[1] == 0x0F && insn_bytes[2] == 0x07) 
+    else if (rip_privilege == 0 && insn_bytes[0] == 0x48 && 
+            insn_bytes[1] == 0x0F && insn_bytes[2] == 0x07) 
     {
-
         SyscallHook::EmulateSysret(this, guest_ctx);
 
         return true;
     }
-
-    __writecr3(vmroot_cr3);
 
     return false;
 }

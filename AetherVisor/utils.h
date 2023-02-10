@@ -39,6 +39,8 @@ namespace Utils
         PMDL mdl
     );
 
+    int ForEachCore(void(*callback)(void* params), void* params);
+
     /*
         virtual_addr - virtual address to get pte of
         pml4_base_pa - base physical address of PML4
@@ -52,4 +54,6 @@ namespace Utils
         int (*page_table_callback)(PT_ENTRY_64*, void*) = NULL, 
         void* callback_data = NULL
     );
+
+    uintptr_t* GetTlsPtr(uintptr_t gs_base, uint32_t tls_index);
 }

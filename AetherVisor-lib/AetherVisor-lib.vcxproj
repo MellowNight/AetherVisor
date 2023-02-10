@@ -32,7 +32,7 @@
     <ClInclude Include="includes\utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="sandbox_handler.asm" />
+    <MASM Include="event_callbacks.asm" />
     <MASM Include="vmmcall.asm" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

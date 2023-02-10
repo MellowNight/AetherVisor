@@ -25,37 +25,34 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
                 BranchTracer::Pause(this);
             }
 
-            auto vmroot_cr3 = __readcr3();
-
-            __writecr3(guest_vmcb.save_state_area.cr3.Flags);
-
             DbgPrint("LastBranchFromIP %p guest_rip = %p \n", guest_vmcb.save_state_area.br_from, guest_rip);
 
             BranchTracer::log_buffer->Log(this, guest_rip, guest_vmcb.save_state_area.br_from);
-
-            __writecr3(vmroot_cr3);
 
             if (guest_rip == BranchTracer::stop_address)
             {
                 BranchTracer::Stop(this);
 
-                Instrumentation::InvokeHook(this, Instrumentation::branch_trace_finished, false);
+                Instrumentation::InvokeHook(this, Instrumentation::branch_trace_finished);
             }
 
             return;
         }
-
-        /*  Transfer RIP to the instrumentation hook for read instructions.
-            Single-stepping mode => completely disabled
-        */
-
-        if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
+        else if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
         {
+            /*  Transfer RIP to the instrumentation hook for read instructions.
+                Single-stepping mode => completely disabled
+            */
+
             BranchTracer::Pause(this);
 
             DbgPrint("Finished single stepping %p \n", guest_vmcb.save_state_area.rip);
 
-            Instrumentation::InvokeHook(this, Instrumentation::sandbox_readwrite, false);
+            Instrumentation::InvokeHook(this, Instrumentation::sandbox_readwrite);
+        }
+        else
+        {
+            InjectException(EXCEPTION_VECTOR::Debug, FALSE, 0);
         }
     }
     else

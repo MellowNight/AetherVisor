@@ -60,7 +60,7 @@ namespace BranchTracer
 			{
 				/*	notify to the guest that the branch tracing buffer is almost full	*/
 
-				if (Instrumentation::InvokeHook(vcpu, Instrumentation::branch_log_full, false) == FALSE)
+				if (Instrumentation::InvokeHook(vcpu, Instrumentation::branch_log_full) == FALSE)
 				{
 				}
 				else

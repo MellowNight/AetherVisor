@@ -47,7 +47,8 @@ namespace NptHooks
 		void* address, 
 		uint8_t* patch, 
 		size_t patch_len, 
-		int32_t shadow_cr3_id
+		int32_t shadow_cr3_id,
+		bool& suppress_nrip_increment
 	);
 
 	NptHook* ForEachHook(

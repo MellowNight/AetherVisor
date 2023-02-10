@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <MASM Include="vmmcall.asm" />
+    <MASM Include="event_callbacks.asm" />
     <MASM Include="sandbox_handler.asm">
       <Filter>features</Filter>
     </MASM>

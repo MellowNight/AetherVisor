@@ -110,14 +110,28 @@ union VM_CR_MSR
 
 
 union InterceptVector4
-{ 
-    struct
+{
+    struct 
     {
-        int32_t  intercept_vmrun : 1; // intercept VMRUN
-        int32_t  intercept_vmmcall : 1;  // Intercept VMMCALL
-        int32_t  pad : 30;
+        uint32_t vmrun_intercept : 1;
+        uint32_t vmmcall_intercept : 1;
+        uint32_t vmload_intercept : 1;
+        uint32_t vmsave_intercept : 1;
+        uint32_t stgi_intercept : 1;
+        uint32_t clgi_intercept : 1;
+        uint32_t skinit_intercept : 1;
+        uint32_t rdtscp_intercept : 1;
+        uint32_t icebp_intercept : 1;
+        uint32_t wbinvd_intercept : 1;
+        uint32_t monitor_intercept : 1;
+        uint32_t mwait_intercept_unconditional : 1;
+        uint32_t mwait_intercept_armed : 1;
+        uint32_t xsetbv_intercept : 1;
+        uint32_t rdpru_intercept : 1;
+        uint32_t efer_write_intercept : 1;
+        uint32_t cr_write_intercept : 16;
     };
-    int32_t	value;
+    uint32_t value;
 };
 static_assert(sizeof(InterceptVector4) == 0x4, "InterceptVector4 Size Mismatch");
 

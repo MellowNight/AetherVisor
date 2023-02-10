@@ -37,8 +37,14 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
         break;
     }
     case VMEXIT::DB:
-    {
+    {        
+        auto vmroot_cr3 = __readcr3();
+        
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
+
         vcpu->DebugFaultHandler(guest_ctx);
+
+        __writecr3(vmroot_cr3);
 
         break;
     }
@@ -49,26 +55,50 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
         break;
     }
     case VMEXIT::VMMCALL:
-    {
+    {		
+        auto vmroot_cr3 = __readcr3();
+        
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
+
         vcpu->VmmcallHandler(guest_ctx, &end_hypervisor);
+
+        __writecr3(vmroot_cr3);
 
         break;
     }
     case VMEXIT::BP:
-    {
+    {    
+        auto vmroot_cr3 = __readcr3();
+
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
+
         vcpu->BreakpointHandler(guest_ctx);
+
+        __writecr3(vmroot_cr3);
 
         break;
     }
     case VMEXIT::NPF:
-    {
+    {        
+        auto vmroot_cr3 = __readcr3();
+
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
+
         vcpu->NestedPageFaultHandler(guest_ctx);
+
+        __writecr3(vmroot_cr3);
 
         break;
     }
     case VMEXIT::UD:
-    {
+    {        
+        auto vmroot_cr3 = __readcr3();
+
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
+
         vcpu->InvalidOpcodeHandler(guest_ctx, physical_mem);
+
+        __writecr3(vmroot_cr3);
 
         break;
     }
@@ -76,14 +106,16 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
     {
         DbgPrint("VMEXIT::INVALID!! ! \n");
        // auto cs_attrib = vcpu->guest_vmcb.save_state_area.cs_attrib;
-
         // IsCoreReadyForVmrun(&vcpu->guest_vmcb, cs_attrib);
+
         vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
 
         break;
     }
     default:
-    {
+    {        
+        DbgPrint("unknown VMEXIT 0x%p \n", vcpu->guest_vmcb.control_area.exit_code);
+
         KeBugCheckEx(MANUALLY_INITIATED_CRASH, vcpu->guest_vmcb.control_area.exit_code, 
             vcpu->guest_vmcb.control_area.exit_info1, vcpu->guest_vmcb.control_area.exit_info2, vcpu->guest_vmcb.save_state_area.rip);
 

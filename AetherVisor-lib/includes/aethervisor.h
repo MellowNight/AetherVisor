@@ -41,20 +41,20 @@ struct GuestRegisters
 
 extern "C" {
 
-    extern void (*sandbox_execute_handler)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
+    extern void (*sandbox_execute_event)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
     void __stdcall execute_handler_wrap();
 
-    extern void (*sandbox_mem_access_handler)(GuestRegisters* registers, void* o_guest_rip);
+    extern void (*sandbox_mem_access_event)(GuestRegisters* registers, void* o_guest_rip);
     void __stdcall rw_handler_wrap();
 
-    extern void (*branch_log_full_handler)();
-    void __stdcall branch_log_full_handler_wrap();
+    extern void (*branch_log_full_event)();
+    void __stdcall branch_log_full_event_wrap();
 
-    extern void (*branch_trace_finish_handler)();
-    void __stdcall branch_trace_finish_handler_wrap();
+    extern void (*branch_trace_finish_event)();
+    void __stdcall branch_trace_finish_event_wrap();
 
-    extern void (*syscall_callback)();
-    void __stdcall syscall_callback_wrap();
+    extern void (*syscall_hook)(GuestRegisters* registers, void* guest_rip);
+    void __stdcall syscall_hook_wrap();
 
     int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 }

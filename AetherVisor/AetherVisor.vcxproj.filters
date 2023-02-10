@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Driver Files">
+      <UniqueIdentifier>{8E41214B-6785-4CFE-B992-037D68949A14}</UniqueIdentifier>
+      <Extensions>inf;inv;inx;mof;mc;</Extensions>
+    </Filter>
+    <Filter Include="Source Files\logger">
+      <UniqueIdentifier>{bc0b8d0d-a7b4-4527-ad75-8076014ef1de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utils">
+      <UniqueIdentifier>{021d6046-de4d-4845-ab9e-369764e33c82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\nt kernel">
+      <UniqueIdentifier>{baec2ef4-2551-4ec2-987e-584bf913a91c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\amd structs">
+      <UniqueIdentifier>{7f3c90e1-2152-4e57-94cf-f79e18650663}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\setup">
+      <UniqueIdentifier>{27e87246-2b31-485d-9fb0-02a425e70619}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vmexit">
+      <UniqueIdentifier>{32019504-683e-456b-9723-a2a29b616413}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\NPT">
+      <UniqueIdentifier>{bb498eab-ff8d-4d33-8c50-28fb71e7fa43}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="npt.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="disassembly.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hypervisor.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel_exports.h">
+      <Filter>Source Files\nt kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel_structures.h">
+      <Filter>Source Files\nt kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="npt_hook.h">
+      <Filter>Source Files\NPT</Filter>
+    </ClInclude>
+    <ClInclude Include="logging.h">
+      <Filter>Source Files\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="prepare_vm.h">
+      <Filter>Source Files\setup</Filter>
+    </ClInclude>
+    <ClInclude Include="ia32.h">
+      <Filter>Source Files\amd structs</Filter>
+    </ClInclude>
+    <ClInclude Include="amd.h">
+      <Filter>Source Files\amd structs</Filter>
+    </ClInclude>
+    <ClInclude Include="branch_tracer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="npt_sandbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="npthook_safety.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="paging_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="portable_executable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shellcode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="syscall_hook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="instrumentation_hook.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="svm.h">
+      <Filter>Source Files\amd structs</Filter>
+    </ClInclude>
+    <ClInclude Include="vmexit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vmexit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hypervisor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="logging.cpp">
+      <Filter>Source Files\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="npt_hook.cpp">
+      <Filter>Source Files\NPT</Filter>
+    </ClCompile>
+    <ClCompile Include="prepare_vm.cpp">
+      <Filter>Source Files\setup</Filter>
+    </ClCompile>
+    <ClCompile Include="disassembly.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="instrumentation_hook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="branch_tracer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npt_sandbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="msr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npthook_safety.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="paging_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="syscall_hook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vmmcall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bp_exception.cpp">
+      <Filter>Source Files\vmexit</Filter>
+    </ClCompile>
+    <ClCompile Include="db_exception.cpp">
+      <Filter>Source Files\vmexit</Filter>
+    </ClCompile>
+    <ClCompile Include="ud_exception.cpp">
+      <Filter>Source Files\vmexit</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="instructions.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="vm_launch.asm">
+      <Filter>Source Files\setup</Filter>
+    </MASM>
+  </ItemGroup>
+</Project>
