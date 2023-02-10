@@ -14,7 +14,8 @@ namespace Util
 
     void TriggerCOW(void* address)
     {
-        uint8_t buffer;
+        auto buffer = *(uint8_t*)address;
+
         /*	trigger COW	*/
 
         WriteToReadOnly(address, (uint8_t*)"\xC3", 1);
