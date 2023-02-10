@@ -58,10 +58,6 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     }
     case VMMCALL_ID::remove_npt_hook:
     {
-        auto vmroot_cr3 = __readcr3();
-
-        __writecr3(guest_vmcb.save_state_area.cr3.Flags);
-
         DbgPrint("VMMCALL_ID::remove_npt_hook called! \n");
 
         NptHooks::ForEachHook(
@@ -77,8 +73,6 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
             },
             (void*)guest_ctx->rdx
                 );
-
-        __writecr3(vmroot_cr3);
 
         break;
     }

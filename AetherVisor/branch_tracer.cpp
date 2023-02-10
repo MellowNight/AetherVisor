@@ -27,10 +27,6 @@ namespace BranchTracer
 
 	void Init(VcpuData* vcpu, uintptr_t start_addr, uintptr_t stop_addr, uintptr_t out_buffer, uintptr_t trace_range_base, uintptr_t trace_range_size)
 	{
-		auto vmroot_cr3 = __readcr3();
-
-		__writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
-
 		initialized = true;
 		range_base = trace_range_base;
 		range_size = trace_range_size;
@@ -62,8 +58,6 @@ namespace BranchTracer
 		vcpu->guest_vmcb.save_state_area.dr7.ReadWrite0 = 0;
 
 		__writedr(0, (uintptr_t)start_addr);
-
-		__writecr3(vmroot_cr3);
 	}
 
 	void Start(VcpuData* vcpu)

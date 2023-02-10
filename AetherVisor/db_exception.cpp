@@ -25,15 +25,9 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
                 BranchTracer::Pause(this);
             }
 
-            auto vmroot_cr3 = __readcr3();
-
-            __writecr3(guest_vmcb.save_state_area.cr3.Flags);
-
             DbgPrint("LastBranchFromIP %p guest_rip = %p \n", guest_vmcb.save_state_area.br_from, guest_rip);
 
             BranchTracer::log_buffer->Log(this, guest_rip, guest_vmcb.save_state_area.br_from);
-
-            __writecr3(vmroot_cr3);
 
             if (guest_rip == BranchTracer::stop_address)
             {

@@ -8,11 +8,6 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
 
     auto guest_rip = guest_vmcb.save_state_area.rip;
 
-    uintptr_t vmroot_cr3 = __readcr3();
-
-    __writecr3(guest_vmcb.save_state_area.cr3.Flags);
-
-
     uint8_t insn_bytes[3] = { 0 };
 
     physical_mem->ReadVirtual((void*)guest_rip, insn_bytes, 3);
@@ -32,10 +27,6 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* ph
 
         return true;
     }
-
-    __writecr3(vmroot_cr3);
-
-
 
     return false;
 }
