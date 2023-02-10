@@ -7,20 +7,20 @@ Here's how AetherVisor's features are implemented: https://mellownight.github.io
 In the writeup, I mentioned multiple potential bugs that I fixed with band-aid solutions. If you experience any of these bugs, feel free to open an issue and/or propose a better fix.
 
 ## Features
-### Syscall hooks via MSR_LSTAR
+#### Syscall hooks via MSR_LSTAR
 ```function definition``` - 
 
 
-### NPT inline hooks
+#### NPT inline hooks
 ```function definition``` - 
 
-### Branch tracing
+#### Branch tracing
 ```function definition``` - 
 
-### Sandboxing and Read/Write/Execute instrumentation
+#### Sandboxing and Read/Write/Execute instrumentation
 ```SandboxPage(VMMCALL_ID, ...)``` - 
 
-### vmmcall interface
+#### vmmcall interface
 ```svm_vmmcall(VMMCALL_ID, ...)``` -
 
 ## Components ##
