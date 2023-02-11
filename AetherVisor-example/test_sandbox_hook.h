@@ -55,12 +55,10 @@ void ReadWriteHook(GuestRegisters* registers, void* o_guest_rip)
 
 void SandboxTest()
 {
-	
-
     AetherVisor::SetCallback(AetherVisor::sandbox_readwrite, ReadWriteHook);
 	AetherVisor::SetCallback(AetherVisor::sandbox_execute, ExecuteHook);
 
-	AetherVisor::Sandbox::SandboxRegion(module_base, PeHeader(module_base)->OptionalHeader.SizeOfImage);
+	//AetherVisor::Sandbox::SandboxRegion(module_base, PeHeader(module_base)->OptionalHeader.SizeOfImage);
 
-	AetherVisor::Sandbox::DenyRegionAccess((void*)Global::dll_params->dll_base, Global::dll_params->dll_size, false);
+	//AetherVisor::Sandbox::DenyRegionAccess((void*)Global::dll_params->dll_base, Global::dll_params->dll_size, false);
 }

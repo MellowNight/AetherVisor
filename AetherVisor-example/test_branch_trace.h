@@ -1,6 +1,8 @@
 #pragma once
 #include "utils.h"
 #include "address_format.h"
+#include "portable_executable.h"
+#include <tchar.h>
 
 using namespace AetherVisor;
 using namespace AetherVisor::BranchTracer;
@@ -12,8 +14,8 @@ std::vector<BranchLog::LogEntry> traced_branches;
 void BranchLogFullHook()
 {
 	std::cout << "Branch Log is full!, "
-		<< "log_buffer->info.buffer 0x" << std::hex << AetherVisor::log_buffer->info.buffer
-		<< " log_buffer->info.buffer_idx " << AetherVisor::log_buffer->info.buffer_idx << "\n";
+		<< "log_buffer->info.buffer 0x" << std::hex << BranchTracer::log_buffer->info.buffer
+		<< " log_buffer->info.buffer_idx " << BranchTracer::log_buffer->info.buffer_idx << "\n";
 
 	traced_branches.insert(traced_branches.end(), log_buffer->info.buffer,
 		log_buffer->info.buffer + log_buffer->info.buffer_idx);
@@ -25,8 +27,8 @@ void BranchTraceFinished()
 
 	for (auto entry : traced_branches)
 	{
-		std::cout << "branch " < AddressInfo{ (void*)entry.branch_address }.Format()
-			" -> " << AddressInfo{ (void*)entry.branch_target }.Format() << "\n";
+		std::cout << "branch " << AddressInfo{ (void*)entry.branch_address }.Format() 
+            << " -> " << AddressInfo{ (void*)entry.branch_target }.Format() << "\n";
 	}
 }
 
@@ -72,11 +74,11 @@ void Foo(int x, int y, int z)
 
 void BranchTraceTest()
 {
-	auto exe_base = (uintptr_t)GetModuleHandle(NULL));
+	auto exe_base = (uintptr_t)GetModuleHandle(NULL);
 
 	AetherVisor::SetCallback(AetherVisor::branch_log_full, BranchLogFullHook);
 	AetherVisor::SetCallback(AetherVisor::branch_trace_finished, BranchTraceFinished);
 
 	BranchTracer::Trace(
-		(uint8_t*)Foo, exe_base, PeHeader(exe_base)->OptionalHeader.SizeOfImage);
+		(uint8_t*)Foo, exe_base, PE_HEADER(exe_base)->OptionalHeader.SizeOfImage);
 }

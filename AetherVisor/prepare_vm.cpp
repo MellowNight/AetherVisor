@@ -75,7 +75,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 
 	intercept_vector2.intercept_bp = 1;
 	intercept_vector2.intercept_db = 1;
-	//intercept_vector2.intercept_ud = 1;
+	intercept_vector2.intercept_ud = 1;
 
 	core_data->guest_vmcb.control_area.intercept_exception = intercept_vector2;
 

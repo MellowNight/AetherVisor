@@ -53,8 +53,8 @@ extern "C" {
     extern void (*branch_trace_finish_event)();
     void __stdcall branch_trace_finish_event_wrap();
 
-    extern void (*syscall_callback)();
-    void __stdcall syscall_callback_wrap();
+    extern void (*syscall_hook)(GuestRegisters* registers, void* guest_rip);
+    void __stdcall syscall_hook_wrap();
 
     int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 }

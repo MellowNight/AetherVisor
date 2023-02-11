@@ -14,7 +14,7 @@ namespace AetherVisor
 
             Util::ForEachCore(
                 [](void* params) -> void {
-                    svm_vmmcall(VMMCALL_ID::hook_efer_syscall);
+                    svm_vmmcall(VMMCALL_ID::hook_efer_syscall, tls_index);
                 }, NULL
             );
 

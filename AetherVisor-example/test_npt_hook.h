@@ -2,7 +2,7 @@
 #include "utils.h"
 #include "shellcode.h"
 
-/*  test_npt_hook.h:  Install a hidden NPT hook on Wintrust.dll!WinVerifyTrust    */
+/*  test_npt_hook.h:  Install a hidden NPT hook on user32.dll!MessageBoxA    */
 
 
 Hooks::JmpRipCode* messagebox_hk;
@@ -29,4 +29,6 @@ void NptHookTest()
     Sleep(1000);
 
     MessageBoxA(NULL, "HELLO WORLD!!!1111", "NPT hook test", MB_OK);
+
+    Sleep(1000);
 }
