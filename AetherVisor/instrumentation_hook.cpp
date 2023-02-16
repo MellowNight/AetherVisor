@@ -14,9 +14,9 @@ namespace Instrumentation
 
 		DbgPrint("guest_rip %p \n", guest_rip);
 
-		int callback_cpl = ((uintptr_t)callbacks[handler] > 0x7FFFFFFFFFFF) ? 3 : 0;
+		int callback_cpl = ((uintptr_t)callbacks[handler] < 0x7FFFFFFFFFFF) ? 3 : 0;
 
-		int rip_privilege = (guest_rip > 0x7FFFFFFFFFFF) ? 3 : 0;
+		int rip_privilege = (guest_rip < 0x7FFFFFFFFFFF) ? 3 : 0;
 
 		if (callback_cpl == rip_privilege || handler == sandbox_readwrite)
 		{

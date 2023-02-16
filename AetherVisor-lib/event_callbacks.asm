@@ -50,9 +50,9 @@ execute_handler_wrap proc frame
 
     PUSHAQ
 
-    mov rcx, rsp                  ; pass the registers
-    mov rdx, [rsp + 8 * 16 + 8]       ; pass the return address
-    mov r8, [rsp + 8 * 16]    ; pass the original guest RIP
+    mov rcx, rsp                    ; pass the registers
+    mov rdx, [rsp + 8 * 16 + 8]     ; pass the return address
+    mov r8, [rsp + 8 * 16]          ; pass the original guest RIP
     
     call sandbox_execute_event
 
@@ -113,8 +113,9 @@ syscall_hook_wrap proc frame
 
     PUSHAQ
     
-    mov rcx, rsp                  ; pass the registers
-    mov rdx, [rsp + 8 * 16 + 8]   ; pass the return address
+    mov rcx, rsp                    ; pass the registers
+    mov rdx, [rsp + 8 * 16 + 8]     ; pass the return address
+    mov r8, [rsp + 8 * 16]          ; pass the original guest RIP
     call syscall_hook
 
     POPAQ

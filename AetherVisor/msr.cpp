@@ -1,4 +1,5 @@
 #include "vmexit.h"
+#include "syscall_hook.h"
 
 void VcpuData::MsrExitHandler(GuestRegisters* guest_regs)
 {
@@ -27,6 +28,12 @@ void VcpuData::MsrExitHandler(GuestRegisters* guest_regs)
         efer->svme = 0;
         break;
     }
+    case MSR::lstar:
+    {        
+        DbgPrint("SYSCALL reading LSTAR caught!!! \n");
+
+        break;
+    }
     default:
         break;
     }
@@ -36,28 +43,32 @@ void VcpuData::MsrExitHandler(GuestRegisters* guest_regs)
 
     guest_vmcb.save_state_area.rip = guest_vmcb.control_area.nrip;
 }
-//
-//void SetupMSRPM(VcpuData* vcpu)
-//{
-//    size_t bits_per_msr = 16000 / 8000;
-//    size_t bits_per_byte = sizeof(uint8_t) * 8;
-//    size_t msrpm_size = PAGE_SIZE * 2;
-//
-//    auto msrpm = ExAllocatePoolZero(NonPagedPool, msrpm_size, 'msr0');
-//
-//    vcpu->guest_vmcb.control_area.msrpm_base_pa = MmGetPhysicalAddress(msrpm).QuadPart;
-//
-//    RTL_BITMAP bitmap;
-//
-//    RtlInitializeBitMap(&bitmap, (PULONG)msrpm, msrpm_size * 8);
-//
-//    RtlClearAllBits(&bitmap);
-//
-//    auto section2_offset = (0x800 * bits_per_byte);
-//
-//    auto efer_offset = section2_offset + (bits_per_msr * (MSR::efer - 0xC0000000));
-//
-//    /*	intercept EFER read and write	*/
-//
-//    RtlSetBits(&bitmap, efer_offset, 2);
-//}
+
+
+void SetupMSRPM(VcpuData* core_data)
+{
+    size_t bits_per_msr = 16000 / 8000;
+    size_t bits_per_byte = sizeof(uint8_t) * 8;
+    size_t msrpm_size = PAGE_SIZE * 2;
+
+    auto msrpm = ExAllocatePoolZero(NonPagedPool, msrpm_size, 'msr0');
+
+    core_data->guest_vmcb.control_area.msrpm_base_pa = MmGetPhysicalAddress(msrpm).QuadPart;
+
+    RTL_BITMAP bitmap;
+
+    RtlInitializeBitMap(&bitmap, (PULONG)msrpm, msrpm_size * 8);
+    RtlClearAllBits(&bitmap);
+
+    auto section2_offset = (0x800 * bits_per_byte);
+
+    auto efer_offset = section2_offset + (bits_per_msr * (MSR::efer - 0xC0000000));
+    //auto lstar_offset = section2_offset + (bits_per_msr * (MSR::lstar - 0xC0000000));
+
+    /*	intercept EFER read and write
+    *	intercept LSTAR read
+    */
+
+    RtlSetBits(&bitmap, efer_offset, 2);
+   // RtlSetBits(&bitmap, lstar_offset, 2);
+}

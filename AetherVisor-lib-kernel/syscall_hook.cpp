@@ -8,7 +8,7 @@ namespace AetherVisor
     {
         uint32_t tls_index = 0;
 
-        int HookEFER()
+        int Enable()
         {
             tls_index = TlsAlloc();
 

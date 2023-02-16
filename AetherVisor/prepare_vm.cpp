@@ -24,28 +24,6 @@ SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_b
 	return attribute;
 }
 
-void SetupMSRPM(VcpuData* core_data)
-{
-	size_t bits_per_msr = 16000 / 8000;
-	size_t bits_per_byte = sizeof(uint8_t) * 8;
-	size_t msrpm_size = PAGE_SIZE * 2;
-
-	auto msrpm = ExAllocatePoolZero(NonPagedPool, msrpm_size, 'msr0');
-
-	core_data->guest_vmcb.control_area.msrpm_base_pa = MmGetPhysicalAddress(msrpm).QuadPart;
-
-	RTL_BITMAP bitmap;
-
-	RtlInitializeBitMap(&bitmap, (PULONG)msrpm, msrpm_size * 8);
-	RtlClearAllBits(&bitmap);
-
-	auto section2_offset = (0x800 * bits_per_byte);
-	auto efer_offset = section2_offset + (bits_per_msr * (MSR::efer - 0xC0000000));
-
-	/*	intercept EFER read and write	*/
-	RtlSetBits(&bitmap, efer_offset, 2);
-}
-
 void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 {
 	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
@@ -92,6 +70,7 @@ void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
 	core_data->guest_vmcb.save_state_area.rflags.Flags = __readeflags();
 	core_data->guest_vmcb.save_state_area.efer.value = __readmsr(MSR::efer);
 	core_data->guest_vmcb.save_state_area.guest_pat = __readmsr(MSR::pat);
+	core_data->guest_vmcb.save_state_area.lstar = __readmsr(MSR::lstar);
 
 	core_data->guest_vmcb.save_state_area.gdtr_limit = gdtr.limit;
 	core_data->guest_vmcb.save_state_area.gdtr_base = gdtr.base;

@@ -10,6 +10,13 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
     DR6 dr6 = guest_vmcb.save_state_area.dr6;
 
+    DbgPrint("dr6.SingleInstruction = %i \n", dr6.SingleInstruction);
+    DbgPrint("guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) = %i \n", guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9));
+    DbgPrint("BranchTracer::process_cr3.Flags %p \n", BranchTracer::process_cr3.Flags);
+    DbgPrint("guest_vmcb.save_state_area.cr3.Flags %p \n", guest_vmcb.save_state_area.cr3.Flags);
+    DbgPrint("BranchTracer::range_base %p \n", BranchTracer::range_base);
+    DbgPrint("BranchTracer::range_base + BranchTracer::range_size %p \n", BranchTracer::range_size + BranchTracer::range_base);
+
     if (dr6.SingleInstruction == 1)
     {
         if (BranchTracer::active == true &&

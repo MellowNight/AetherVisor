@@ -32,11 +32,11 @@
     <Filter Include="Source Files\setup">
       <UniqueIdentifier>{27e87246-2b31-485d-9fb0-02a425e70619}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\vmexit">
-      <UniqueIdentifier>{32019504-683e-456b-9723-a2a29b616413}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\NPT">
       <UniqueIdentifier>{bb498eab-ff8d-4d33-8c50-28fb71e7fa43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\exceptions">
+      <UniqueIdentifier>{32019504-683e-456b-9723-a2a29b616413}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -83,9 +83,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="npthook_safety.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="paging_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="portable_executable.h">
@@ -150,9 +147,6 @@
     <ClCompile Include="npthook_safety.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="paging_utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="syscall_hook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -160,13 +154,13 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="bp_exception.cpp">
-      <Filter>Source Files\vmexit</Filter>
+      <Filter>Source Files\exceptions</Filter>
     </ClCompile>
     <ClCompile Include="db_exception.cpp">
-      <Filter>Source Files\vmexit</Filter>
+      <Filter>Source Files\exceptions</Filter>
     </ClCompile>
     <ClCompile Include="ud_exception.cpp">
-      <Filter>Source Files\vmexit</Filter>
+      <Filter>Source Files\exceptions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

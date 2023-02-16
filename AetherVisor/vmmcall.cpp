@@ -56,6 +56,25 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
 
         break;
     }
+    case VMMCALL_ID::unbox_page:
+    {
+        Sandbox::ForEachHook(
+            [](auto hook_entry, auto data) -> auto {
+
+                if (hook_entry->guest_physical == data)
+                {
+                    DbgPrint("Releasing sandbox page %p \n", hook_entry->guest_physical);
+                    Sandbox::ReleasePage(hook_entry);
+                }
+
+                return false;
+            },
+            (void*)MmGetPhysicalAddress((void*)guest_ctx->rdx).QuadPart
+        );
+
+
+        break;
+    }
     case VMMCALL_ID::remove_npt_hook:
     {
         DbgPrint("VMMCALL_ID::remove_npt_hook called! \n");
@@ -72,7 +91,7 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
                 return false;
             },
             (void*)guest_ctx->rdx
-                );
+        );
 
         break;
     }
@@ -98,7 +117,7 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     }
     case VMMCALL_ID::hook_efer_syscall:
     {
-        SyscallHook::Init(this, TRUE, guest_ctx->rdx);
+        SyscallHook::Toggle(this, guest_ctx->rdx, guest_ctx->r8);
 
         break;
     }

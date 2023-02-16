@@ -5,8 +5,11 @@
 
 int main()
 {
-	NptHookTest();
-	EferSyscallHookTest();
-	//TestNptSandbox();
-	//BranchTraceTest();
+	Symbols::Init();
+
+	BranchTraceTest();
+//	NptHookTest();
+
+	//SandboxTest();
+	//EferSyscallHookTest();
 }

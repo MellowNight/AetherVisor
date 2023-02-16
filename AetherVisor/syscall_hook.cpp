@@ -10,34 +10,55 @@ namespace SyscallHook
 
     uintptr_t captured_rsp;
     uintptr_t captured_rip;
+    uintptr_t captured_retaddr;
 
-    void Init(VcpuData* vcpu, BOOLEAN EnableEFERSyscallHook, uint32_t _tls_index)
+    void Toggle(VcpuData* vcpu, bool intercept_syscalls, uint32_t _tls_index)
     {
         process_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
+
         tls_index = _tls_index;
 
-        if (EnableEFERSyscallHook)
-        {
-            vcpu->guest_vmcb.save_state_area.efer.syscall = FALSE;
-        }
-        else
-        {
-            vcpu->guest_vmcb.save_state_area.efer.syscall = TRUE;
-
-            //
-            // unset the exception to not cause vm-exit on #UDs
-            //
-          //  ProtectedHvRemoveUndefinedInstructionForDisablingSyscallSysretCommands();
-        }
+        vcpu->guest_vmcb.save_state_area.efer.syscall = !intercept_syscalls;
     }
 
     bool EmulateSysret(VcpuData* vcpu, GuestRegisters* guest_ctx)
     {
-        if (vcpu->guest_vmcb.save_state_area.cr3.Flags != process_cr3.Flags)
-        {
-            return false;
-        }
+        // DbgPrint("EmulateSysret %p \n", EmulateSysret);
 
+        //
+        // SYSRET loads the CS and SS selectors with values derived from bits 63:48 of IA32_STAR
+        //
+        uintptr_t star_msr = __readmsr(IA32_STAR);
+
+        vcpu->guest_vmcb.save_state_area.cs_selector = (uint16_t)(((star_msr >> 48) + 16) | 3); // (STAR[63:48]+16) | 3 (* RPL forced to 3 *)
+        vcpu->guest_vmcb.save_state_area.cs_base = 0;               // Flat segment
+        vcpu->guest_vmcb.save_state_area.cs_limit = UINT32_MAX;     // 4GB limit
+
+
+        // L+DB+P+S+DPL3+Code
+
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type = 0xB;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.dpl = 3;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.present = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.long_mode = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.granularity = 1;
+
+
+        vcpu->guest_vmcb.save_state_area.ss_selector = (UINT16)(((star_msr >> 48) + 8) | 3); // (STAR[63:48]+8) | 3 (* RPL forced to 3 *)
+        vcpu->guest_vmcb.save_state_area.ss_base = 0;               // Flat segment
+        vcpu->guest_vmcb.save_state_area.ss_limit = UINT32_MAX;     // 4GB limit
+
+        // G+DB+P+S+DPL3+Data
+
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 3;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.system = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.present = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.default_bit = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
+
+        vcpu->guest_vmcb.save_state_area.cpl = 3;
         vcpu->guest_vmcb.save_state_area.rip = guest_ctx->rcx;
 
         //
@@ -52,69 +73,47 @@ namespace SyscallHook
 
         vcpu->guest_vmcb.save_state_area.rflags = rflags;
 
-        //
-        // SYSRET loads the CS and SS selectors with values derived from bits 63:48 of IA32_STAR
-        //
-        uintptr_t star_msr  = __readmsr(IA32_STAR);
-
-        vcpu->guest_vmcb.save_state_area.cs_selector = (uint16_t)(((star_msr >> 48) + 16) | 3); // (STAR[63:48]+16) | 3 (* RPL forced to 3 *)
-        vcpu->guest_vmcb.save_state_area.cs_base = 0;               // Flat segment
-        vcpu->guest_vmcb.save_state_area.cs_limit = UINT32_MAX;     // 4GB limit
-                                                                    
-        // as uint16 = 0xAFB; // L+DB+P+S+DPL3+Code
-
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type = 0xB;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.dpl = 3;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.present = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.long_mode = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.granularity = 1;
-
-
-        vcpu->guest_vmcb.save_state_area.ss_selector = (UINT16)(((star_msr >> 48) + 8) | 3); // (STAR[63:48]+8) | 3 (* RPL forced to 3 *)
-        vcpu->guest_vmcb.save_state_area.ss_base = 0;               // Flat segment
-        vcpu->guest_vmcb.save_state_area.ss_limit = UINT32_MAX;     // 4GB limit
-
-         // as uint16 = 0xCF3;   // G+DB+P+S+DPL3+Data
-       
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 3;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.system = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.present = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.default_bit = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
-
         return true;
     }
 
     bool EmulateSyscall(VcpuData* vcpu, GuestRegisters* guest_ctx)
     {
-        if (vcpu->guest_vmcb.save_state_area.cr3.Flags != process_cr3.Flags)
-        {
-            return false;
-        }
-
-        /*  prevent infinite loops caused by syscalling from a syscall hook handler */
-
-        auto tls_ptr = Utils::GetTlsPtr(vcpu->guest_vmcb.save_state_area.gs_base, tls_index);
-
-        if (!*tls_ptr)
-        {
-            captured_rsp = vcpu->guest_vmcb.save_state_area.rsp;
-            captured_rip = vcpu->guest_vmcb.save_state_area.rip;
-
-            *tls_ptr = TRUE;
-
-            Instrumentation::InvokeHook(vcpu, Instrumentation::syscall);
-        }
-        else if (
-            vcpu->guest_vmcb.save_state_area.rsp == captured_rsp &&
-            vcpu->guest_vmcb.save_state_area.rip == captured_rip)
-        {
-            *tls_ptr = FALSE;
-        }
-
         uintptr_t guest_rip = vcpu->guest_vmcb.save_state_area.rip;
+
+        if (vcpu->guest_vmcb.save_state_area.cr3.Flags == process_cr3.Flags)
+        {
+            /*  prevent infinite loops caused by syscalling from a syscall hook handler */
+
+            auto tls_ptr = Utils::GetTlsPtr(vcpu->guest_vmcb.save_state_area.gs_base, tls_index);
+
+            DbgPrint("tls_index %i \n", tls_index);
+
+            DbgPrint("tls_ptr %p \n", tls_ptr);
+            DbgPrint("*tls_ptr %p \n", *tls_ptr);
+
+            if (!*tls_ptr)
+            {
+                captured_rsp = vcpu->guest_vmcb.save_state_area.rsp;
+                captured_rip = guest_rip;
+
+                captured_retaddr = *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp;
+
+                *tls_ptr = TRUE;
+
+                Instrumentation::InvokeHook(vcpu, Instrumentation::syscall);
+
+                return false;
+            }
+            else if (
+                vcpu->guest_vmcb.save_state_area.rsp == captured_rsp &&
+                guest_rip == captured_rip &&
+                captured_retaddr == *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp)
+            {
+                DbgPrint("syscall hook finished \n");
+
+                *tls_ptr = FALSE;
+            }
+        }
 
         ZydisDecodedOperand operands[5];
 
@@ -127,50 +126,53 @@ namespace SyscallHook
         // Save the address of the instruction following SYSCALL into RCX and then
         // load RIP from IA32_LSTAR.
         //
-        uintptr_t lstar  = __readmsr(IA32_LSTAR);
+        auto lstar  = __readmsr(IA32_LSTAR);
         guest_ctx->rcx = guest_rip + insn_len;
         vcpu->guest_vmcb.save_state_area.rip = lstar;
 
-        //
-        // Save RFLAGS into R11 and then mask RFLAGS using IA32_FMASK
-        //
-        uintptr_t fmask  = __readmsr(IA32_FMASK);
+
+        /*  Save RFLAGS into R11and then mask RFLAGS using IA32_FMASK   */
+
+        auto fmask  = __readmsr(IA32_FMASK);
 
         guest_ctx->r11 = vcpu->guest_vmcb.save_state_area.rflags.Flags;
 
         vcpu->guest_vmcb.save_state_area.rflags.Flags &= ~(fmask | RFLAGS_RESUME_FLAG_BIT);
 
-        //
-        // Load the CS and SS selectors with values derived from bits 47:32 of IA32_STAR
-        //
-        uintptr_t star  = __readmsr(IA32_STAR);
+        /*  Load the CS and SS selectors with values derived from bits 47:32 of IA32_STAR   */
+
+        auto star  = __readmsr(IA32_STAR);
 
         vcpu->guest_vmcb.save_state_area.cs_selector    = (uint16_t)((star >> 32) & ~3);   // STAR[47:32] & ~RPL3
         vcpu->guest_vmcb.save_state_area.cs_base        = 0;                               // flat segment
-        vcpu->guest_vmcb.save_state_area.cs_limit       = (uint32_t)~0;     // 4GB limit
+        vcpu->guest_vmcb.save_state_area.cs_limit       = UINT32_MAX;     // 4GB limit
 
         //  0xA9B, L+DB+P+S+DPL0+Code
 
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type = 0xB;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.type      = 0xB;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system    = 1;
         vcpu->guest_vmcb.save_state_area.cs_attrib.fields.dpl = 0;
         vcpu->guest_vmcb.save_state_area.cs_attrib.fields.present = 1;
         vcpu->guest_vmcb.save_state_area.cs_attrib.fields.long_mode = 1;
-        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.system = 1;
+        vcpu->guest_vmcb.save_state_area.cs_attrib.fields.default_bit = 0;
         vcpu->guest_vmcb.save_state_area.cs_attrib.fields.granularity = 1;
 
 
         vcpu->guest_vmcb.save_state_area.ss_selector = (uint16_t)(((star >> 32) & ~3) + 8); // STAR[47:32] + 8
         vcpu->guest_vmcb.save_state_area.ss_base = 0;               // flat segment
-        vcpu->guest_vmcb.save_state_area.ss_limit = (uint32_t)~0;   // 4GB limit
+        vcpu->guest_vmcb.save_state_area.ss_limit = UINT32_MAX;   // 4GB limit
                                                                                              
-        // 0xC93 G+DB+P+S+DPL0+Data
-        
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 0;
+        //  G+DB+P+S+DPL0+Data
+
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
         vcpu->guest_vmcb.save_state_area.ss_attrib.fields.system = 1;
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.dpl = 0;
         vcpu->guest_vmcb.save_state_area.ss_attrib.fields.present = 1;
         vcpu->guest_vmcb.save_state_area.ss_attrib.fields.default_bit = 1;
-        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.type = 3;
+
+        vcpu->guest_vmcb.save_state_area.ss_attrib.fields.granularity = 1;
+
+        vcpu->guest_vmcb.save_state_area.cpl = 0;
 
         return true;
     }

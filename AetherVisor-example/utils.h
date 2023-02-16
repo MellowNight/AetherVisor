@@ -4,6 +4,8 @@
 
 namespace Utils
 {
+	void ConsoleTextColor(uint16_t color);
+
 	bool NewFile(const char* file_path, const char* address, size_t size);
 
 	void* ModuleFromAddress(uintptr_t address, PUNICODE_STRING out_name);

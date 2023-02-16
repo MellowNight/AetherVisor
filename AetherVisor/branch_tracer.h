@@ -1,5 +1,4 @@
 #include "logging.h"
-#include "paging_utils.h"
 #include "disassembly.h"
 #include "portable_executable.h"
 #include "vmexit.h"

@@ -19,7 +19,8 @@ enum MSR : uint64_t
     apic_bar = 0x1b,
     vm_cr = 0xC0010114,
     efer = 0xC0000080,
-    vm_hsave_pa = 0xC0010117
+    vm_hsave_pa = 0xC0010117,
+    lstar = 0xC0000082
 };
 
 struct SegmentDescriptor

@@ -1,32 +1,47 @@
 #include "vmexit.h"
 #include "syscall_hook.h"
-#include "paging_utils.h"
 
-bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx, PhysMemAccess* physical_mem)
+bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx)
 {
-    DbgPrint("VcpuData::InvalidOpcodeHandler!! ! \n");
+    auto guest_rip = (uint8_t*)guest_vmcb.save_state_area.rip;
 
-    auto guest_rip = guest_vmcb.save_state_area.rip;
+  //  DbgPrint("VcpuData::InvalidOpcodeHandler!! ! guest_rip %p \n", guest_rip);
 
-    uint8_t insn_bytes[3] = { 0 };
+    /*	page in the instruction's page if it's not present. */
 
-    physical_mem->ReadVirtual((void*)guest_rip, insn_bytes, 3);
+    auto guest_pte = Utils::GetPte((void*)guest_rip, __readcr3());
 
-    int rip_privilege = (guest_rip > 0x7FFFFFFFFFFF) ? 3 : 0;
+    if (guest_pte == NULL)
+    {
+        guest_vmcb.save_state_area.cr2 = (uintptr_t)guest_rip;
 
-    if (rip_privilege == 3 && insn_bytes[0] == 0x0F && insn_bytes[1] == 0x05)
+        InjectException(EXCEPTION_VECTOR::PageFault, true, guest_vmcb.control_area.exit_info1);
+
+        // suppress_nrip_increment = true;
+
+        return false;
+    }
+
+    int rip_privilege = ((uintptr_t)guest_rip < 0x7FFFFFFFFFFF) ? 3 : 0;
+
+//   DbgPrint("rip_privilege %i \n", rip_privilege);
+//    DbgPrint("guest_rip %p guest_rip[0] %p guest_rip[1] %p \n", guest_rip, guest_rip[0], guest_rip[1]);
+
+    if (rip_privilege == 3 && guest_rip[0] == 0x0F && guest_rip[1] == 0x05)
     {
         SyscallHook::EmulateSyscall(this, guest_ctx);
 
         return true;
     }
-    else if (rip_privilege == 0 && insn_bytes[0] == 0x48 && 
-            insn_bytes[1] == 0x0F && insn_bytes[2] == 0x07) 
+    else if (rip_privilege == 0 && guest_rip[0] == 0x48 &&
+        guest_rip[1] == 0x0F && guest_rip[2] == 0x07)
     {
         SyscallHook::EmulateSysret(this, guest_ctx);
 
         return true;
     }
+
+    InjectException(EXCEPTION_VECTOR::InvalidOpcode, false, NULL);
 
     return false;
 }

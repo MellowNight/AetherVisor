@@ -2,7 +2,6 @@
 #include "npt_hook.h"
 #include "logging.h"
 #include "hypervisor.h"
-#include "paging_utils.h"
 #include "branch_tracer.h"
 
 #pragma optimize( "", off )

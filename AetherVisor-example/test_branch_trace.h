@@ -4,8 +4,8 @@
 #include "portable_executable.h"
 #include <tchar.h>
 
-using namespace AetherVisor;
-using namespace AetherVisor::BranchTracer;
+using namespace Aether;
+using namespace Aether::BranchTracer;
 
 /*  test_branch_trace.h:  Trace a function until return and log APIs called from the thread.	*/
 
@@ -76,9 +76,15 @@ void BranchTraceTest()
 {
 	auto exe_base = (uintptr_t)GetModuleHandle(NULL);
 
-	AetherVisor::SetCallback(AetherVisor::branch_log_full, BranchLogFullHook);
-	AetherVisor::SetCallback(AetherVisor::branch_trace_finished, BranchTraceFinished);
+	Aether::SetCallback(Aether::branch_log_full, BranchLogFullHook);
+	Aether::SetCallback(Aether::branch_trace_finished, BranchTraceFinished);
+
+    /*  intercept the next function call of Foo */
 
 	BranchTracer::Trace(
 		(uint8_t*)Foo, exe_base, PE_HEADER(exe_base)->OptionalHeader.SizeOfImage);
+
+    srand(time(NULL));
+
+    Foo((rand() * 100) % 8, (rand() * 100) % 6, (rand() * 100) % 4);
 }

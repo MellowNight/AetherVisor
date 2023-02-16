@@ -15,7 +15,8 @@ Hypervisor* Hypervisor::Get()
 
 bool Hypervisor::IsCoreVirtualized(int32_t core_number)
 {
-	/*	I switched from vmmcall to a simple pointer check to avoid #UD	*/
+    /*	I switched from vmmcall to a simple pointer check to avoid #UD	*/
 
-	return hypervisor->vcpus[core_number] != NULL ? true : false;
+    return hypervisor->vcpus[core_number] != NULL ? true : false;
 }
+

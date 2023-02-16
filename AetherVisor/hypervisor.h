@@ -1,6 +1,5 @@
 #pragma once
 #include "svm.h"
-#include "paging_utils.h"
 
 struct GuestRegisters
 {
@@ -23,13 +22,13 @@ struct GuestRegisters
 };
 
 /*
-    VcpuData:
-    Contains core-specific VMCB data and other information. Must be 16 byte aligned on the stack
-
-    StackSpace - Stack Space required because we are manually setting stack pointer to guest_vmcbPa
-    We need to also subtract some size to make VMCB 4KB aligned	& guest_vmcbPa 16 byte aligned
-
-    Self - VcpuData self-reference 
+*   VcpuData:
+*   Contains core-specific VMCB data and other information. Must be 16 byte aligned on the stack
+*
+*   StackSpace - Stack Space required because we are manually setting stack pointer to guest_vmcbPa
+*   We need to also subtract some size to make VMCB 4KB aligned	& guest_vmcbPa 16 byte aligned
+*
+*   Self - VcpuData self-reference
 */
 
 struct VcpuData
@@ -37,7 +36,6 @@ struct VcpuData
     uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(int64_t) * 4];
     uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
     uintptr_t   host_vmcb_physicaladdr;
-//    PhysMemAccess* mem_access;
     struct      VcpuData* self;
     uint8_t     pad[8];
     VMCB        guest_vmcb;
@@ -60,8 +58,7 @@ struct VcpuData
     );
 
     bool InvalidOpcodeHandler(
-        GuestRegisters* guest_ctx,
-        PhysMemAccess* physical_mem
+        GuestRegisters* guest_ctx
     );
 
     void MsrExitHandler(

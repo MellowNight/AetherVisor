@@ -1,5 +1,4 @@
 #include "logging.h"
-#include "paging_utils.h"
 #include "disassembly.h"
 #include "portable_executable.h"
 #include "vmexit.h"
@@ -19,7 +18,7 @@ namespace BranchTracer
 	HANDLE thread_id;
 	CR3 process_cr3;
 
-	bool is_system;
+	int is_system;
 
 	PMDL mdl;
 
@@ -30,12 +29,12 @@ namespace BranchTracer
 		initialized = true;
 		range_base = trace_range_base;
 		range_size = trace_range_size;
-
+		process_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
 		log_buffer = (BranchLog*)out_buffer;
 
-		is_system = (vcpu->guest_vmcb.save_state_area.cr3.Flags == __readcr3()) ? true : false;
+		is_system = ((uintptr_t)start_addr < 0x7FFFFFFFFFFF) ? false : true;
 
-		// DbgPrint("log_buffer  = %p \n", log_buffer);
+		DbgPrint("log_buffer  = %p \n", log_buffer);
 
 		if (is_system)
 		{
@@ -51,13 +50,13 @@ namespace BranchTracer
 		stop_address = stop_addr;
 
 
-		/*  place breakpoint to capture ETHREAD  */
+		///*  place breakpoint to capture ETHREAD  */
 
-		vcpu->guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 1;
-		vcpu->guest_vmcb.save_state_area.dr7.Length0 = 0;
-		vcpu->guest_vmcb.save_state_area.dr7.ReadWrite0 = 0;
+		//vcpu->guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 1;
+		//vcpu->guest_vmcb.save_state_area.dr7.Length0 = 0;
+		//vcpu->guest_vmcb.save_state_area.dr7.ReadWrite0 = 0;
 
-		__writedr(0, (uintptr_t)start_addr);
+		//__writedr(0, (uintptr_t)start_addr);
 	}
 
 	void Start(VcpuData* vcpu)
@@ -70,7 +69,7 @@ namespace BranchTracer
 			stop_address = *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp;
 		}
 
-		// DbgPrint("BranchTracer::stop_address  = %p \n", stop_address);
+		DbgPrint("BranchTracer::stop_address  = %p \n", stop_address);
 
 		int processor_id = KeGetCurrentProcessorNumber();
 
@@ -78,7 +77,7 @@ namespace BranchTracer
 
 		KeSetSystemAffinityThread(affinity);
 
-		// DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+		DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
 
 		active = true;
 
@@ -90,7 +89,7 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-		//	DbgPrint("BranchTracer::Resume guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.Rip);
+			DbgPrint("BranchTracer::Resume guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
 
 			int cpuinfo[4];
 

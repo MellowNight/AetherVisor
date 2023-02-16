@@ -56,7 +56,7 @@ extern "C" {
     int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 }
 
-namespace AetherVisor
+namespace Aether
 {
     enum NCR3_DIRECTORIES
     {
@@ -119,7 +119,8 @@ namespace AetherVisor
 
     namespace SyscallHook
     {
-        int HookEFER();
+        int Disable();
+        int Enable();
     }
 
     namespace Sandbox

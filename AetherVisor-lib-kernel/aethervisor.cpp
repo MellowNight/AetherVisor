@@ -14,7 +14,7 @@ void (*syscall_hook)(GuestRegisters* registers, void* guest_rip);
 
 /*  vmmcall parameter order: rcx, rdx, r8, r9, r12, r11  */
 
-namespace AetherVisor
+namespace Aether
 {
     struct Callback
     {

@@ -1,6 +1,5 @@
 #include "npt_hook.h"
 #include "logging.h"
-#include "paging_utils.h"
 #include "disassembly.h"
 #include "portable_executable.h"
 #include "vmexit.h"
@@ -104,23 +103,23 @@ namespace NptHooks
 			auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
 
-			hook_entry->mdl = Utils::LockPages(PAGE_ALIGN(address), IoReadAccess, mode);
+			hook_entry->mdl	= Utils::LockPages(PAGE_ALIGN(address), IoReadAccess, mode);
 
-			hook_entry->ncr3_id = ncr3_id;
-			hook_entry->address = address;
-			hook_entry->process_cr3 = vcpu->guest_vmcb.save_state_area.cr3.Flags;
+			hook_entry->ncr3_id	= ncr3_id;
+			hook_entry->address	= address;
+			hook_entry->process_cr3	= vcpu->guest_vmcb.save_state_area.cr3.Flags;
 
 
 			/*	get the guest pte and physical address of the hooked page	*/
 
-			hook_entry->guest_physical_page = (uint8_t*)physical_page;
+			hook_entry->guest_physical_page	= (uint8_t*)physical_page;
 
 			hook_entry->guest_pte = guest_pte;
 
-			hook_entry->original_nx = hook_entry->guest_pte->ExecuteDisable;
+			hook_entry->original_nx	= hook_entry->guest_pte->ExecuteDisable;
 
-			hook_entry->guest_pte->ExecuteDisable = 0;
-			hook_entry->guest_pte->Write = 1;
+			guest_pte->ExecuteDisable = 0;
+			guest_pte->Write = 1;
 
 
 			/*	get the nested pte of the guest physical address, in primary nCR3	*/

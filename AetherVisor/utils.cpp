@@ -13,7 +13,7 @@ namespace Utils
 
         if (tls_index < 64)
         {
-result = (uintptr_t*)(gs_base + 8 * tls_index + 0x1480);
+            result = (uintptr_t*)(gs_base + 8 * tls_index + 0x1480);
         }
         else
         {

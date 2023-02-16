@@ -2,7 +2,7 @@
 #include "aethervisor_kernel.h"
 #include "utils.h"
 
-namespace AetherVisor
+namespace Aether
 {
 	namespace Sandbox
 	{

@@ -15,6 +15,7 @@ enum VMMCALL_ID : uintptr_t
     deny_sandbox_reads = 0x11111118,
     start_branch_trace = 0x11111119,
     hook_efer_syscall = 0x1111111A,
+    unbox_page = 0x1111111B,
 };
 
 #define PAGE_SIZE 0x1000
@@ -53,13 +54,13 @@ extern "C" {
     extern void (*branch_trace_finish_event)();
     void __stdcall branch_trace_finish_event_wrap();
 
-    extern void (*syscall_hook)(GuestRegisters* registers, void* guest_rip);
+    extern void (*syscall_hook)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
     void __stdcall syscall_hook_wrap();
 
     int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 }
 
-namespace AetherVisor
+namespace Aether
 {
     enum NCR3_DIRECTORIES
     {
@@ -117,23 +118,22 @@ namespace AetherVisor
 
         extern BranchLog* log_buffer;
 
-        void Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL);
+        void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL);
     }
 
     namespace SyscallHook
     {
-        int HookEFER();
+        int Enable();
+        int Disable();
     }
 
     namespace Sandbox
     {
-        void DenyPageAccess(void* page_addr, bool allow_reads);
-
         void DenyRegionAccess(void* base, size_t range, bool allow_reads);
 
-        int SandboxPage(uintptr_t address, uintptr_t tag);
-
         void SandboxRegion(uintptr_t base, uintptr_t size);
+
+        void UnboxRegion(uintptr_t base, uintptr_t size);
     }
 
     void SetCallback(

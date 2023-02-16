@@ -1,7 +1,6 @@
 #pragma once
 #include "hypervisor.h"
 #include "npt.h"
-#include "paging_utils.h"
 
 namespace Sandbox
 {
