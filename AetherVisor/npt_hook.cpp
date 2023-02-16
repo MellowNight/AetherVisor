@@ -162,6 +162,8 @@ namespace NptHooks
 				}
 
 				memcpy((uint8_t*)hooked_copy + page_offset, patch, patch_len);
+
+				DbgPrint("hooked_copy %p \n\n", hooked_copy);
 			}
 
 		}

@@ -14,7 +14,7 @@ namespace Aether
             log_buffer = new BranchLog{};
 
             NptHook::Set((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, primary);
-            NptHook::Set((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox);
+          //  NptHook::Set((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox);
 
             svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, stop_addr, log_buffer, range_base, range_size);
 

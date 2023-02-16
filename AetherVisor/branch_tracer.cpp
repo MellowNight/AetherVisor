@@ -34,8 +34,6 @@ namespace BranchTracer
 
 		is_system = ((uintptr_t)start_addr < 0x7FFFFFFFFFFF) ? false : true;
 
-		DbgPrint("log_buffer  = %p \n", log_buffer);
-
 		if (is_system)
 		{
 			mdl = Utils::LockPages((void*)log_buffer, IoModifyAccess, KernelMode, log_buffer->info.capacity);
@@ -77,7 +75,7 @@ namespace BranchTracer
 
 		KeSetSystemAffinityThread(affinity);
 
-		DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+		DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 		active = true;
 
@@ -89,7 +87,7 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-			DbgPrint("BranchTracer::Resume guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+			DbgPrint("BranchTracer::Resume guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 			int cpuinfo[4];
 
@@ -118,7 +116,7 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-			DbgPrint("BranchTracer::Pause guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+			DbgPrint("BranchTracer::Pause guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 			/*	BTF, LBR, and trap flag disable	*/
 

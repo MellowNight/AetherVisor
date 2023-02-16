@@ -4,10 +4,10 @@
 
 void VcpuData::BreakpointHandler(GuestRegisters* guest_ctx)
 {
-    DbgPrint("BranchTracer::initialized %i, BranchTracer::start_address %p, BranchTracer::thread_id %i ! \n", BranchTracer::initialized, BranchTracer::start_address, BranchTracer::thread_id);
+    DbgPrint("[BreakpointHandler]   BranchTracer::initialized %i, BranchTracer::start_address %p, BranchTracer::thread_id %i ! \n", BranchTracer::initialized, BranchTracer::start_address, BranchTracer::thread_id);
 
     auto guest_rip = guest_vmcb.save_state_area.rip;
-    DbgPrint("guest_rip %p \n", guest_rip);
+    DbgPrint("[BreakpointHandler]   guest_rip %p \n\n", guest_rip);
 
     if (BranchTracer::initialized && guest_rip == BranchTracer::start_address && !BranchTracer::thread_id)
     {
@@ -16,7 +16,7 @@ void VcpuData::BreakpointHandler(GuestRegisters* guest_ctx)
 
                 if (hook_entry->address == data)
                 {
-                    DbgPrint("hook_entry->address == data, found stealth breakpoint! \n");
+                    DbgPrint("[BreakpointHandler]   hook_entry->address == data, found stealth breakpoint! \n");
 
                     UnsetHook(hook_entry);
                 }

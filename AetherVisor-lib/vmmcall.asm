@@ -41,7 +41,7 @@ svm_vmmcall proc frame
 	
 	.endprolog
 
-	PUSHAQ ; prevent the corruption of certain guest registers used during vm unload
+	PUSHAQ                  ; prevent the corruption of certain guest registers used during vm unload
 
 	lea r11, [rsp+28h+88h]	; 6th param
 	mov r11, qword ptr [r11]

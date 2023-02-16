@@ -8,6 +8,7 @@ int main()
 	Symbols::Init();
 
 	BranchTraceTest();
+	__debugbreak();
 //	NptHookTest();
 
 	//SandboxTest();

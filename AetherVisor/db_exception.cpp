@@ -10,12 +10,12 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
     DR6 dr6 = guest_vmcb.save_state_area.dr6;
 
-    DbgPrint("dr6.SingleInstruction = %i \n", dr6.SingleInstruction);
-    DbgPrint("guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) = %i \n", guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9));
-    DbgPrint("BranchTracer::process_cr3.Flags %p \n", BranchTracer::process_cr3.Flags);
-    DbgPrint("guest_vmcb.save_state_area.cr3.Flags %p \n", guest_vmcb.save_state_area.cr3.Flags);
-    DbgPrint("BranchTracer::range_base %p \n", BranchTracer::range_base);
-    DbgPrint("BranchTracer::range_base + BranchTracer::range_size %p \n", BranchTracer::range_size + BranchTracer::range_base);
+    DbgPrint("[DebugFaultHandler]   dr6.SingleInstruction = %i \n", dr6.SingleInstruction);
+    DbgPrint("[DebugFaultHandler]   guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) = %i \n", guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9));
+    DbgPrint("[DebugFaultHandler]   BranchTracer::process_cr3.Flags %p \n", BranchTracer::process_cr3.Flags);
+    DbgPrint("[DebugFaultHandler]   guest_vmcb.save_state_area.cr3.Flags %p \n", guest_vmcb.save_state_area.cr3.Flags);
+    DbgPrint("[DebugFaultHandler]   BranchTracer::range_base %p \n", BranchTracer::range_base);
+    DbgPrint("[DebugFaultHandler]   BranchTracer::range_base + BranchTracer::range_size %p \n\n\n", BranchTracer::range_size + BranchTracer::range_base);
 
     if (dr6.SingleInstruction == 1)
     {
@@ -32,7 +32,7 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
                 BranchTracer::Pause(this);
             }
 
-            DbgPrint("LastBranchFromIP %p guest_rip = %p \n", guest_vmcb.save_state_area.br_from, guest_rip);
+            DbgPrint("[DebugFaultHandler]   LastBranchFromIP %p guest_rip = %p \n", guest_vmcb.save_state_area.br_from, guest_rip);
 
             BranchTracer::log_buffer->Log(this, guest_rip, guest_vmcb.save_state_area.br_from);
 
@@ -53,7 +53,7 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
             BranchTracer::Pause(this);
 
-            DbgPrint("Finished single stepping %p \n", guest_vmcb.save_state_area.rip);
+            DbgPrint("[DebugFaultHandler]   Finished single stepping %p \n", guest_vmcb.save_state_area.rip);
 
             Instrumentation::InvokeHook(this, Instrumentation::sandbox_readwrite);
         }
