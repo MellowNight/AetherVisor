@@ -1,4 +1,5 @@
 #include "hypervisor.h"
+#include "utils.h"
 
 Hypervisor* Hypervisor::hypervisor = NULL;
 
@@ -20,3 +21,20 @@ bool Hypervisor::IsCoreVirtualized(int32_t core_number)
     return hypervisor->vcpus[core_number] != NULL ? true : false;
 }
 
+bool VcpuData::IsPagePresent(void* address)
+{
+    auto guest_pte = Utils::GetPte((void*)address, __readcr3());
+
+    if (guest_pte == NULL)
+    {
+        guest_vmcb.save_state_area.cr2 = (uintptr_t)address;
+
+        InjectException(EXCEPTION_VECTOR::PageFault, true, guest_vmcb.control_area.exit_info1);
+
+        suppress_nrip_increment = TRUE;
+
+        return false;
+    }
+
+    return true;
+}

@@ -14,14 +14,9 @@ namespace BranchTracer
 	void Pause(VcpuData* vcpu);
 	void Resume(VcpuData* vcpu);
 
-	void Init(
-		VcpuData* vcpu, 
-		uintptr_t start_addr, 
-		uintptr_t stop_addr, 
-		uintptr_t out_buffer,
-		uintptr_t trace_range_base, 
-		uintptr_t trace_range_size
-	);
+	void Init(VcpuData* vcpu, uintptr_t start_addr, uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size, uint32_t tls_idx);
+
+	void UpdateState(VcpuData* vcpu);
 
 	extern CR3 process_cr3;
 
@@ -31,52 +26,16 @@ namespace BranchTracer
 	extern uintptr_t range_base;
 	extern uintptr_t range_size;
 
+	extern uint32_t tls_index;
+
 	extern uintptr_t stop_address;
 	extern uintptr_t start_address;
 
 	extern HANDLE thread_id;
 
-	union BranchLog
+	struct LogEntry
 	{
-		struct LogEntry
-		{
-			uintptr_t branch_address;
-			uintptr_t branch_target;
-		};
-
-		struct
-		{
-			int capacity;
-			int buffer_idx;
-			LogEntry* buffer;
-		} info;
-
-		LogEntry log_entries[PAGE_SIZE / sizeof(LogEntry)];
-
-		void Log(VcpuData* vcpu, uintptr_t branch_address, uintptr_t target)
-		{
-			if (info.capacity - info.buffer_idx <= 5)
-			{
-				/*	notify to the guest that the branch tracing buffer is almost full	*/
-
-				if (Instrumentation::InvokeHook(vcpu, Instrumentation::branch_log_full) == FALSE)
-				{
-				}
-				else
-				{
-					/*	overwrite the buffer starting from the beginning...	*/
-
-					info.buffer_idx = 0;
-
-					return;
-				}
-			}
-
-			info.buffer[info.buffer_idx].branch_target = target;
-			info.buffer[info.buffer_idx].branch_address = branch_address;
-			info.buffer_idx += 1;
-		}
+		uintptr_t branch_address;
+		uintptr_t branch_target;
 	};
-
-	extern BranchLog* log_buffer;
 };

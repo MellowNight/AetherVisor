@@ -25,10 +25,10 @@ namespace Aether
 
     Callback instrumentation_hooks[] = {
         // Invoked when sandboxed code reads/writes from a page that denies read/write access.
-        {sandbox_readwrite, (void**)&sandbox_mem_access_event, rw_handler_wrap},
+        {sandbox_readwrite, (void**)&sandbox_mem_access_event, rw_handler_wrapper},
 
         // Invoked every time RIP leaves a sandbox memory region
-        {sandbox_execute, (void**)&sandbox_execute_event, execute_handler_wrap},
+        {sandbox_execute, (void**)&sandbox_execute_event, execute_handler_wrapper},
 
         // Invoked when branch trace buffer is full
         {branch_log_full, (void**)&branch_log_full_event, branch_log_full_event_wrap},

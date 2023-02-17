@@ -61,8 +61,7 @@ namespace NptHooks
 		void* address, 
 		uint8_t* patch, 
 		size_t patch_len,
-		int32_t ncr3_id, 
-		bool& suppress_nrip_increment)
+		int32_t ncr3_id)
 	{
 		/*	First, switch to guest process context	*/
 	
@@ -74,15 +73,9 @@ namespace NptHooks
 
 		/*	page in the page if it's not present.	*/
 
-		auto guest_pte = Utils::GetPte((void*)address, __readcr3());
-
-		if (guest_pte == NULL)
+		if (!vcpu->IsPagePresent(address))
 		{
-			vcpu->guest_vmcb.save_state_area.cr2 = (uintptr_t)address;
-
-			vcpu->InjectException(EXCEPTION_VECTOR::PageFault, true, vcpu->guest_vmcb.control_area.exit_info1);
-
-			suppress_nrip_increment = true;
+			return NULL;
 		}
 		else
 		{
@@ -114,12 +107,12 @@ namespace NptHooks
 
 			hook_entry->guest_physical_page	= (uint8_t*)physical_page;
 
-			hook_entry->guest_pte = guest_pte;
+			hook_entry->guest_pte = Utils::GetPte((void*)address, __readcr3());;
 
 			hook_entry->original_nx	= hook_entry->guest_pte->ExecuteDisable;
 
-			guest_pte->ExecuteDisable = 0;
-			guest_pte->Write = 1;
+			hook_entry->guest_pte->ExecuteDisable = 0;
+			hook_entry->guest_pte->Write = 1;
 
 
 			/*	get the nested pte of the guest physical address, in primary nCR3	*/

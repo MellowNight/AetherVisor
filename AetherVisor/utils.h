@@ -56,4 +56,17 @@ namespace Utils
     );
 
     uintptr_t* GetTlsPtr(uintptr_t gs_base, uint32_t tls_index);
+
+    template <typename T>
+    uint32_t Diff(T a, T b)
+    {
+        int diff = 0;
+
+        if (a > b)
+            diff = a - b;
+        else
+            diff = b - a;
+
+        return diff;
+    }
 }

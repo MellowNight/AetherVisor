@@ -1,6 +1,6 @@
 extern sandbox_execute_event : qword
 extern sandbox_mem_access_event : qword
-extern branch_log_full_event : qword
+extern BranchCallbackInternal : proc
 extern branch_trace_finish_event : qword
 extern syscall_hook : qword
 
@@ -44,12 +44,12 @@ POPAQ macro
         pop     rax
 endm
 
-execute_handler_wrap proc frame
+execute_handler_wrapper proc frame
 	
-    .endprolog
-
     PUSHAQ
 
+    .endprolog
+ 
     mov rcx, rsp                    ; pass the registers
     mov rdx, [rsp + 8 * 16 + 8]     ; pass the return address
     mov r8, [rsp + 8 * 16]          ; pass the original guest RIP
@@ -60,16 +60,16 @@ execute_handler_wrap proc frame
 
     ret
 	
-execute_handler_wrap endp
+execute_handler_wrapper endp
 
-rw_handler_wrap proc frame
+rw_handler_wrapper proc frame
 	
+    PUSHAQ
+   
     .endprolog
 
-    PUSHAQ
-
     mov rcx, rsp                ; pass the registers
-    mov rdx, [rsp + 8 * 16]     ; pass the original guest RIP
+    mov rdx, [rsp + 8 * 16]     ; pass the guest RIP
     
     call sandbox_mem_access_event
 
@@ -77,21 +77,28 @@ rw_handler_wrap proc frame
 
     ret
 	
-rw_handler_wrap endp
+rw_handler_wrapper endp
 
-branch_log_full_event_wrap proc frame
-	
+branch_callback_wrapper proc frame
     .endprolog
 
+
     PUSHAQ
-    
-    call branch_log_full_event
+
+    mov rcx, rsp                    ; pass the registers
+    mov rdx, [rsp + 8 * 16 + 16]    ; pass the return address
+    mov r8, [rsp + 8 * 16 + 8]      ; pass the guest RIP
+    mov r9, [rsp + 8 * 16]          ; pass the LastBranchFromIP
+
+    call BranchCallbackInternal
+
+    pop rax ; delete LastBranchFromIP
 
     POPAQ
 
     ret
 	
-branch_log_full_event_wrap endp
+branch_callback_wrapper endp
 
 branch_trace_finish_event_wrap proc frame
 	

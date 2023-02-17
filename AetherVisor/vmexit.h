@@ -13,8 +13,9 @@ enum VMMCALL_ID : uintptr_t
     instrumentation_hook = 0x11111117,
     deny_sandbox_reads = 0x11111118,
     start_branch_trace = 0x11111119,
-    hook_efer_syscall = 0x1111111A,
-    unbox_page = 0x1111111B,
+    resume_branch_trace = 0x1111111A,
+    hook_efer_syscall = 0x1111111B,
+    unbox_page = 0x1111111C,
 };
 
 enum VMEXIT

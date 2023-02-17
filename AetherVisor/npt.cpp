@@ -114,13 +114,13 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 	if (exit_info1.fields.execute == 1)
 	{
-		if (guest_rip > BranchTracer::range_base && guest_rip < (BranchTracer::range_size + BranchTracer::range_base))
-		{
-			/*  Resume the branch tracer after an NCR3 switch, if the tracer is active.
-				Single-stepping mode => only #DB on branches
-			*/
-			BranchTracer::Resume(this);
-		}
+		//if (guest_rip > BranchTracer::range_base && guest_rip < (BranchTracer::range_size + BranchTracer::range_base))
+		//{
+		//	/*  Resume the branch tracer after an NCR3 switch, if the tracer is active.
+		//		Single-stepping mode => only #DB on branches
+		//	*/
+		//	BranchTracer::Resume(this);
+		//}
 
 		if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{

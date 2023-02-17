@@ -37,10 +37,12 @@ struct VcpuData
     uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
     uintptr_t   host_vmcb_physicaladdr;
     struct      VcpuData* self;
-    uint8_t     pad[8];
+    uintptr_t   suppress_nrip_increment;
     VMCB        guest_vmcb;
     VMCB        host_vmcb;
     uint8_t     host_save_area[0x1000];
+
+    bool IsPagePresent(void* address);
 
     void InjectException(int vector, bool push_error, int error_code);
 

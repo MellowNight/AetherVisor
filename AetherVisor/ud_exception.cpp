@@ -9,16 +9,8 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx)
 
     /*	page in the instruction's page if it's not present. */
 
-    auto guest_pte = Utils::GetPte((void*)guest_rip, __readcr3());
-
-    if (guest_pte == NULL)
+    if (!IsPagePresent(guest_rip))
     {
-        guest_vmcb.save_state_area.cr2 = (uintptr_t)guest_rip;
-
-        InjectException(EXCEPTION_VECTOR::PageFault, true, guest_vmcb.control_area.exit_info1);
-
-        // suppress_nrip_increment = true;
-
         return false;
     }
 

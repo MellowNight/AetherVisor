@@ -131,6 +131,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)dependencies\AetherVisor\include;$(SolutionDir)dependencies\Zydis\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,6 +141,8 @@
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(SolutionDir)dependencies\AetherVisor\lib\Release;$(SolutionDir)dependencies\Zydis\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>AetherVisor-lib.lib;Zydis.lib;Zycore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <StackCommitSize>40000</StackCommitSize>
+      <StackReserveSize>1049000</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

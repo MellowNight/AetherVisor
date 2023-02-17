@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <math.h>
 #include <intrin.h>
+#include <vector>
 
 enum VMMCALL_ID : uintptr_t
 {
@@ -43,13 +44,13 @@ struct GuestRegisters
 extern "C" {
 
     extern void (*sandbox_execute_event)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
-    void __stdcall execute_handler_wrap();
+    void __stdcall execute_handler_wrapper();
 
     extern void (*sandbox_mem_access_event)(GuestRegisters* registers, void* o_guest_rip);
-    void __stdcall rw_handler_wrap();
+    void __stdcall rw_handler_wrapper();
 
-    extern void (*branch_log_full_event)();
-    void __stdcall branch_log_full_event_wrap();
+    extern void (*branch_callback)(GuestRegisters* registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP);
+    void __stdcall branch_callback_wrapper();
 
     extern void (*branch_trace_finish_event)();
     void __stdcall branch_trace_finish_event_wrap();
@@ -74,7 +75,7 @@ namespace Aether
     {
         sandbox_readwrite = 0,
         sandbox_execute = 1,
-        branch_log_full = 2,
+        branch = 2,
         branch_trace_finished = 3,
         syscall = 4,
         max_id
@@ -95,28 +96,15 @@ namespace Aether
 
     namespace BranchTracer
     {
-        union BranchLog
+        struct LogEntry
         {
-            struct LogEntry
-            {
-                uintptr_t branch_address;
-                uintptr_t branch_target;
-            };
-
-            struct
-            {
-                int capacity;
-                int buffer_idx;
-                LogEntry* buffer;
-            } info;
-
-            LogEntry log_entries[PAGE_SIZE / sizeof(LogEntry)];
-
-            void Init();    // for kernel driver ExAllocatePool
-            // BranchLog() for usermode CPP
+            uintptr_t branch_address;
+            uintptr_t branch_target;
         };
 
-        extern BranchLog* log_buffer;
+        extern "C" extern void BranchCallback(GuestRegisters * registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP);
+
+        void Init();
 
         void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL);
     }
