@@ -7,7 +7,6 @@ using namespace Instrumentation;
 
 void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 {
-
     DR6 dr6 = guest_vmcb.save_state_area.dr6;
 
     if (dr6.SingleInstruction == 1)
@@ -15,6 +14,28 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
         DbgPrint("[DebugFaultHandler]   guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) = %i \n", guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9));
         DbgPrint("[DebugFaultHandler]   BranchTracer::range_base %p \n", BranchTracer::range_base);
         DbgPrint("[DebugFaultHandler]   BranchTracer::range_base + BranchTracer::range_size %p \n\n\n", BranchTracer::range_size + BranchTracer::range_base);
+
+
+        if (guest_vmcb.save_state_area.rip == BranchTracer::resume_address)
+        {			
+            /*	transition out of branch callback, resume/unlock branch hooks	*/
+
+            DbgPrint("[UpdateState]		Branch hook finished \n");
+
+            BranchTracer::resume_address = NULL;
+
+            auto tls_ptr = Utils::GetTlsPtr(guest_vmcb.save_state_area.gs_base, BranchTracer::tls_index);
+
+            *tls_ptr = FALSE;
+
+            /*  capture the ID of the target thread & start the tracer  */
+
+            BranchTracer::Resume(this);
+
+            guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 0;
+
+            return;
+        }
 
         if (BranchTracer::active == true)
         {

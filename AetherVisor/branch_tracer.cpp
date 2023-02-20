@@ -15,7 +15,8 @@ namespace BranchTracer
 
 	uintptr_t range_base;
 	uintptr_t range_size;
-	uintptr_t captured_rip;
+	
+	uintptr_t resume_address;
 
 	uint32_t tls_index;
 
@@ -83,7 +84,6 @@ namespace BranchTracer
 		Resume(vcpu);
 	}
 
-
 	void Resume(VcpuData* vcpu)
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
@@ -135,6 +135,8 @@ namespace BranchTracer
 
 	void Stop(VcpuData* vcpu)
 	{
+		DbgPrint("[BranchTracer::Stop]			BRANCH TRACING FINISHED!!!!!!!!!!!\n");
+
 		Pause(vcpu);
 
 		active = false;
@@ -149,47 +151,58 @@ namespace BranchTracer
 		if ((guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) &&
 			(guest_vmcb.save_state_area.cr3.Flags == BranchTracer::process_cr3.Flags))
 		{
-			if (guest_rip < BranchTracer::range_base || guest_rip >(BranchTracer::range_size + BranchTracer::range_base))
-			{
-				/*  Pause branch tracer after a branch outside of the specified range is executed.
-					Single-stepping mode => completely disabled
-				*/
-
-				BranchTracer::Pause(vcpu);
-
-				return;
-			}
+			// BranchTracer::Resume(vcpu);
+			//nvcpu->guest_vmcb.save_state_area.dr6.SingleInstruction = 0;
 
 			DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
 
-			/*  Do not trace the branch hook itself */
-
-			auto tls_ptr = Utils::GetTlsPtr(guest_vmcb.save_state_area.gs_base, tls_index);
-
-			if (!*tls_ptr)
-			{
-				*tls_ptr = TRUE;
-
-				captured_rip = guest_rip;
-
-				Instrumentation::InvokeHook(
-					vcpu, Instrumentation::branch, &guest_vmcb.save_state_area.br_from, sizeof(uintptr_t));
-
-				return;
-			}
-			else if (captured_rip == guest_rip)
-			{
-				DbgPrint("[UpdateState]		Branch hook finished \n");
-
-				captured_rip = NULL;
-				*tls_ptr = FALSE;
-			}
+			/*	completely stop the branch tracer	*/
 
 			if (guest_rip == BranchTracer::stop_address)
 			{
 				BranchTracer::Stop(vcpu);
 
 				Instrumentation::InvokeHook(vcpu, Instrumentation::branch_trace_finished);
+
+				return;
+			}
+
+			/*  
+				Do not trace the branch hook itself.
+
+				Pause branch tracer when a branch to outside of the specified range occurs,
+				or upon invoking branch callback.
+
+				Single-stepping mode => completely disabled
+			*/
+
+			auto tls_ptr = Utils::GetTlsPtr(guest_vmcb.save_state_area.gs_base, tls_index);
+
+			BranchTracer::Pause(vcpu);
+
+			if (!*tls_ptr)
+			{				
+				*tls_ptr = TRUE;
+				
+				Instrumentation::InvokeHook(
+					vcpu, Instrumentation::branch, &guest_vmcb.save_state_area.br_from, sizeof(uintptr_t));
+
+				if (guest_rip < BranchTracer::range_base || guest_rip >(BranchTracer::range_size + BranchTracer::range_base))
+				{
+					resume_address = *(uintptr_t*)guest_vmcb.save_state_area.rsp;
+				}
+				else
+				{
+					resume_address = guest_rip;
+				}
+
+				vcpu->guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 1;
+				vcpu->guest_vmcb.save_state_area.dr7.Length0 = 0;
+				vcpu->guest_vmcb.save_state_area.dr7.ReadWrite0 = 0;
+
+				__writedr(0, (uintptr_t)resume_address);
+
+				return;
 			}
 
 			return;

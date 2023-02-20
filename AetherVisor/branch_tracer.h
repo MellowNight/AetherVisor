@@ -31,6 +31,8 @@ namespace BranchTracer
 	extern uintptr_t stop_address;
 	extern uintptr_t start_address;
 
+	extern uintptr_t resume_address;
+
 	extern HANDLE thread_id;
 
 	struct LogEntry
