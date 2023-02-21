@@ -31,6 +31,11 @@ enum VMEXIT
     GP = 0x4D,
     DB = 0x41,
     WRITE_CR3 = 0x13,
+    DR0_READ = 0x20,
+    DR6_READ = 0x26,
+    DR7_READ = 0x27,
+    PUSHF = 0x70,
+    POPF = 0x71
 };
 
 extern "C" int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);

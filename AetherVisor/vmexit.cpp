@@ -102,6 +102,26 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx)
 
         break;
     }
+    case VMEXIT::DR0_READ:
+    case VMEXIT::DR6_READ:
+    case VMEXIT::DR7_READ:
+    {
+        vcpu->DebugRegisterExit(guest_ctx);
+
+        break;
+    }
+    case VMEXIT::PUSHF:
+    {       
+        auto vmroot_cr3 = __readcr3();
+
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
+
+        vcpu->PushfExit(guest_ctx);
+
+        __writecr3(vmroot_cr3);
+
+        break;
+    }
     case VMEXIT::INVALID:
     {
         DbgPrint("VMEXIT::INVALID!! ! \n");

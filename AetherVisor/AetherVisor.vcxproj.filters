@@ -162,6 +162,9 @@
     <ClCompile Include="ud_exception.cpp">
       <Filter>Source Files\exceptions</Filter>
     </ClCompile>
+    <ClCompile Include="debug_flags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="instructions.asm">

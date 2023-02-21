@@ -18,7 +18,7 @@ namespace Instrumentation
 
 		int rip_privilege = (guest_rip < 0x7FFFFFFFFFFF) ? 3 : 0;
 
-		if (!vcpu->IsPagePresent((uint8_t*)vcpu->guest_vmcb.save_state_area.rsp - 8 - params_size))
+		if (!vcpu->IsPagePresent((uint8_t*)vcpu->guest_vmcb.save_state_area.rsp - sizeof(uintptr_t) - params_size))
 		{
 			return false;
 		}
@@ -27,7 +27,7 @@ namespace Instrumentation
 		{
 			vcpu->guest_vmcb.save_state_area.rip = (uintptr_t)callbacks[handler];
 
-			vcpu->guest_vmcb.save_state_area.rsp -= 8;
+			vcpu->guest_vmcb.save_state_area.rsp -= sizeof(uintptr_t);
 
 			*(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp = guest_rip;
 

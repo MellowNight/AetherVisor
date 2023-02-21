@@ -202,6 +202,7 @@
     <ClCompile Include="bp_exception.cpp" />
     <ClCompile Include="branch_tracer.cpp" />
     <ClCompile Include="db_exception.cpp" />
+    <ClCompile Include="debug_flags.cpp" />
     <ClCompile Include="disassembly.cpp" />
     <ClCompile Include="hypervisor.cpp" />
     <ClCompile Include="instrumentation_hook.cpp" />

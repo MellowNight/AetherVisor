@@ -15,8 +15,8 @@ enum VMMCALL_ID : uintptr_t
     instrumentation_hook = 0x11111117,
     deny_sandbox_reads = 0x11111118,
     start_branch_trace = 0x11111119,
-    hook_efer_syscall = 0x1111111A,
-    unbox_page = 0x1111111B,
+    hook_efer_syscall = 0x1111111B,
+    unbox_page = 0x1111111C,
 };
 
 #define PAGE_SIZE 0x1000
@@ -102,7 +102,9 @@ namespace Aether
             uintptr_t branch_target;
         };
 
-        extern "C" extern void BranchCallback(GuestRegisters * registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP);
+        extern  std::vector<LogEntry> log_buffer;
+
+        extern "C" extern void BranchCallbackInternal(GuestRegisters * registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP);
 
         void Init();
 

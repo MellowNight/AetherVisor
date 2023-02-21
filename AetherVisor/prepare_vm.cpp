@@ -24,81 +24,98 @@ SegmentAttribute GetSegmentAttributes(uint16_t segment_selector, uintptr_t gdt_b
 	return attribute;
 }
 
-void ConfigureProcessor(VcpuData* core_data, CONTEXT* context_record)
+void VcpuData::ConfigureProcessor(CONTEXT* context_record)
 {
-	core_data->guest_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->guest_vmcb).QuadPart;
-	core_data->host_vmcb_physicaladdr = MmGetPhysicalAddress(&core_data->host_vmcb).QuadPart;
-	core_data->self = core_data;
+	guest_vmcb_physicaladdr = MmGetPhysicalAddress(&guest_vmcb).QuadPart;
+	host_vmcb_physicaladdr = MmGetPhysicalAddress(&host_vmcb).QuadPart;
 
-	core_data->guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
-	core_data->guest_vmcb.control_area.np_enable = (1UL << 0);
+	self = this;
+
+	/*	setup nested paging	*/
+
+	guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
+	guest_vmcb.control_area.np_enable = (1UL << 0);
+
+	/*	spoof reads to dr0, dr6, dr7	*/
+
+	guest_vmcb.control_area.intercept_dr_read = ((uint16_t)1 << 0);
+	guest_vmcb.control_area.intercept_dr_read = ((uint16_t)1 << 7);
+	guest_vmcb.control_area.intercept_dr_read = ((uint16_t)1 << 6);
+
+	/*	intercept PUSHF instruction and SVM instructions	*/
+
+	guest_vmcb.control_area.intercept_vec3 = ((uint32_t)1 << 16);
+
+	guest_vmcb.control_area.intercept_vec4.vmmcall_intercept = 1;
+	guest_vmcb.control_area.intercept_vec4.vmrun_intercept = 1;
+
+	/*	intercept MSR access	*/
+
+	guest_vmcb.control_area.intercept_vec3 |= (1UL << 28);
+
+	/*	intercept #BP, #UD, and #DB exceptions, set guest ASID to 1	*/
+
+	guest_vmcb.control_area.intercept_exception.intercept_bp = 1;
+	guest_vmcb.control_area.intercept_exception.intercept_db = 1;
+	guest_vmcb.control_area.intercept_exception.intercept_ud = 1;
+
+	guest_vmcb.control_area.guest_asid = 1;
+
+	/*	initialize control registers	*/
+
+	guest_vmcb.save_state_area.cr0.Flags = __readcr0();
+	guest_vmcb.save_state_area.cr2 = __readcr2();
+	guest_vmcb.save_state_area.cr3.Flags = __readcr3();
+	guest_vmcb.save_state_area.cr4.Flags = __readcr4();
+
+	/*	initialize important registers	*/
+
+	guest_vmcb.save_state_area.rip = context_record->Rip;
+	guest_vmcb.save_state_area.rax = context_record->Rax;
+	guest_vmcb.save_state_area.rsp = context_record->Rsp;
+	guest_vmcb.save_state_area.rflags.Flags = __readeflags();
+	guest_vmcb.save_state_area.efer.value = __readmsr(MSR::efer);
+	guest_vmcb.save_state_area.guest_pat = __readmsr(MSR::pat);
+	guest_vmcb.save_state_area.lstar = __readmsr(MSR::lstar);
+
+	/*	initialize global descriptor tables	*/
 
 	DescriptorTableRegister	gdtr, idtr;
 
 	_sgdt(&gdtr);
 	__sidt(&idtr);
 
-	InterceptVector4 intercept_vector4 = {0};
+	guest_vmcb.save_state_area.gdtr_limit = gdtr.limit;
+	guest_vmcb.save_state_area.gdtr_base = gdtr.base;
+	guest_vmcb.save_state_area.idtr_limit = idtr.limit;
+	guest_vmcb.save_state_area.idtr_base = idtr.base;
 
-	intercept_vector4.vmmcall_intercept = 1;
-	intercept_vector4.vmrun_intercept = 1;
+	/*	initialize segments	*/
 
-	core_data->guest_vmcb.control_area.intercept_vec4 = intercept_vector4;
+	guest_vmcb.save_state_area.cs_limit = GetSegmentLimit(context_record->SegCs);
+	guest_vmcb.save_state_area.ds_limit = GetSegmentLimit(context_record->SegDs);
+	guest_vmcb.save_state_area.es_limit = GetSegmentLimit(context_record->SegEs);
+	guest_vmcb.save_state_area.ss_limit = GetSegmentLimit(context_record->SegSs);
 
-	/*	intercept MSR access	*/
+	guest_vmcb.save_state_area.cs_selector = context_record->SegCs;
+	guest_vmcb.save_state_area.ds_selector = context_record->SegDs;
+	guest_vmcb.save_state_area.es_selector = context_record->SegEs;
+	guest_vmcb.save_state_area.ss_selector = context_record->SegSs;
 
-	core_data->guest_vmcb.control_area.intercept_vec3 |= (1UL << 28);
+	guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base);
+	guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base);
+	guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base);
+	guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base);
 
-	InterceptVector2 intercept_vector2 = {0};
+	/*	other stuff	*/
 
-	intercept_vector2.intercept_bp = 1;
-	intercept_vector2.intercept_db = 1;
-	intercept_vector2.intercept_ud = 1;
+	SetupMSRPM(this);
 
-	core_data->guest_vmcb.control_area.intercept_exception = intercept_vector2;
+	__svm_vmsave(guest_vmcb_physicaladdr);
 
-	core_data->guest_vmcb.control_area.guest_asid = 1;
+	__writemsr(MSR::vm_hsave_pa, MmGetPhysicalAddress(&host_save_area).QuadPart);
 
-	core_data->guest_vmcb.save_state_area.cr0.Flags = __readcr0();
-	core_data->guest_vmcb.save_state_area.cr2 = __readcr2();
-	core_data->guest_vmcb.save_state_area.cr3.Flags = __readcr3();
-	core_data->guest_vmcb.save_state_area.cr4.Flags = __readcr4();
-
-	core_data->guest_vmcb.save_state_area.rip = context_record->Rip;
-	core_data->guest_vmcb.save_state_area.rax = context_record->Rax;
-	core_data->guest_vmcb.save_state_area.rsp = context_record->Rsp;
-	core_data->guest_vmcb.save_state_area.rflags.Flags = __readeflags();
-	core_data->guest_vmcb.save_state_area.efer.value = __readmsr(MSR::efer);
-	core_data->guest_vmcb.save_state_area.guest_pat = __readmsr(MSR::pat);
-	core_data->guest_vmcb.save_state_area.lstar = __readmsr(MSR::lstar);
-
-	core_data->guest_vmcb.save_state_area.gdtr_limit = gdtr.limit;
-	core_data->guest_vmcb.save_state_area.gdtr_base = gdtr.base;
-	core_data->guest_vmcb.save_state_area.idtr_limit = idtr.limit;
-	core_data->guest_vmcb.save_state_area.idtr_base = idtr.base;
-
-	core_data->guest_vmcb.save_state_area.cs_limit = GetSegmentLimit(context_record->SegCs);
-	core_data->guest_vmcb.save_state_area.ds_limit = GetSegmentLimit(context_record->SegDs);
-	core_data->guest_vmcb.save_state_area.es_limit = GetSegmentLimit(context_record->SegEs);
-	core_data->guest_vmcb.save_state_area.ss_limit = GetSegmentLimit(context_record->SegSs);
-
-	core_data->guest_vmcb.save_state_area.cs_selector = context_record->SegCs;
-	core_data->guest_vmcb.save_state_area.ds_selector = context_record->SegDs;
-	core_data->guest_vmcb.save_state_area.es_selector = context_record->SegEs;
-	core_data->guest_vmcb.save_state_area.ss_selector = context_record->SegSs;
-
-	core_data->guest_vmcb.save_state_area.cs_attrib = GetSegmentAttributes(context_record->SegCs, gdtr.base);
-	core_data->guest_vmcb.save_state_area.ds_attrib = GetSegmentAttributes(context_record->SegDs, gdtr.base);
-	core_data->guest_vmcb.save_state_area.es_attrib = GetSegmentAttributes(context_record->SegEs, gdtr.base);
-	core_data->guest_vmcb.save_state_area.ss_attrib = GetSegmentAttributes(context_record->SegSs, gdtr.base);
-
-	SetupMSRPM(core_data);
-
-	__svm_vmsave(core_data->guest_vmcb_physicaladdr);
-
-	__writemsr(MSR::vm_hsave_pa, MmGetPhysicalAddress(&core_data->host_save_area).QuadPart);
-
-	__svm_vmsave(core_data->host_vmcb_physicaladdr);
+	__svm_vmsave(host_vmcb_physicaladdr);
 }
 
 bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
@@ -110,7 +127,6 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 	else
 	{
 		DbgPrint("Long mode disabled\n");
-
 	}
 
 	EFER_MSR efer_msr = { 0 };

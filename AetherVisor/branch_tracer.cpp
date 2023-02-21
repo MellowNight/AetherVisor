@@ -37,7 +37,7 @@ namespace BranchTracer
 		start_address = start_addr;
 		stop_address = stop_addr;
 
-		DbgPrint("[BranchTracer::Init]	tls_idx: %p \n", tls_idx);
+	//	DbgPrint("[BranchTracer::Init]	tls_idx: %p \n", tls_idx);
 	}
 
 	void Start(VcpuData* vcpu)
@@ -57,7 +57,7 @@ namespace BranchTracer
 
 		KeSetSystemAffinityThread(affinity);
 
-		DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
+	//	DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 		active = true;
 
@@ -88,7 +88,7 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-			DbgPrint("[BranchTracer::Resume]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
+		//	DbgPrint("[BranchTracer::Resume]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 			int cpuinfo[4];
 
@@ -119,7 +119,7 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-			DbgPrint("[BranchTracer::Pause]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
+		//	DbgPrint("[BranchTracer::Pause]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 			/*	BTF, LBR, and trap flag disable	*/
 
@@ -151,10 +151,8 @@ namespace BranchTracer
 		if ((guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) &&
 			(guest_vmcb.save_state_area.cr3.Flags == BranchTracer::process_cr3.Flags))
 		{
-			// BranchTracer::Resume(vcpu);
-			//nvcpu->guest_vmcb.save_state_area.dr6.SingleInstruction = 0;
 
-			DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
+		//	DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
 
 			/*	completely stop the branch tracer	*/
 

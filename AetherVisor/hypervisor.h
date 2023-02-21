@@ -19,6 +19,11 @@ struct GuestRegisters
     uintptr_t  rdx;
     uintptr_t  rcx;
     uintptr_t  rax;
+
+    uintptr_t* operator[] (int32_t gpr_number)
+    {
+        return &((uintptr_t*)this)[15 - gpr_number];
+    }
 };
 
 /*
@@ -42,9 +47,15 @@ struct VcpuData
     VMCB        host_vmcb;
     uint8_t     host_save_area[0x1000];
 
+    void ConfigureProcessor(CONTEXT* context_record);
+
     bool IsPagePresent(void* address);
 
-    void InjectException(int vector, bool push_error, int error_code);
+    void InjectException(
+        int vector, 
+        bool push_error, 
+        int error_code
+    );
 
     void VmmcallHandler(
         GuestRegisters* guest_regs,
@@ -70,6 +81,9 @@ struct VcpuData
     void NestedPageFaultHandler(
         GuestRegisters* guest_registers
     );
+
+    void DebugRegisterExit(GuestRegisters* guest_ctx);
+    void PushfExit(GuestRegisters* guest_ctx);
 };
 
 /* Global hypervisor information    */

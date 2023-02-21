@@ -82,7 +82,6 @@ rw_handler_wrapper endp
 branch_callback_wrapper proc frame
     .endprolog
 
-
     PUSHAQ
 
     mov rcx, rsp                    ; pass the registers
@@ -90,11 +89,21 @@ branch_callback_wrapper proc frame
     mov r8, [rsp + 8 * 16 + 8]      ; pass the guest RIP
     mov r9, [rsp + 8 * 16]          ; pass the LastBranchFromIP
 
+    ; Align the stack pointer to 16 bytes
+    push rbp
+    mov rbp, rsp
+    and rsp, 0FFFFFFFFFFFFFFF0h
+
     call BranchCallbackInternal
 
-    pop rax ; delete LastBranchFromIP
+    mov rsp, rbp ; Add back the value that was subtracted
+    pop rbp
+
+    ; Restore the original stack pointer value
 
     POPAQ
+
+    add rsp, 8
 
     ret
 	

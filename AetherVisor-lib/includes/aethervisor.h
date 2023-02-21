@@ -102,6 +102,8 @@ namespace Aether
             uintptr_t branch_target;
         };
 
+        extern  std::vector<LogEntry> log_buffer;
+
         extern "C" extern void BranchCallbackInternal(GuestRegisters * registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP);
 
         void Init();

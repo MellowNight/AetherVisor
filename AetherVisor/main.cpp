@@ -57,7 +57,7 @@ bool VirtualizeAllProcessors()
 
 			vcpu_data[idx] = (VcpuData*)ExAllocatePoolZero(NonPagedPool, sizeof(VcpuData), 'Vmcb');
 
-			ConfigureProcessor(vcpu_data[idx], register_ctx);
+			vcpu_data[idx]->ConfigureProcessor(register_ctx);
 
 			auto cs_attrib = vcpu_data[idx]->guest_vmcb.save_state_area.cs_attrib;
 
