@@ -1,0 +1,34 @@
+﻿  dbg_symbols.cpp
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\dbg_symbols.cpp(21,16): warning C4244: 'return': conversion from 'DWORD64' to 'uintptr_t', possible loss of data
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\dbg_symbols.cpp(32,20): error C3861: '__readgsqword': identifier not found
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\dbg_symbols.cpp(36,25): error C3536: 'head': cannot be used before it is initialized
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\dbg_symbols.cpp(42,44): error C3536: 'dll': cannot be used before it is initialized
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\dbg_symbols.cpp(49,101): error C3536: 'dll_size': cannot be used before it is initialized
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\dbg_symbols.cpp(48,13): error C2660: 'Symbols::LoadSymbolsForModule': function does not take 2 arguments
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\dbg_symbols.cpp(15,15): message : see declaration of 'Symbols::LoadSymbolsForModule'
+  disassembly.cpp
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.h(20,7): error C2182: 'MyRegContextToZydisRegContext': this use of 'void' is not valid
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.h(21,3): error C2065: 'GuestRegisters': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.h(21,19): error C2065: 'guest_regs': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.h(22,25): error C2065: 'context': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.h(22,3): error C2275: 'ZydisRegisterContext': expected an expression instead of a type
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.h(23,3): error C2062: type 'void' unexpected
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(6,7): error C2182: 'MyRegContextToZydisRegContext': this use of 'void' is not valid
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(6,7): error C2374: 'Disasm::MyRegContextToZydisRegContext': redefinition; multiple initialization
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.h(20): message : see declaration of 'Disasm::MyRegContextToZydisRegContext'
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(6,37): error C2065: 'GuestRegisters': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(6,53): error C2065: 'guest_regs': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(6,87): error C2065: 'context': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(6,65): error C2275: 'ZydisRegisterContext': expected an expression instead of a type
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(6,96): error C2062: type 'void' unexpected
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(7,2): error C2143: syntax error: missing ';' before '{'
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(7,2): error C2447: '{': missing function header (old-style formal list?)
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(37,4): error C2065: 'ZYDIS_MAX_OPERAND_COUNT_VISIBLE': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(38,4): error C2065: 'ZYDIS_DFLAG_VISIBLE_OPERANDS_ONLY': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(32,3): error C3861: 'ZydisDecoderDecodeFull': identifier not found
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(47,32): error C2065: 'ZYDIS_MAX_OPERAND_COUNT_VISIBLE': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(79,33): error C2065: 'ZYDIS_MAX_OPERAND_COUNT_VISIBLE': undeclared identifier
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\disassembly.cpp(91,71): error C2065: 'ZYDIS_STACK_WIDTH_64': undeclared identifier
+  utils.cpp
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\utils.cpp(34,20): error C3861: '__readgsqword': identifier not found
+C:\Users\user123\Documents\GitHub\AetherVisor\AetherVisor-example\utils.cpp(104,3): error C4996: 'vsprintf': This function or variable may be unsafe. Consider using vsprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.

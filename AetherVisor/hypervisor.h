@@ -84,6 +84,7 @@ struct VcpuData
 
     void DebugRegisterExit(GuestRegisters* guest_ctx);
     void PushfExit(GuestRegisters* guest_ctx);
+    void PopfExit(GuestRegisters* guest_ctx);
 };
 
 /* Global hypervisor information    */

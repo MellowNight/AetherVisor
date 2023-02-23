@@ -5,6 +5,6 @@
 #include <winternl.h>
 #include <intrin.h>
 #include <vector>
-#include <sstream>>
+#include <sstream>
 
 #include "aethervisor.h"

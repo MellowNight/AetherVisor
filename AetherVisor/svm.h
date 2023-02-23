@@ -206,3 +206,8 @@ struct VMCB
 /*  EXITINFO1 for mov CRx and mov DRx  */
 
 #define SVM_EXITINFO_REG_MASK 0x0F
+
+#define SVM_INTERCEPT_POPF 17
+#define SVM_INTERCEPT_PUSHF 16
+
+#define SVM_NP_ENABLE 0

@@ -9,8 +9,9 @@ int main()
 
 	BranchTraceTest();
 	Sleep(10000);
-//	NptHookTest();
 
-	//SandboxTest();
-	//EferSyscallHookTest();
+	NptHookTest();
+
+	SandboxTest();
+	EferSyscallHookTest();
 }

@@ -34,7 +34,7 @@ void VcpuData::ConfigureProcessor(CONTEXT* context_record)
 	/*	setup nested paging	*/
 
 	guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[primary];
-	guest_vmcb.control_area.np_enable = (1UL << 0);
+	guest_vmcb.control_area.np_enable = (1UL << SVM_NP_ENABLE);
 
 	/*	spoof reads to dr0, dr6, dr7	*/
 
@@ -42,9 +42,10 @@ void VcpuData::ConfigureProcessor(CONTEXT* context_record)
 	guest_vmcb.control_area.intercept_dr_read = ((uint16_t)1 << 7);
 	guest_vmcb.control_area.intercept_dr_read = ((uint16_t)1 << 6);
 
-	/*	intercept PUSHF instruction and SVM instructions	*/
+	/*	intercept PUSHF, POPF instruction and SVM instructions	*/
 
-	guest_vmcb.control_area.intercept_vec3 = ((uint32_t)1 << 16);
+	guest_vmcb.control_area.intercept_vec3 |= ((uint32_t)1 << SVM_INTERCEPT_PUSHF);
+	guest_vmcb.control_area.intercept_vec3 |= ((uint32_t)1 << SVM_INTERCEPT_POPF);
 
 	guest_vmcb.control_area.intercept_vec4.vmmcall_intercept = 1;
 	guest_vmcb.control_area.intercept_vec4.vmrun_intercept = 1;
