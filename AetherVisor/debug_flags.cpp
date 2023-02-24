@@ -170,37 +170,39 @@ void VcpuData::PopfExit(GuestRegisters* guest_ctx)
 		}
     }
 
-	int64_t flags_val = 0;
+	RFLAGS stack_flags { stack_flags.Flags = 0 };
 
-	uint32_t operand_size = 4;
+	uint32_t operand_size = sizeof(uint32_t);;
 
-	flags_val = *(uint32_t*)save_state_area.rsp;
+	stack_flags.Flags = *(uint32_t*)save_state_area.rsp;
 
     /* 64-bit mode: POP defaults to a 64-bit operand. */
 
 	if (save_state_area.cs_attrib.fields.long_mode)
 	{
-		flags_val = *(uint64_t*)save_state_area.rsp;
+		stack_flags.Flags = *(uint64_t*)save_state_area.rsp;
 
-		operand_size = 8;
+		operand_size = sizeof(uint64_t);
 	}
 
 	if (*(uint8_t*)save_state_area.rip == 0x66)
 	{
-		flags_val = *(uint16_t*)save_state_area.rsp;
+		stack_flags.Flags = *(uint16_t*)save_state_area.rsp;
 
-		operand_size = 2;
+		operand_size = sizeof(uint16_t);
+
+		stack_flags.Flags = (uint16_t)stack_flags.Flags | (save_state_area.rflags.Flags & 0xffff0000u);
+
 	}
-
-	if (operand_size == 2)
+	else if (BranchTracer::active && BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags)
 	{
-		flags_val = (uint16_t)flags_val | (save_state_area.rflags.Flags & 0xffff0000u);
+		stack_flags.TrapFlag = 1;
 	}
 
-	flags_val &= 0x257fd5;
+	stack_flags.Flags &= 0x257fd5;
 
 	save_state_area.rflags.Flags &= unchanged_mask;
-	save_state_area.rflags.Flags |= (uint32_t)(flags_val & ~unchanged_mask) | 0x02;
+	save_state_area.rflags.Flags |= (uint32_t)(stack_flags.Flags & ~unchanged_mask) | 0x02;
 
 	save_state_area.rsp += operand_size;
 }
