@@ -19,9 +19,9 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
         if (guest_vmcb.save_state_area.rip == BranchTracer::resume_address)
         {			
-            /*	transition out of branch callback, resume/unlock branch hooks	*/
+            /*	transition out of branch callback, continue branch single-stepping	*/
 
-            DbgPrint("[UpdateState]		Branch hook finished \n");
+            DbgPrint("[UpdateState]		Branch hook finished, guest_rip %p \n", guest_vmcb.save_state_area.rip);
 
             BranchTracer::resume_address = NULL;
 

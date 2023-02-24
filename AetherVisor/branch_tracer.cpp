@@ -135,7 +135,7 @@ namespace BranchTracer
 
 	void Stop(VcpuData* vcpu)
 	{
-		DbgPrint("[BranchTracer::Stop]			BRANCH TRACING FINISHED!!!!!!!!!!!\n");
+		DbgPrint("[BranchTracer::Stop]		BRANCH TRACING FINISHED!!!!!!!!!!!\n");
 
 		Pause(vcpu);
 

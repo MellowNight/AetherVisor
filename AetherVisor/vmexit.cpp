@@ -108,6 +108,11 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx)
     {
         vcpu->DebugRegisterExit(guest_ctx);
 
+        if (vcpu->suppress_nrip_increment == FALSE)
+        {
+            vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
+        }
+
         break;
     }
     case VMEXIT::PUSHF:
@@ -120,6 +125,11 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx)
 
         __writecr3(vmroot_cr3);
 
+        if (vcpu->suppress_nrip_increment == FALSE)
+        {
+            vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
+        }
+
         break;
     }
     case VMEXIT::POPF:
@@ -131,6 +141,11 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx)
         vcpu->PopfExit(guest_ctx);
 
         __writecr3(vmroot_cr3);
+
+        if (vcpu->suppress_nrip_increment == FALSE)
+        {
+            vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
+        }
 
         break;
     }

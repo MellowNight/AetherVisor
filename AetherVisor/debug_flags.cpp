@@ -20,52 +20,73 @@ void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 		target_register = (*guest_ctx)[gpr_num];
 	}
 
-	if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags)
+	/*	DR7 debug register access detection	*/
+
+	if (guest_vmcb.save_state_area.dr7.GeneralDetect)
 	{
-		DbgPrint("[DebugRegisterExit]	guest_rip 0x%p gpr_num %i exit_code 0x%p \n",
-			guest_vmcb.save_state_area.rip, gpr_num, guest_vmcb.control_area.exit_code);
+		DR6 dr6; dr6.Flags = __readdr(6);
+		
+		dr6.BreakpointCondition = 0;
+		dr6.DebugRegisterAccessDetected = 1;
 
-		switch (guest_vmcb.control_area.exit_code)
-		{
-		case VMEXIT::DR0_READ:
-		{
-			auto dr0 = __readdr(0);
+		__writedr(6, dr6.Flags);
 
+		guest_vmcb.save_state_area.dr7.GeneralDetect = FALSE;
+
+		InjectException(EXCEPTION_VECTOR::Debug, FALSE, 0);
+
+		suppress_nrip_increment = TRUE;
+		return;
+	}
+
+	//DbgPrint("[DebugRegisterExit]	guest_rip 0x%p gpr_num %i exit_code 0x%p \n",
+		//guest_vmcb.save_state_area.rip, gpr_num, guest_vmcb.control_area.exit_code);
+
+	switch (guest_vmcb.control_area.exit_code)
+	{
+	case VMEXIT::DR0_READ:
+	{
+		auto dr0 = __readdr(0);
+
+		if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && BranchTracer::active)
+		{
 			if (dr0 == BranchTracer::resume_address)
 			{
 				*target_register = NULL;
 			}
-
-			break;
 		}
-		case VMEXIT::DR6_READ:
-		{
-			*target_register = __readdr(6);
 
+		break;
+	}
+	case VMEXIT::DR6_READ:
+	{
+		*target_register = __readdr(6);
+
+		if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && BranchTracer::active)
+		{
 			((DR6*)target_register)->SingleInstruction = 0;
-
-			break;
 		}
-		case VMEXIT::DR7_READ:
-		{
-			*target_register = __readdr(7);
+		break;
+	}
+	case VMEXIT::DR7_READ:
+	{
+		*target_register = __readdr(7);
 
+		if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && BranchTracer::active)
+		{
 			((DR7*)target_register)->Flags &= ~((int64_t)1 << 9);
 			((DR7*)target_register)->Flags &= ~((int64_t)1 << 8);
 			((DR7*)target_register)->GlobalBreakpoint0 = 0;
 			((DR7*)target_register)->Length0 = 0;
 			((DR7*)target_register)->ReadWrite0 = 0;
-
-			break;
 		}
-		default:
-		{
-			break;
-		}
-		}
-
-		guest_vmcb.save_state_area.rip = guest_vmcb.control_area.nrip;
+		break;
 	}
+	default:
+	{
+		break;
+	}
+	}	
 }
 
 int last_intercept = 0;
@@ -83,7 +104,7 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 
 		save_state_area.rsp -= sizeof(int16_t);
 
-		*(int16_t*)save_state_area.rsp = (int16_t)(save_state_area.rflags.Flags & 0xFFFF);
+		*(int16_t*)save_state_area.rsp = (int16_t)((save_state_area.rflags.Flags & 0xFFFF000000000000LL) >> 48);
 	}
 	else if (save_state_area.cs_attrib.fields.long_mode == 1)
 	{
@@ -94,7 +115,7 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 
 		*(int64_t*)save_state_area.rsp = save_state_area.rflags.Flags;
 
-		//((RFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
+		((RFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
 		((RFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
 
 		if (BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags && BranchTracer::active)
@@ -109,11 +130,11 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 
 		save_state_area.rsp -= sizeof(uint32_t);
 
-		uint32_t value = save_state_area.rflags.Flags & UINT32_MAX;
+		uint32_t value = ((save_state_area.rflags.Flags & 0xFFFFFFFF00000000LL) >> 32);
 
 		*(uint32_t*)save_state_area.rsp = value;
 
-		//((RFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
+		((RFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
 		((EFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
 
 		if (BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags && BranchTracer::active)
@@ -124,8 +145,6 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 
 	////DbgPrint("[PushfExit]	guest_rip 0x%p guest_vmcb.control_area.nrip 0x%p \n",
 	//	save_state_area.rip, guest_vmcb.control_area.nrip);
-
-	save_state_area.rip = control_area.nrip;
 }
 
 void VcpuData::PopfExit(GuestRegisters* guest_ctx)
@@ -134,201 +153,55 @@ void VcpuData::PopfExit(GuestRegisters* guest_ctx)
 
 	VmcbControlArea& control_area = guest_vmcb.control_area;
 
-	auto operand_size = 64;
-
-	auto iopl = save_state_area.rflags.IoPrivilegeLevel;
-
-	if (save_state_area.cs_attrib.fields.long_mode == 0)
+	if (!IsPagePresent((void*)save_state_area.rsp))
 	{
-		operand_size = 32;
+		return;
+	}
+
+	uint32_t unchanged_mask = RFLAGS_VIRTUAL_INTERRUPT_PENDING_FLAG_FLAG | RFLAGS_VIRTUAL_INTERRUPT_FLAG_FLAG | RFLAGS_VIRTUAL_8086_MODE_FLAG_FLAG;
+
+    if ( save_state_area.cpl > 0 )
+	{
+        unchanged_mask |= RFLAGS_IO_PRIVILEGE_LEVEL_FLAG;
+
+		if (save_state_area.cpl > save_state_area.rflags.IoPrivilegeLevel)
+		{
+			unchanged_mask |= RFLAGS_INTERRUPT_ENABLE_FLAG_FLAG;
+		}
+    }
+
+	int64_t flags_val = 0;
+
+	uint32_t operand_size = 4;
+
+	flags_val = *(uint32_t*)save_state_area.rsp;
+
+    /* 64-bit mode: POP defaults to a 64-bit operand. */
+
+	if (save_state_area.cs_attrib.fields.long_mode)
+	{
+		flags_val = *(uint64_t*)save_state_area.rsp;
+
+		operand_size = 8;
 	}
 
 	if (*(uint8_t*)save_state_area.rip == 0x66)
 	{
-		operand_size = 16;
+		flags_val = *(uint16_t*)save_state_area.rsp;
+
+		operand_size = 2;
 	}
 
-	if (save_state_area.cpl == 0) 
+	if (operand_size == 2)
 	{
-		uint64_t change_mask =
-			RFLAGS_CARRY_FLAG_FLAG | RFLAGS_PARITY_FLAG_FLAG | RFLAGS_AUXILIARY_CARRY_FLAG_FLAG |
-			RFLAGS_ZERO_FLAG_FLAG | RFLAGS_SIGN_FLAG_FLAG | RFLAGS_TRAP_FLAG_FLAG | RFLAGS_INTERRUPT_ENABLE_FLAG_FLAG |
-			RFLAGS_DIRECTION_FLAG_FLAG | RFLAGS_OVERFLOW_FLAG_FLAG | RFLAGS_IO_PRIVILEGE_LEVEL_FLAG |
-			RFLAGS_NESTED_TASK_FLAG_FLAG | RFLAGS_ALIGNMENT_CHECK_FLAG_FLAG | RFLAGS_IDENTIFICATION_FLAG_FLAG;
-
-		switch (operand_size)
-		{
-			case 32:
-			{		
-				last_intercept = 4;		last_rip = save_state_area.rip;
-
-
-
-				auto flags_val = *(uint32_t*)save_state_area.rsp;
-
-				save_state_area.rflags.Flags = (save_state_area.rflags.Flags & (uint32_t)~change_mask) | (flags_val & (uint32_t)change_mask);
-				save_state_area.rflags.ResumeFlag = 0;
-
-				// 32-bit pop
-				// All non-reserved flags except RF, VIP, VIF, and VM can be modified;
-				// VIP, VIF, VM, and all reserved bits are unaffected. RF is cleared.
-				break;
-			}
-			case 64:
-			{last_intercept = 5;		last_rip = save_state_area.rip;
-
-				auto flags_val = *(uint64_t*)save_state_area.rsp;
-
-				save_state_area.rflags.Flags = (save_state_area.rflags.Flags & (uint64_t)~change_mask) | (flags_val & (uint64_t)change_mask);
-				save_state_area.rflags.ResumeFlag = 0;
-
-				// 64-bit pop
-				// All non-reserved flags except RF, VIP, VIF, and VM can be modified;
-				// VIP, VIF, VM, and all reserved bits are unaffected. RF is cleared.
-				break;
-			}
-			case 16:
-			{ // OperandSize = 16
-				last_intercept = 6;		last_rip = save_state_area.rip;
-
-				auto flags_val = *(uint16_t*)save_state_area.rsp;
-
-				change_mask |= (RFLAGS_RESUME_FLAG_FLAG | RFLAGS_VIRTUAL_INTERRUPT_FLAG_FLAG |
-					RFLAGS_VIRTUAL_8086_MODE_FLAG_FLAG | RFLAGS_VIRTUAL_INTERRUPT_PENDING_FLAG_FLAG);
-
-				save_state_area.rflags.Flags = (save_state_area.rflags.Flags & (uint16_t)~change_mask) | (flags_val & (uint16_t)change_mask);
-
-				// 16-bit pop
-				// All non-reserved flags can be modified.
-				break;
-			}
-			default:
-			{
-				__debugbreak();
-				break;
-			}
-		}
-	}
-	else if (save_state_area.cpl > 0)
-	{ // CPL > 0
-		uint64_t change_mask =
-			RFLAGS_CARRY_FLAG_FLAG | RFLAGS_PARITY_FLAG_FLAG | RFLAGS_AUXILIARY_CARRY_FLAG_FLAG |
-			RFLAGS_ZERO_FLAG_FLAG | RFLAGS_SIGN_FLAG_FLAG | RFLAGS_TRAP_FLAG_FLAG |
-			RFLAGS_DIRECTION_FLAG_FLAG | RFLAGS_OVERFLOW_FLAG_FLAG | RFLAGS_NESTED_TASK_FLAG_FLAG | 
-			RFLAGS_ALIGNMENT_CHECK_FLAG_FLAG | RFLAGS_IDENTIFICATION_FLAG_FLAG;
-
-		switch (operand_size)
-		{
-			case 32:
-			{
-				if (save_state_area.cpl > iopl) 
-				{
-					last_intercept = 7;		last_rip = save_state_area.rip;
-
-
-					auto flags_val = *(uint32_t*)save_state_area.rsp;
-
-					save_state_area.rflags.Flags = (save_state_area.rflags.Flags & (uint32_t)~change_mask) | (flags_val & (uint32_t)change_mask);
-					save_state_area.rflags.ResumeFlag = 0;
-
-					//DbgPrint("[PopfExit]	flags_val %p save_state_area.rflags %p \n", flags_val, save_state_area.rflags.Flags);
-
-					// 32-bit pop
-					// All non-reserved bits except IF, IOPL, VIP, VIF, VM and RF can be modified;
-					// IF, IOPL, VIP, VIF, VM and all reserved bits are unaffected; RF is cleared.
-				}
-				else
-				{
-					last_rip = save_state_area.rip;
-
-					last_intercept = 8;
-
-					change_mask |= RFLAGS_INTERRUPT_ENABLE_FLAG_FLAG;
-
-					auto flags_val = *(uint32_t*)save_state_area.rsp;
-
-					save_state_area.rflags.Flags = (save_state_area.rflags.Flags & (uint32_t)~change_mask) | (flags_val & (uint32_t)change_mask);
-					save_state_area.rflags.ResumeFlag = 0;
-					
-					// 32-bit pop
-					// All non-reserved bits except IOPL, VIP, VIF, VM and RF can be modified;
-					// IOPL, VIP, VIF, VM and all reserved bits are unaffected; RF is cleared.
-				}
-
-				if (BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags && BranchTracer::active)
-				{
-					save_state_area.rflags.TrapFlag = 1;
-				}
-
-				break;
-			}
-			case 64:
-			{
-				if (save_state_area.cpl > iopl)
-				{
-					last_intercept = 9;		last_rip = save_state_area.rip;
-
-
-					auto flags_val = *(uint64_t*)save_state_area.rsp;
-
-					save_state_area.rflags.Flags = (save_state_area.rflags.Flags & (uint64_t)~change_mask) | (flags_val & (uint64_t)change_mask);
-					save_state_area.rflags.ResumeFlag = 0;
-					
-					// 64-bit pop
-					// All non-reserved bits except IF, IOPL, VIP, VIF, VM and RF can be modified;
-					// IF, IOPL, VIP, VIF, VM and all reserved bits are unaffected; RF is cleared.
-				}
-				else
-				{
-					last_intercept = 10;		last_rip = save_state_area.rip;
-
-
-					change_mask |= RFLAGS_INTERRUPT_ENABLE_FLAG_FLAG;
-
-					auto flags_val = *(uint64_t*)save_state_area.rsp;
-
-					save_state_area.rflags.Flags = (save_state_area.rflags.Flags & (uint64_t)~change_mask) | (flags_val & (uint64_t)change_mask);
-					save_state_area.rflags.ResumeFlag = 0;
-					
-					// 64-bit pop
-					// All non-reserved bits except IOPL, VIP, VIF, VM and RF can be modified;
-					// IOPL, VIP, VIF, VM and all reserved bits are unaffected; RF is cleared.
-				}
-
-				if (BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags && BranchTracer::active)
-				{
-					save_state_area.rflags.TrapFlag = 1;
-				}
-
-				break;
-			}
-			case 16:
-			{ // OperandSize = 16
-				last_intercept = 11;		last_rip = save_state_area.rip;
-
-
-				change_mask |= (RFLAGS_RESUME_FLAG_FLAG | RFLAGS_INTERRUPT_ENABLE_FLAG_FLAG | RFLAGS_VIRTUAL_INTERRUPT_FLAG_FLAG |
-					RFLAGS_VIRTUAL_8086_MODE_FLAG_FLAG | RFLAGS_VIRTUAL_INTERRUPT_PENDING_FLAG_FLAG);
-
-				auto flags_val = *(uint16_t*)save_state_area.rsp;
-
-				save_state_area.rflags.Flags = (save_state_area.rflags.Flags & (uint16_t)~change_mask) | (flags_val & (uint16_t)change_mask);
-
-				// 16-bit pop
-				// All non-reserved bits except IOPL can be modified; IOPL and all
-				// reserved bits are unaffected.
-				break;
-			}
-			default:
-			{
-				__debugbreak();
-				break;
-			}
-		}
+		flags_val = (uint16_t)flags_val | (save_state_area.rflags.Flags & 0xffff0000u);
 	}
 
-	save_state_area.rsp += (operand_size / 8);
+	flags_val &= 0x257fd5;
 
-	save_state_area.rip = control_area.nrip;
+	save_state_area.rflags.Flags &= unchanged_mask;
+	save_state_area.rflags.Flags |= (uint32_t)(flags_val & ~unchanged_mask) | 0x02;
+
+	save_state_area.rsp += operand_size;
 }
 

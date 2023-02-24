@@ -57,7 +57,7 @@ void VcpuData::ConfigureProcessor(CONTEXT* context_record)
 	/*	intercept #BP, #UD, and #DB exceptions, set guest ASID to 1	*/
 
 	guest_vmcb.control_area.intercept_exception.intercept_bp = 1;
-	guest_vmcb.control_area.intercept_exception.intercept_db = 1;
+	//guest_vmcb.control_area.intercept_exception.intercept_db = 1;
 	guest_vmcb.control_area.intercept_exception.intercept_ud = 1;
 
 	guest_vmcb.control_area.guest_asid = 1;
