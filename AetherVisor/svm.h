@@ -1,10 +1,8 @@
 #pragma once
 #include "amd.h"
 
-
-
-
 /*  15.20 Event Injection   */
+
 union EventInjection
 {
     struct
@@ -204,3 +202,12 @@ struct VMCB
     VmcbSaveStateArea save_state_area;
     char pad[PAGE_SIZE - sizeof(VmcbControlArea) - sizeof(VmcbSaveStateArea)];
 };
+
+/*  EXITINFO1 for mov CRx and mov DRx  */
+
+#define SVM_EXITINFO_REG_MASK 0x0F
+
+#define SVM_INTERCEPT_POPF 17
+#define SVM_INTERCEPT_PUSHF 16
+
+#define SVM_NP_ENABLE 0

@@ -1,6 +1,6 @@
 extern sandbox_execute_event : qword
 extern sandbox_mem_access_event : qword
-extern branch_log_full_event : qword
+extern BranchCallbackInternal : proc
 extern branch_trace_finish_event : qword
 extern syscall_hook : qword
 
@@ -44,15 +44,15 @@ POPAQ macro
         pop     rax
 endm
 
-execute_handler_wrap proc frame
+execute_handler_wrapper proc frame
 	
-    .endprolog
-
     PUSHAQ
 
-    mov rcx, rsp                  ; pass the registers
-    mov rdx, [rsp + 8 * 16 + 8]       ; pass the return address
-    mov r8, [rsp + 8 * 16]    ; pass the original guest RIP
+    .endprolog
+ 
+    mov rcx, rsp                    ; pass the registers
+    mov rdx, [rsp + 8 * 16 + 8]     ; pass the return address
+    mov r8, [rsp + 8 * 16]          ; pass the original guest RIP
     
     call sandbox_execute_event
 
@@ -60,16 +60,16 @@ execute_handler_wrap proc frame
 
     ret
 	
-execute_handler_wrap endp
+execute_handler_wrapper endp
 
-rw_handler_wrap proc frame
+rw_handler_wrapper proc frame
 	
+    PUSHAQ
+   
     .endprolog
 
-    PUSHAQ
-
     mov rcx, rsp                ; pass the registers
-    mov rdx, [rsp + 8 * 16]     ; pass the original guest RIP
+    mov rdx, [rsp + 8 * 16]     ; pass the guest RIP
     
     call sandbox_mem_access_event
 
@@ -77,21 +77,38 @@ rw_handler_wrap proc frame
 
     ret
 	
-rw_handler_wrap endp
+rw_handler_wrapper endp
 
-branch_log_full_event_wrap proc frame
-	
+branch_callback_wrapper proc frame
     .endprolog
 
+    pushfq
     PUSHAQ
     
-    call branch_log_full_event
+    mov rcx, rsp                    ; pass the registers
+    mov rdx, [rsp + 8 * 17 + 8]     ; pass the return address
+    mov r8, [rsp + 8 * 17]          ; pass the guest RIP
+
+    ; Align the stack pointer to 16 bytes
+    push rbp
+    mov rbp, rsp
+    and rsp, 0FFFFFFFFFFFFFFF0h
+    
+    sub rsp, 20h
+    
+    call BranchCallbackInternal
+
+    add rsp, 20h
+
+    mov rsp, rbp ; Add back the value that was subtracted
+    pop rbp
 
     POPAQ
+    popfq
 
     ret
 	
-branch_log_full_event_wrap endp
+branch_callback_wrapper endp
 
 branch_trace_finish_event_wrap proc frame
 	
@@ -113,8 +130,9 @@ syscall_hook_wrap proc frame
 
     PUSHAQ
     
-    mov rcx, rsp                  ; pass the registers
-    mov rdx, [rsp + 8 * 16 + 8]   ; pass the return address
+    mov rcx, rsp                    ; pass the registers
+    mov rdx, [rsp + 8 * 16 + 8]     ; pass the return address
+    mov r8, [rsp + 8 * 16]          ; pass the original guest RIP
     call syscall_hook
 
     POPAQ
@@ -122,6 +140,5 @@ syscall_hook_wrap proc frame
     ret
 	
 syscall_hook_wrap endp
-
 
 end

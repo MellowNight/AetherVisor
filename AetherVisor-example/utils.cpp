@@ -1,10 +1,14 @@
-
-
-#include "pch.h"
 #include "utils.h"
 
 namespace Utils
 {
+	void ConsoleTextColor(uint16_t color)
+	{
+		auto hconsole = GetStdHandle(STD_OUTPUT_HANDLE); /* Handle to current output buffer*/
+
+		SetConsoleTextAttribute(hconsole, color);
+	}
+
 	bool NewFile(const char* file_path, const char* address, size_t size)
 	{
 		auto file_handle = CreateFileA(file_path, GENERIC_READ | GENERIC_WRITE,

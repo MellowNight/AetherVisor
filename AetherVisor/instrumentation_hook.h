@@ -9,14 +9,19 @@ namespace Instrumentation
     {
         sandbox_readwrite = 0,
         sandbox_execute = 1,
-        branch_log_full = 2,
+        branch = 2,
         branch_trace_finished = 3,
         syscall = 4,
         max_id
     };
 
+    struct Callback
+    {
+        void* function;
+        uint32_t tls_params_idx;
+    };
 
-	extern void* callbacks[max_id];
+	extern Callback callbacks[max_id];
 
     bool InvokeHook(VcpuData* vcpu, CALLBACK_ID handler);
 };

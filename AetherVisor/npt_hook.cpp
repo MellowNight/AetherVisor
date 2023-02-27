@@ -1,6 +1,5 @@
 #include "npt_hook.h"
 #include "logging.h"
-#include "paging_utils.h"
 #include "disassembly.h"
 #include "portable_executable.h"
 #include "vmexit.h"
@@ -62,8 +61,7 @@ namespace NptHooks
 		void* address, 
 		uint8_t* patch, 
 		size_t patch_len,
-		int32_t ncr3_id, 
-		bool& suppress_nrip_increment)
+		int32_t ncr3_id)
 	{
 		/*	First, switch to guest process context	*/
 	
@@ -75,15 +73,9 @@ namespace NptHooks
 
 		/*	page in the page if it's not present.	*/
 
-		auto guest_pte = Utils::GetPte((void*)address, __readcr3());
-
-		if (guest_pte == NULL)
+		if (!vcpu->IsPagePresent(address))
 		{
-			vcpu->guest_vmcb.save_state_area.cr2 = (uintptr_t)address;
-
-			vcpu->InjectException(EXCEPTION_VECTOR::PageFault, true, vcpu->guest_vmcb.control_area.exit_info1);
-
-			suppress_nrip_increment = true;
+			return NULL;
 		}
 		else
 		{
@@ -104,20 +96,20 @@ namespace NptHooks
 			auto physical_page = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
 
-			hook_entry->mdl = Utils::LockPages(PAGE_ALIGN(address), IoReadAccess, mode);
+			hook_entry->mdl	= Utils::LockPages(PAGE_ALIGN(address), IoReadAccess, mode);
 
-			hook_entry->ncr3_id = ncr3_id;
-			hook_entry->address = address;
-			hook_entry->process_cr3 = vcpu->guest_vmcb.save_state_area.cr3.Flags;
+			hook_entry->ncr3_id	= ncr3_id;
+			hook_entry->address	= address;
+			hook_entry->process_cr3	= vcpu->guest_vmcb.save_state_area.cr3.Flags;
 
 
 			/*	get the guest pte and physical address of the hooked page	*/
 
-			hook_entry->guest_physical_page = (uint8_t*)physical_page;
+			hook_entry->guest_physical_page	= (uint8_t*)physical_page;
 
-			hook_entry->guest_pte = guest_pte;
+			hook_entry->guest_pte = Utils::GetPte((void*)address, __readcr3());;
 
-			hook_entry->original_nx = hook_entry->guest_pte->ExecuteDisable;
+			hook_entry->original_nx	= hook_entry->guest_pte->ExecuteDisable;
 
 			hook_entry->guest_pte->ExecuteDisable = 0;
 			hook_entry->guest_pte->Write = 1;
@@ -163,6 +155,8 @@ namespace NptHooks
 				}
 
 				memcpy((uint8_t*)hooked_copy + page_offset, patch, patch_len);
+
+				DbgPrint("hooked_copy %p \n\n", hooked_copy);
 			}
 
 		}

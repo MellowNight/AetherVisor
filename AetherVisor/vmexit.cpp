@@ -20,7 +20,7 @@ void VcpuData::InjectException(int vector, bool push_error, int error_code)
     guest_vmcb.control_area.event_inject = event_inject.fields;
 }
 
-extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMemAccess * physical_mem)
+extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx)
 {
     /*	load host extra state	*/
 
@@ -96,9 +96,56 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx, PhysMe
 
         __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
 
-        vcpu->InvalidOpcodeHandler(guest_ctx, physical_mem);
+        vcpu->InvalidOpcodeHandler(guest_ctx);
 
         __writecr3(vmroot_cr3);
+
+        break;
+    }
+    case VMEXIT::DR0_READ:
+    case VMEXIT::DR6_READ:
+    case VMEXIT::DR7_READ:
+    {
+        vcpu->DebugRegisterExit(guest_ctx);
+
+        if (vcpu->suppress_nrip_increment == FALSE)
+        {
+            vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
+        }
+
+        break;
+    }
+    case VMEXIT::PUSHF:
+    {
+        auto vmroot_cr3 = __readcr3();
+
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
+
+        vcpu->PushfExit(guest_ctx);
+
+        __writecr3(vmroot_cr3);
+
+        if (vcpu->suppress_nrip_increment == FALSE)
+        {
+            vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
+        }
+
+        break;
+    }
+    case VMEXIT::POPF:
+    {
+        auto vmroot_cr3 = __readcr3();
+
+        __writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
+
+        vcpu->PopfExit(guest_ctx);
+
+        __writecr3(vmroot_cr3);
+
+        if (vcpu->suppress_nrip_increment == FALSE)
+        {
+            vcpu->guest_vmcb.save_state_area.rip = vcpu->guest_vmcb.control_area.nrip;
+        }
 
         break;
     }

@@ -3,7 +3,7 @@
 #include "utils.h"
 
 
-namespace AetherVisor
+namespace Aether
 {
     namespace BranchTracer
     {

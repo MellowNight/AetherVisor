@@ -54,6 +54,38 @@ namespace Utils
         int (*page_table_callback)(PT_ENTRY_64*, void*) = NULL, 
         void* callback_data = NULL
     );
+    
+    template <typename T>
+    T** GetTlsPtr(uintptr_t gs_base, uint32_t tls_index)
+    {
+        // gs_base == NtCurrentTeb(), OFFSETS ARE HARDCODED!!
 
-    uintptr_t* GetTlsPtr(uintptr_t gs_base, uint32_t tls_index);
+        T** result = NULL;
+
+        if (tls_index < 64)
+        {
+            result = (T**)(gs_base + 8 * tls_index + 0x1480);
+        }
+        else
+        {
+            auto tls_expansion_slots = *(uintptr_t*)(gs_base + 0x1780);
+
+            result = (T**)(tls_expansion_slots + 8 * (tls_index - 0x40));
+        }
+
+        return result;
+    }
+
+    template <typename T>
+    uint32_t Diff(T a, T b)
+    {
+        int diff = 0;
+
+        if (a > b)
+            diff = a - b;
+        else
+            diff = b - a;
+
+        return diff;
+    }
 }

@@ -2,7 +2,7 @@
 
 namespace Instrumentation
 {
-	void* callbacks[max_id];
+	Callback callbacks[max_id];
 
 	bool InvokeHook(VcpuData* vcpu, CALLBACK_ID handler)
 	{
@@ -12,17 +12,22 @@ namespace Instrumentation
 
 		auto guest_rip = vcpu->guest_vmcb.save_state_area.rip;
 
-		DbgPrint("guest_rip %p \n", guest_rip);
+	//	DbgPrint("[InvokeHook]	guest_rip %p \n", guest_rip);
 
-		int callback_cpl = ((uintptr_t)callbacks[handler] > 0x7FFFFFFFFFFF) ? 3 : 0;
+		int callback_cpl = ((uintptr_t)callbacks[handler].function < 0x7FFFFFFFFFFF) ? 3 : 0;
 
-		int rip_privilege = (guest_rip > 0x7FFFFFFFFFFF) ? 3 : 0;
+		int rip_privilege = (guest_rip < 0x7FFFFFFFFFFF) ? 3 : 0;
+
+		if (!vcpu->IsPagePresent((uint8_t*)vcpu->guest_vmcb.save_state_area.rsp - sizeof(uintptr_t)))
+		{
+			return false;
+		}
 
 		if (callback_cpl == rip_privilege || handler == sandbox_readwrite)
 		{
-			vcpu->guest_vmcb.save_state_area.rip = (uintptr_t)callbacks[handler];
+			vcpu->guest_vmcb.save_state_area.rip = (uintptr_t)callbacks[handler].function;
 
-			vcpu->guest_vmcb.save_state_area.rsp -= 8;
+			vcpu->guest_vmcb.save_state_area.rsp -= sizeof(uintptr_t);
 
 			*(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp = guest_rip;
 		}
@@ -41,7 +46,7 @@ namespace Instrumentation
 
 		__writecr3(vmroot_cr3);
 
-		return TRUE;
+		return true;
 	}
 };
 

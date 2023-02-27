@@ -21,13 +21,13 @@ struct AddressInfo
 
 		if (!symbol.empty())
 		{
-			snprintf(buffer, 255, "%wZ!%s (0x%02x)", 
-				&dll_name_address.first, symbol.c_str(), address);
+			snprintf(buffer,
+				255, "%wZ!%s (0x%02x)", &dll_name_address.first, symbol.c_str(), address);
 		}
 		else if (dll_name_address.second)
 		{
-			snprintf(buffer, 255, "%wZ + 0x%02x",
-				&dll_name_address.first, (uintptr_t)address - (uintptr_t)dll_name_address.second);
+			snprintf(buffer, 255, 
+				"%wZ + 0x%02x", &dll_name_address.first, (uintptr_t)address - (uintptr_t)dll_name_address.second);
 		}
 		else
 		{

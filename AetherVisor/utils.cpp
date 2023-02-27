@@ -5,26 +5,6 @@
 
 namespace Utils
 {
-    uintptr_t* GetTlsPtr(uintptr_t gs_base, uint32_t tls_index)
-    {
-        // gs_base == NtCurrentTeb()
-
-        uintptr_t* result = NULL;
-
-        if (tls_index < 64)
-        {
-result = (uintptr_t*)(gs_base + 8 * tls_index + 0x1480);
-        }
-        else
-        {
-        auto tls_expansion_slots = *(uintptr_t*)(gs_base + 0x1780);
-
-        result = (uintptr_t*)(tls_expansion_slots + 8 * (tls_index - 0x40));
-        }
-
-        return result;
-    }
-
     void* PfnToVirtualAddr(uintptr_t pfn)
     {
         PHYSICAL_ADDRESS pa;

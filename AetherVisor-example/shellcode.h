@@ -22,13 +22,13 @@ namespace Hooks
 
 			orig_bytes_size = hook_size + 14;      /*  because orig_bytes includes jmp back code   */
 
-			auto jmp_back_location = hook_address + hook_size;
+			auto jmp_back_location = (uintptr_t)hook_address + hook_size;
 
 			char jmp_rip[15] = "\xFF\x25\x00\x00\x00\x00\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC";
 
 			original_bytes = (uint8_t*)VirtualAlloc(NULL, orig_bytes_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
-			memcpy(original_bytes, (void*)hook_address, hook_size);
+			memcpy(original_bytes, hook_address, hook_size);
 			memcpy((uint8_t*)original_bytes + hook_size, jmp_rip, 14);
 			memcpy((uint8_t*)original_bytes + hook_size + 6, &jmp_back_location, sizeof(uintptr_t));
 

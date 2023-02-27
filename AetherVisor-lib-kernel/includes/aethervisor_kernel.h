@@ -39,10 +39,10 @@ struct GuestRegisters
 extern "C" {
 
     extern void (*sandbox_execute_event)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
-    void __stdcall execute_handler_wrap();
+    void __stdcall execute_handler_wrapper();
 
     extern void (*sandbox_mem_access_event)(GuestRegisters* registers, void* o_guest_rip);
-    void __stdcall rw_handler_wrap();
+    void __stdcall rw_handler_wrapper();
 
     extern void (*branch_log_full_event)();
     void __stdcall branch_log_full_event_wrap();
@@ -56,7 +56,7 @@ extern "C" {
     int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
 }
 
-namespace AetherVisor
+namespace Aether
 {
     enum NCR3_DIRECTORIES
     {
@@ -119,7 +119,8 @@ namespace AetherVisor
 
     namespace SyscallHook
     {
-        int HookEFER();
+        int Disable();
+        int Enable();
     }
 
     namespace Sandbox

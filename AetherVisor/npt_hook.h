@@ -1,7 +1,6 @@
 #pragma once
 #include "hypervisor.h"
 #include "npt.h"
-#include "paging_utils.h"
 
 namespace NptHooks
 {
@@ -47,8 +46,7 @@ namespace NptHooks
 		void* address, 
 		uint8_t* patch, 
 		size_t patch_len, 
-		int32_t shadow_cr3_id,
-		bool& suppress_nrip_increment
+		int32_t shadow_cr3_id
 	);
 
 	NptHook* ForEachHook(

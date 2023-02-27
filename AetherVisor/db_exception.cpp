@@ -3,40 +3,45 @@
 #include "branch_tracer.h"
 #include "instrumentation_hook.h"
 
+using namespace Instrumentation;
 
 void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 {
-    auto guest_rip = guest_vmcb.save_state_area.rip;
-
     DR6 dr6 = guest_vmcb.save_state_area.dr6;
 
     if (dr6.SingleInstruction == 1)
     {
-        if (BranchTracer::active == true &&
-            (guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) &&
-            guest_vmcb.save_state_area.cr3.Flags == BranchTracer::process_cr3.Flags)
-        {
-            if (guest_rip < BranchTracer::range_base || guest_rip > (BranchTracer::range_size + BranchTracer::range_base))
-            {
-                /*  Pause branch tracer after a branch outside of the specified range is executed.
-                    Single-stepping mode => completely disabled
-                */
+      /*  DbgPrint("[DebugFaultHandler]   guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) = %i \n", guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9));
+        DbgPrint("[DebugFaultHandler]   BranchTracer::range_base %p \n", BranchTracer::range_base);
+        DbgPrint("[DebugFaultHandler]   BranchTracer::range_base + BranchTracer::range_size %p \n\n\n", BranchTracer::range_size + BranchTracer::range_base);*/
 
-                BranchTracer::Pause(this);
-            }
+       // DbgPrint("[DebugFaultHandler]   guest_rip %p \n", guest_vmcb.save_state_area.rip);
 
-            DbgPrint("LastBranchFromIP %p guest_rip = %p \n", guest_vmcb.save_state_area.br_from, guest_rip);
+        if (guest_vmcb.save_state_area.rip == BranchTracer::resume_address)
+        {			
+            /*	transition out of branch callback, continue branch single-stepping	*/
 
-            BranchTracer::log_buffer->Log(this, guest_rip, guest_vmcb.save_state_area.br_from);
+           // DbgPrint("[UpdateState]		Branch hook finished, guest_rip %p \n", guest_vmcb.save_state_area.rip);
 
-            if (guest_rip == BranchTracer::stop_address)
-            {
-                BranchTracer::Stop(this);
+            BranchTracer::resume_address = NULL;
 
-                Instrumentation::InvokeHook(this, Instrumentation::branch_trace_finished);
-            }
+            auto tls_params = Utils::GetTlsPtr<BranchTracer::TlsParams>(guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
+
+            (*tls_params)->callback_pending = false;
+
+            /*  capture the ID of the target thread & start the tracer  */
+
+            BranchTracer::Resume(this);
+
+            guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 0;
+            guest_vmcb.save_state_area.dr6.SingleInstruction = 0;
 
             return;
+        }
+
+        if (BranchTracer::active == true)
+        {
+            BranchTracer::UpdateState(this, guest_ctx);
         }
         else if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
         {
@@ -46,7 +51,7 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
             BranchTracer::Pause(this);
 
-            DbgPrint("Finished single stepping %p \n", guest_vmcb.save_state_area.rip);
+            DbgPrint("[DebugFaultHandler]   Finished single stepping %p \n", guest_vmcb.save_state_area.rip);
 
             Instrumentation::InvokeHook(this, Instrumentation::sandbox_readwrite);
         }

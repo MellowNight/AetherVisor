@@ -1,6 +1,5 @@
 #pragma once
 #include "svm.h"
-#include "paging_utils.h"
 
 struct GuestRegisters
 {
@@ -20,16 +19,21 @@ struct GuestRegisters
     uintptr_t  rdx;
     uintptr_t  rcx;
     uintptr_t  rax;
+
+    uintptr_t* operator[] (int32_t gpr_number)
+    {
+        return &((uintptr_t*)this)[15 - gpr_number];
+    }
 };
 
 /*
-    VcpuData:
-    Contains core-specific VMCB data and other information. Must be 16 byte aligned on the stack
-
-    StackSpace - Stack Space required because we are manually setting stack pointer to guest_vmcbPa
-    We need to also subtract some size to make VMCB 4KB aligned	& guest_vmcbPa 16 byte aligned
-
-    Self - VcpuData self-reference 
+*   VcpuData:
+*   Contains core-specific VMCB data and other information. Must be 16 byte aligned on the stack
+*
+*   StackSpace - Stack Space required because we are manually setting stack pointer to guest_vmcbPa
+*   We need to also subtract some size to make VMCB 4KB aligned	& guest_vmcbPa 16 byte aligned
+*
+*   Self - VcpuData self-reference
 */
 
 struct VcpuData
@@ -37,14 +41,21 @@ struct VcpuData
     uint8_t     stack_space[KERNEL_STACK_SIZE - sizeof(int64_t) * 4];
     uintptr_t   guest_vmcb_physicaladdr;	// <------ stack pointer points here
     uintptr_t   host_vmcb_physicaladdr;
-//    PhysMemAccess* mem_access;
     struct      VcpuData* self;
-    uint8_t     pad[8];
+    uintptr_t   suppress_nrip_increment;
     VMCB        guest_vmcb;
     VMCB        host_vmcb;
     uint8_t     host_save_area[0x1000];
 
-    void InjectException(int vector, bool push_error, int error_code);
+    void ConfigureProcessor(CONTEXT* context_record);
+
+    bool IsPagePresent(void* address);
+
+    void InjectException(
+        int vector, 
+        bool push_error, 
+        int error_code
+    );
 
     void VmmcallHandler(
         GuestRegisters* guest_regs,
@@ -60,8 +71,7 @@ struct VcpuData
     );
 
     bool InvalidOpcodeHandler(
-        GuestRegisters* guest_ctx,
-        PhysMemAccess* physical_mem
+        GuestRegisters* guest_ctx
     );
 
     void MsrExitHandler(
@@ -71,6 +81,10 @@ struct VcpuData
     void NestedPageFaultHandler(
         GuestRegisters* guest_registers
     );
+
+    void DebugRegisterExit(GuestRegisters* guest_ctx);
+    void PushfExit(GuestRegisters* guest_ctx);
+    void PopfExit(GuestRegisters* guest_ctx);
 };
 
 /* Global hypervisor information    */

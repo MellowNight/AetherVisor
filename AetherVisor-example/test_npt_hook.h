@@ -2,31 +2,44 @@
 #include "utils.h"
 #include "shellcode.h"
 
-/*  test_npt_hook.h:  Install a hidden NPT hook on Wintrust.dll!WinVerifyTrust    */
-
-
-Hooks::JmpRipCode* messagebox_hk;
-
-int MessageBoxA_hk(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
+LONG WINAPI UdExceptionVEH(struct _EXCEPTION_POINTERS* ExceptionInfo)
 {
-    uintptr_t retaddr = (uintptr_t)_ReturnAddress();
+    if (ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ILLEGAL_INSTRUCTION)
+    {
+        Aether::NptHook::Remove((uintptr_t)MessageBoxA);
 
-    std::cout << "MessageBoxA() called from 0x" << std::hex << retaddr << " lpText: " << lpText << "\n";
+        Sleep(1000);
 
-    std::cout << "First 8 bytes of MessageBoxA are 0x" << std::hex << *(uint64_t*)MessageBoxA;
+        MessageBoxA(NULL, "This messagebox should be called!!!!!", "NPT hook test", MB_OK);
 
-    return static_cast<decltype(&MessageBoxA)>(messagebox_hk->original_bytes)(
-        hWnd, lpText, lpCaption, uType);
+        auto rip = (uint8_t*)ExceptionInfo->ContextRecord->Rip;
+
+        /*  force return from the patched messagebox */
+
+        ExceptionInfo->ContextRecord->Rip = *(uintptr_t*)ExceptionInfo->ContextRecord->Rsp;
+
+        ExceptionInfo->ContextRecord->Rsp += 8;
+
+        return EXCEPTION_CONTINUE_EXECUTION;
+    }
+
+    // IT's not a break intruction. Continue searching for an exception handler.
+    return EXCEPTION_CONTINUE_SEARCH;
 }
+
+
+/*  test_npt_hook.h:  Install a hidden NPT hook on user32.dll!MessageBoxA    */
 
 void NptHookTest()
 {
-    messagebox_hk = new Hooks::JmpRipCode{ MessageBoxA, MessageBoxA_hk };
+    auto veh = AddVectoredExceptionHandler(1, UdExceptionVEH);
 
-    AetherVisor::NptHook::Set(messagebox_hk->fn_address, 
-        messagebox_hk->hook_code, messagebox_hk->hook_size, AetherVisor::primary, true);
+    Aether::NptHook::Set((uintptr_t)MessageBoxA,
+        (uint8_t*)"\x0F\x0B", 2, Aether::sandbox, true);
 
-    Sleep(1000);
+    MessageBoxA(NULL, "This messagebox shouldn't be called!!!!!", "NPT hook test", MB_OK);
 
-    MessageBoxA(NULL, "HELLO WORLD!!!1111", "NPT hook test", MB_OK);
+    RemoveVectoredExceptionHandler(veh);
+
+    MessageBoxA(NULL, "This messagebox 222 should be called!!!!!", "NPT hook test", MB_OK);
 }

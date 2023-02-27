@@ -1,10 +1,11 @@
 #include "logging.h"
-#include "paging_utils.h"
 #include "disassembly.h"
 #include "portable_executable.h"
 #include "vmexit.h"
 #include "utils.h"
 #include "branch_tracer.h"
+
+using namespace Instrumentation;
 
 namespace BranchTracer
 {
@@ -13,56 +14,35 @@ namespace BranchTracer
 
 	uintptr_t start_address;
 	uintptr_t stop_address;
+
 	uintptr_t range_base;
 	uintptr_t range_size;
+	
+	uintptr_t resume_address;
 
 	HANDLE thread_id;
+
 	CR3 process_cr3;
 
-	bool is_system;
+	int is_system;
 
-	PMDL mdl;
+	TlsParams* tls_params;
 
-	BranchLog* log_buffer;
-
-	void Init(VcpuData* vcpu, uintptr_t start_addr, uintptr_t stop_addr, uintptr_t out_buffer, uintptr_t trace_range_base, uintptr_t trace_range_size)
+	void Init(VcpuData* vcpu, uintptr_t start_addr, uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size, TlsParams* tracer_params)
 	{
 		initialized = true;
 		range_base = trace_range_base;
 		range_size = trace_range_size;
-
-		log_buffer = (BranchLog*)out_buffer;
-
-		is_system = (vcpu->guest_vmcb.save_state_area.cr3.Flags == __readcr3()) ? true : false;
-
-		// DbgPrint("log_buffer  = %p \n", log_buffer);
-
-		if (is_system)
-		{
-			mdl = Utils::LockPages((void*)log_buffer, IoModifyAccess, KernelMode, log_buffer->info.capacity);
-		}
-		else
-		{
-			mdl = Utils::LockPages((void*)log_buffer, IoModifyAccess, UserMode, log_buffer->info.capacity);
-		}
-
+		process_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
+		is_system = ((uintptr_t)start_addr < 0x7FFFFFFFFFFF) ? false : true;
 		start_address = start_addr;
-
 		stop_address = stop_addr;
 
-
-		/*  place breakpoint to capture ETHREAD  */
-
-		vcpu->guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 1;
-		vcpu->guest_vmcb.save_state_area.dr7.Length0 = 0;
-		vcpu->guest_vmcb.save_state_area.dr7.ReadWrite0 = 0;
-
-		__writedr(0, (uintptr_t)start_addr);
+		tls_params = tracer_params;
 	}
 
 	void Start(VcpuData* vcpu)
 	{
-		process_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
 		thread_id = PsGetCurrentThreadId();
 
 		if (stop_address == NULL)
@@ -70,7 +50,7 @@ namespace BranchTracer
 			stop_address = *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp;
 		}
 
-		// DbgPrint("BranchTracer::stop_address  = %p \n", stop_address);
+		DbgPrint("BranchTracer::stop_address  = %p \n", stop_address);
 
 		int processor_id = KeGetCurrentProcessorNumber();
 
@@ -78,19 +58,43 @@ namespace BranchTracer
 
 		KeSetSystemAffinityThread(affinity);
 
-		// DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+	//	DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 		active = true;
 
+		NptHooks::ForEachHook(
+			[](auto hook_entry, auto data) -> auto {
+
+				if (hook_entry->address == data)
+				{
+					DbgPrint("[BreakpointHandler]   hook_entry->address == data, found stealth breakpoint! \n");
+
+					UnsetHook(hook_entry);
+				}
+				return false;
+			},
+			(void*)vcpu->guest_vmcb.save_state_area.rip
+		);
+
+		auto tls_buffer = Utils::GetTlsPtr<TlsParams>(
+			vcpu->guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
+
+		*tls_buffer = tls_params;
+
+		/*  clean TLB after removing the NPT hook   */
+
+		vcpu->guest_vmcb.control_area.vmcb_clean &= 0xFFFFFFEF;
+		vcpu->guest_vmcb.control_area.tlb_control = 1;
+
+
 		Resume(vcpu);
 	}
-
 
 	void Resume(VcpuData* vcpu)
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-		//	DbgPrint("BranchTracer::Resume guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.Rip);
+		//	DbgPrint("[BranchTracer::Resume]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 			int cpuinfo[4];
 
@@ -102,6 +106,8 @@ namespace BranchTracer
 
 				KeBugCheckEx(MANUALLY_INITIATED_CRASH, cpuinfo[3], 0, 0, 0);
 			}
+
+			vcpu->guest_vmcb.control_area.lbr_virt_enable |= (1 << 0);
 
 			/*	BTF, LBR, and trap flag enable	*/
 
@@ -119,7 +125,7 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-			DbgPrint("BranchTracer::Pause guest_rip = %p \n", vcpu->guest_vmcb.save_state_area.rip);
+		//	DbgPrint("[BranchTracer::Pause]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 			/*	BTF, LBR, and trap flag disable	*/
 
@@ -135,9 +141,86 @@ namespace BranchTracer
 
 	void Stop(VcpuData* vcpu)
 	{
+		DbgPrint("[BranchTracer::Stop]		BRANCH TRACING FINISHED!!!!!!!!!!! rip %p \n", vcpu->guest_vmcb.save_state_area.rip);
+
 		Pause(vcpu);
 
 		active = false;
 	}
 
+	void UpdateState(VcpuData* vcpu, GuestRegisters* guest_ctx)
+	{
+		auto guest_vmcb = vcpu->guest_vmcb;
+
+		auto guest_rip = guest_vmcb.save_state_area.rip;
+
+		if ((guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) &&
+			(guest_vmcb.save_state_area.cr3.Flags == BranchTracer::process_cr3.Flags))
+		{
+
+//			DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
+
+			/*	completely stop the branch tracer	*/
+
+			if (guest_rip == BranchTracer::stop_address)
+			{
+				BranchTracer::Stop(vcpu);
+				
+				Instrumentation::InvokeHook(vcpu, Instrumentation::branch_trace_finished);
+
+				return;
+			}
+
+			/*  
+				Do not trace the branch hook itself.
+
+				Pause branch tracer when a branch to outside of the specified range occurs,
+				or upon invoking branch callback.
+
+				Single-stepping mode => completely disabled
+			*/
+
+			auto tls_buffer = Utils::GetTlsPtr<TlsParams>(guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
+
+			if ((*tls_buffer)->callback_pending == false)
+			{
+				if (!Instrumentation::InvokeHook(vcpu, Instrumentation::branch))
+				{
+					DbgPrint("[UpdateState]	stack read fucked up, retry the #DB, guest rip %p \n", guest_rip);
+
+					vcpu->InjectException(EXCEPTION_VECTOR::Debug, FALSE, 0);
+
+					return;
+				}
+
+				(*tls_buffer)->last_branch_from = (void*)guest_vmcb.save_state_area.br_from;
+				(*tls_buffer)->callback_pending = true;
+
+				if (guest_rip < BranchTracer::range_base || guest_rip > (BranchTracer::range_size + BranchTracer::range_base))
+				{
+					resume_address = *(uintptr_t*)guest_vmcb.save_state_area.rsp;
+				}
+				else
+				{
+					resume_address = guest_rip;
+				}
+
+				vcpu->guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 1;
+				vcpu->guest_vmcb.save_state_area.dr7.Length0 = 0;
+				vcpu->guest_vmcb.save_state_area.dr7.ReadWrite0 = 0;
+
+				__writedr(0, (uintptr_t)resume_address);
+
+				BranchTracer::Pause(vcpu);
+
+				return;
+			}
+			else
+			{
+				// Branch single-step is currently being handled if TLS variable is TRUE
+			}
+
+			return;
+		}
+	}
 }
