@@ -114,11 +114,25 @@ branch_trace_finish_event_wrap proc frame
 	
     .endprolog
 
+    pushfq
     PUSHAQ
     
+    ; Align the stack pointer to 16 bytes
+    push rbp
+    mov rbp, rsp
+    and rsp, 0FFFFFFFFFFFFFFF0h
+    
+    sub rsp, 20h
+
     call branch_trace_finish_event
+    
+    add rsp, 20h
+
+    mov rsp, rbp ; Add back the value that was subtracted
+    pop rbp
 
     POPAQ
+    popfq
 
     ret
 	
