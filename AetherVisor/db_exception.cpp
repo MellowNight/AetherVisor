@@ -21,26 +21,27 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
         {			
             /*	transition out of branch callback, continue branch single-stepping	*/
 
-            DbgPrint("[UpdateState]		Branch hook finished, guest_rip %p \n", guest_vmcb.save_state_area.rip);
+           // DbgPrint("[UpdateState]		Branch hook finished, guest_rip %p \n", guest_vmcb.save_state_area.rip);
 
             BranchTracer::resume_address = NULL;
 
-            auto tls_ptr = Utils::GetTlsPtr(guest_vmcb.save_state_area.gs_base, BranchTracer::tls_index);
+            auto tls_params = Utils::GetTlsPtr<BranchTracer::TlsParams>(guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
 
-            *tls_ptr = FALSE;
+            (*tls_params)->callback_pending = FALSE;
 
             /*  capture the ID of the target thread & start the tracer  */
 
             BranchTracer::Resume(this);
 
             guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 0;
+            guest_vmcb.save_state_area.dr6.SingleInstruction = 0;
 
             return;
         }
 
         if (BranchTracer::active == true)
         {
-            BranchTracer::UpdateState(this);
+            BranchTracer::UpdateState(this, guest_ctx);
         }
         else if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox_single_step])
         {

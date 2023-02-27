@@ -48,12 +48,9 @@ void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 	{
 		auto dr0 = __readdr(0);
 
-		if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && BranchTracer::active)
+		if (/*BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && */BranchTracer::active)
 		{
-			if (dr0 == BranchTracer::resume_address)
-			{
-				*target_register = NULL;
-			}
+			*target_register = NULL;
 		}
 
 		break;
@@ -62,7 +59,7 @@ void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 	{
 		*target_register = __readdr(6);
 
-		if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && BranchTracer::active)
+		if (/*BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags &&*/ BranchTracer::active)
 		{
 			((DR6*)target_register)->SingleInstruction = 0;
 		}
@@ -72,7 +69,7 @@ void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 	{
 		*target_register = __readdr(7);
 
-		if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && BranchTracer::active)
+		if (/*BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && */BranchTracer::active)
 		{
 			((DR7*)target_register)->Flags &= ~((int64_t)1 << 9);
 			((DR7*)target_register)->Flags &= ~((int64_t)1 << 8);
@@ -194,15 +191,17 @@ void VcpuData::PopfExit(GuestRegisters* guest_ctx)
 		stack_flags.Flags = (uint16_t)stack_flags.Flags | (save_state_area.rflags.Flags & 0xffff0000u);
 
 	}
-	else if (BranchTracer::active && BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags)
-	{
-		stack_flags.TrapFlag = 1;
-	}
-
+	
 	stack_flags.Flags &= 0x257fd5;
 
 	save_state_area.rflags.Flags &= unchanged_mask;
 	save_state_area.rflags.Flags |= (uint32_t)(stack_flags.Flags & ~unchanged_mask) | 0x02;
+
+	if (BranchTracer::active && BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags)
+	{
+		save_state_area.rflags.TrapFlag = 1;
+	}
+
 
 	save_state_area.rsp += operand_size;
 }

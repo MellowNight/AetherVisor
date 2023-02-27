@@ -21,10 +21,8 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     {
     case VMMCALL_ID::start_branch_trace:
     {
-        DbgPrint("VMMCALL_ID::start_branch_trace \n");
-
-        BranchTracer::Init(this,
-            guest_ctx->rdx, guest_ctx->r8, guest_ctx->r9, guest_ctx->r12, guest_ctx->r11);
+        BranchTracer::Init(this, guest_ctx->rdx,
+            guest_ctx->r8, guest_ctx->r9, guest_ctx->r12, (BranchTracer::TlsParams*)guest_ctx->r11);
 
         break;
     }
@@ -37,10 +35,12 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     case VMMCALL_ID::instrumentation_hook:
     {
         auto handler_id = guest_ctx->rdx;
+        auto tls_idx = guest_ctx->r9;
+        auto function = guest_ctx->r8;
 
         if (handler_id < Instrumentation::max_id)
         {
-            Instrumentation::callbacks[handler_id] = (void*)guest_ctx->r8;
+            Instrumentation::callbacks[handler_id] = { (void*)function, (uint32_t)tls_idx };
         }
         else
         {
@@ -117,7 +117,7 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     }
     case VMMCALL_ID::hook_efer_syscall:
     {
-        SyscallHook::Toggle(this, guest_ctx->rdx, guest_ctx->r8);
+        SyscallHook::Toggle(this, guest_ctx->rdx);
 
         break;
     }

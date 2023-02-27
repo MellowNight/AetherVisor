@@ -15,9 +15,14 @@ namespace Instrumentation
         max_id
     };
 
+    struct Callback
+    {
+        void* function;
+        uint32_t tls_params_idx;
+    };
 
-	extern void* callbacks[max_id];
+	extern Callback callbacks[max_id];
 
-    bool InvokeHook(VcpuData* vcpu, CALLBACK_ID handler, void* parameter = NULL, int params_size = NULL);
+    bool InvokeHook(VcpuData* vcpu, CALLBACK_ID handler);
 };
 

@@ -16,35 +16,29 @@ void (*syscall_hook)(GuestRegisters* registers, void* return_address, void* o_gu
 
 namespace Aether
 {
-    struct Callback
-    {
-        CALLBACK_ID id;
-        void** handler;
-        void (*handler_wrapper)();
-    };
-
     Callback instrumentation_hooks[] = {
         // Invoked when sandboxed code reads/writes from a page that denies read/write access.
-        {sandbox_readwrite, (void**)&sandbox_mem_access_event, rw_handler_wrapper},
+        {sandbox_readwrite, (void**)&sandbox_mem_access_event, rw_handler_wrapper, NULL},
 
         // Invoked every time RIP leaves a sandbox memory region
-        {sandbox_execute, (void**)&sandbox_execute_event, execute_handler_wrapper},
+        {sandbox_execute, (void**)&sandbox_execute_event, execute_handler_wrapper, NULL},
 
         // Invoked when branch trace buffer is full
-        {branch, (void**)&branch_callback, branch_callback_wrapper},
+        {branch, (void**)&branch_callback, branch_callback_wrapper, NULL},
 
         // Invoked when the branch tracer has reached the stop address
-        {branch_trace_finished, (void**)&branch_trace_finish_event, branch_trace_finish_event_wrap},
+        {branch_trace_finished, (void**)&branch_trace_finish_event, branch_trace_finish_event_wrap, NULL},
 
         // EFER MSR Syscall hook handler
-        {syscall, (void**)&syscall_hook, syscall_hook_wrap}
+        {syscall, (void**)&syscall_hook, syscall_hook_wrap, NULL}
     };
 
     void SetCallback(CALLBACK_ID handler_id, void* address)
     {
         *instrumentation_hooks[handler_id].handler = address;
 
-        svm_vmmcall(VMMCALL_ID::instrumentation_hook, handler_id, *instrumentation_hooks[handler_id].handler_wrapper);
+        svm_vmmcall(VMMCALL_ID::instrumentation_hook, 
+            handler_id, *instrumentation_hooks[handler_id].handler_wrapper, instrumentation_hooks[handler_id].tls_params_idx);
     }
 
     int StopHv()

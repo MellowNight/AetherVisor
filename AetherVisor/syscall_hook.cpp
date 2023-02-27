@@ -2,21 +2,24 @@
 #include "disassembly.h"
 #include "instrumentation_hook.h"
 
+using namespace Instrumentation;
+
 namespace SyscallHook
 {
     CR3 process_cr3;
-
-    uint32_t tls_index;
 
     uintptr_t captured_rsp;
     uintptr_t captured_rip;
     uintptr_t captured_retaddr;
 
-    void Toggle(VcpuData* vcpu, bool intercept_syscalls, uint32_t _tls_index)
+    struct TlsParams
+    {
+        bool callback_pending;
+    };
+
+    void Toggle(VcpuData* vcpu, bool intercept_syscalls)
     {
         process_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
-
-        tls_index = _tls_index;
 
         vcpu->guest_vmcb.save_state_area.efer.syscall = !intercept_syscalls;
     }
@@ -84,21 +87,18 @@ namespace SyscallHook
         {
             /*  prevent infinite loops caused by syscalling from a syscall hook handler */
 
-            auto tls_ptr = Utils::GetTlsPtr(vcpu->guest_vmcb.save_state_area.gs_base, tls_index);
+            auto tls_ptr = Utils::GetTlsPtr<TlsParams>(vcpu->guest_vmcb.save_state_area.gs_base, callbacks[syscall].tls_params_idx);
 
-            DbgPrint("tls_index %i \n", tls_index);
+            DbgPrint("tls_index %i \n", callbacks[syscall].tls_params_idx);
 
-            DbgPrint("tls_ptr %p \n", tls_ptr);
-            DbgPrint("*tls_ptr %p \n", *tls_ptr);
-
-            if (!*tls_ptr)
+            if (!(*tls_ptr)->callback_pending)
             {
                 captured_rsp = vcpu->guest_vmcb.save_state_area.rsp;
                 captured_rip = guest_rip;
 
                 captured_retaddr = *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp;
 
-                *tls_ptr = TRUE;
+                (*tls_ptr)->callback_pending = TRUE;
 
                 Instrumentation::InvokeHook(vcpu, Instrumentation::syscall);
 

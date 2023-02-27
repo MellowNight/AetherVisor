@@ -81,6 +81,16 @@ namespace Aether
         max_id
     };
 
+    struct Callback
+    {
+        CALLBACK_ID id;
+        void** handler;
+        void (*handler_wrapper)();
+        uint32_t tls_params_idx;
+    };
+
+    extern Callback instrumentation_hooks[];
+
     namespace NptHook
     {
         int Set(
@@ -100,6 +110,12 @@ namespace Aether
         {
             uintptr_t branch_address;
             uintptr_t branch_target;
+        };
+
+        struct TlsParams
+        {
+            bool callback_pending;
+            void* last_branch_from;
         };
 
         extern  std::vector<LogEntry> log_buffer;
@@ -128,7 +144,8 @@ namespace Aether
 
     void SetCallback(
         CALLBACK_ID handler_id,
-        void* address
+        void* address,
+        uint32_t tls_idx
     );
 
     int StopHv();

@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "branch_tracer.h"
 
+using namespace Instrumentation;
+
 namespace BranchTracer
 {
 	bool active;
@@ -18,24 +20,25 @@ namespace BranchTracer
 	
 	uintptr_t resume_address;
 
-	uint32_t tls_index;
-
 	HANDLE thread_id;
 
 	CR3 process_cr3;
 
 	int is_system;
 
-	void Init(VcpuData* vcpu, uintptr_t start_addr, uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size, uint32_t tls_idx)
+	TlsParams* tls_params;
+
+	void Init(VcpuData* vcpu, uintptr_t start_addr, uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size, TlsParams* tracer_params)
 	{
 		initialized = true;
 		range_base = trace_range_base;
 		range_size = trace_range_size;
 		process_cr3 = vcpu->guest_vmcb.save_state_area.cr3;
-		tls_index = tls_idx;
 		is_system = ((uintptr_t)start_addr < 0x7FFFFFFFFFFF) ? false : true;
 		start_address = start_addr;
 		stop_address = stop_addr;
+
+		tls_params = tracer_params;
 
 	//	DbgPrint("[BranchTracer::Init]	tls_idx: %p \n", tls_idx);
 	}
@@ -74,6 +77,11 @@ namespace BranchTracer
 			},
 			(void*)vcpu->guest_vmcb.save_state_area.rip
 		);
+
+		auto tls_buffer = Utils::GetTlsPtr<TlsParams>(
+			vcpu->guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
+
+		*tls_buffer = tls_params;
 
 		/*  clean TLB after removing the NPT hook   */
 
@@ -135,14 +143,14 @@ namespace BranchTracer
 
 	void Stop(VcpuData* vcpu)
 	{
-		DbgPrint("[BranchTracer::Stop]		BRANCH TRACING FINISHED!!!!!!!!!!!\n");
+		DbgPrint("[BranchTracer::Stop]		BRANCH TRACING FINISHED!!!!!!!!!!! rip %p \n", vcpu->guest_vmcb.save_state_area.rip);
 
 		Pause(vcpu);
 
 		active = false;
 	}
 
-	void UpdateState(VcpuData* vcpu)
+	void UpdateState(VcpuData* vcpu, GuestRegisters* guest_ctx)
 	{
 		auto guest_vmcb = vcpu->guest_vmcb;
 
@@ -152,7 +160,7 @@ namespace BranchTracer
 			(guest_vmcb.save_state_area.cr3.Flags == BranchTracer::process_cr3.Flags))
 		{
 
-		//	DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
+			DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
 
 			/*	completely stop the branch tracer	*/
 
@@ -174,18 +182,23 @@ namespace BranchTracer
 				Single-stepping mode => completely disabled
 			*/
 
-			auto tls_ptr = Utils::GetTlsPtr(guest_vmcb.save_state_area.gs_base, tls_index);
+			auto tls_buffer = Utils::GetTlsPtr<TlsParams>(guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
 
-			BranchTracer::Pause(vcpu);
+			if ((*tls_buffer)->callback_pending == FALSE)
+			{
+				if (!Instrumentation::InvokeHook(vcpu, Instrumentation::branch))
+				{
+					DbgPrint("[UpdateState]	stack read fucked up, retry the #DB, guest rip %p \n", guest_rip);
 
-			if (!*tls_ptr)
-			{				
-				*tls_ptr = TRUE;
-				
-				Instrumentation::InvokeHook(
-					vcpu, Instrumentation::branch, &guest_vmcb.save_state_area.br_from, sizeof(uintptr_t));
+					vcpu->InjectException(EXCEPTION_VECTOR::Debug, FALSE, 0);
 
-				if (guest_rip < BranchTracer::range_base || guest_rip >(BranchTracer::range_size + BranchTracer::range_base))
+					return;
+				}
+
+				(*tls_buffer)->last_branch_from = (void*)guest_vmcb.save_state_area.br_from;
+				(*tls_buffer)->callback_pending = TRUE;
+
+				if (guest_rip < BranchTracer::range_base || guest_rip > (BranchTracer::range_size + BranchTracer::range_base))
 				{
 					resume_address = *(uintptr_t*)guest_vmcb.save_state_area.rsp;
 				}
@@ -200,7 +213,13 @@ namespace BranchTracer
 
 				__writedr(0, (uintptr_t)resume_address);
 
+				BranchTracer::Pause(vcpu);
+
 				return;
+			}
+			else
+			{
+				// Branch single-step is currently being handled if TLS variable is TRUE
 			}
 
 			return;

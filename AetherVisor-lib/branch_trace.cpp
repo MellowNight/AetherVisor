@@ -7,15 +7,16 @@ namespace Aether
     namespace BranchTracer
     {
         std::vector<LogEntry> log_buffer;
-        uint32_t tls_index;
 
-        void BranchCallbackInternal(GuestRegisters* registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP)
+        TlsParams* tracer_params;
+
+        void BranchCallbackInternal(GuestRegisters* registers, void* return_address, void* o_guest_rip)
         {
-            branch_callback(registers, return_address, o_guest_rip, LastBranchFromIP);
+            branch_callback(registers, return_address, o_guest_rip, tracer_params->last_branch_from);
 
             if (log_buffer.size() < log_buffer.capacity())
             {
-                log_buffer.push_back(LogEntry{ (uintptr_t)LastBranchFromIP, (uintptr_t)o_guest_rip });
+                log_buffer.push_back(LogEntry{ (uintptr_t)tracer_params->last_branch_from, (uintptr_t)o_guest_rip });
             }
             else
             {
@@ -25,19 +26,19 @@ namespace Aether
 
         void Init()
         {
-            tls_index = TlsAlloc();
+            instrumentation_hooks[branch].tls_params_idx = TlsAlloc();
 
             log_buffer.reserve(PAGE_SIZE / sizeof(LogEntry));
+
+            tracer_params = new TlsParams;
         }
 
         void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr)
         {
-            TlsSetValue(tls_index, NULL);
-
             NptHook::Set((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, primary);
           //  NptHook::Set((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox);
 
-            svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, stop_addr, range_base, range_size, tls_index);
+            svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, stop_addr, range_base, range_size, tracer_params);
 
             return NULL;
         }

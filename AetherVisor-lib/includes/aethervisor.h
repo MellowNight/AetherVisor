@@ -81,6 +81,16 @@ namespace Aether
         max_id
     };
 
+    struct Callback
+    {
+        CALLBACK_ID id;
+        void** handler;
+        void (*handler_wrapper)();
+        uint32_t tls_params_idx;
+    };
+
+    extern Callback instrumentation_hooks[];
+
     namespace NptHook
     {
         int Set(
@@ -102,9 +112,15 @@ namespace Aether
             uintptr_t branch_target;
         };
 
+        struct TlsParams
+        {
+            bool callback_pending;
+            void* last_branch_from;
+        };
+
         extern  std::vector<LogEntry> log_buffer;
 
-        extern "C" extern void BranchCallbackInternal(GuestRegisters * registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP);
+        extern "C" extern void BranchCallbackInternal(GuestRegisters * registers, void* return_address, void* o_guest_rip);
 
         void Init();
 
