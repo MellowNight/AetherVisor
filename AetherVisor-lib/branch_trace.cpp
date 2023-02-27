@@ -30,7 +30,7 @@ namespace Aether
 
             log_buffer.reserve(PAGE_SIZE / sizeof(LogEntry));
 
-            tracer_params = new TlsParams;
+            tracer_params = new TlsParams{ false, NULL };
         }
 
         void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr)

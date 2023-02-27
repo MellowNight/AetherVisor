@@ -24,6 +24,8 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
         BranchTracer::Init(this, guest_ctx->rdx,
             guest_ctx->r8, guest_ctx->r9, guest_ctx->r12, (BranchTracer::TlsParams*)guest_ctx->r11);
 
+        DbgPrint("(BranchTracer::TlsParams*)guest_ctx->r11 %p \n", (BranchTracer::TlsParams*)guest_ctx->r11);
+
         break;
     }
     case VMMCALL_ID::deny_sandbox_reads:

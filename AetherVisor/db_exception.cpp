@@ -27,7 +27,7 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
             auto tls_params = Utils::GetTlsPtr<BranchTracer::TlsParams>(guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
 
-            (*tls_params)->callback_pending = FALSE;
+            (*tls_params)->callback_pending = false;
 
             /*  capture the ID of the target thread & start the tracer  */
 

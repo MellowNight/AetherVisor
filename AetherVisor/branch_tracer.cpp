@@ -39,8 +39,6 @@ namespace BranchTracer
 		stop_address = stop_addr;
 
 		tls_params = tracer_params;
-
-	//	DbgPrint("[BranchTracer::Init]	tls_idx: %p \n", tls_idx);
 	}
 
 	void Start(VcpuData* vcpu)
@@ -160,14 +158,14 @@ namespace BranchTracer
 			(guest_vmcb.save_state_area.cr3.Flags == BranchTracer::process_cr3.Flags))
 		{
 
-			DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
+//			DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
 
 			/*	completely stop the branch tracer	*/
 
 			if (guest_rip == BranchTracer::stop_address)
 			{
 				BranchTracer::Stop(vcpu);
-
+				
 				Instrumentation::InvokeHook(vcpu, Instrumentation::branch_trace_finished);
 
 				return;
@@ -184,7 +182,7 @@ namespace BranchTracer
 
 			auto tls_buffer = Utils::GetTlsPtr<TlsParams>(guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
 
-			if ((*tls_buffer)->callback_pending == FALSE)
+			if ((*tls_buffer)->callback_pending == false)
 			{
 				if (!Instrumentation::InvokeHook(vcpu, Instrumentation::branch))
 				{
@@ -196,7 +194,7 @@ namespace BranchTracer
 				}
 
 				(*tls_buffer)->last_branch_from = (void*)guest_vmcb.save_state_area.br_from;
-				(*tls_buffer)->callback_pending = TRUE;
+				(*tls_buffer)->callback_pending = true;
 
 				if (guest_rip < BranchTracer::range_base || guest_rip > (BranchTracer::range_size + BranchTracer::range_base))
 				{

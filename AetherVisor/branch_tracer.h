@@ -23,11 +23,13 @@ namespace BranchTracer
 
 	extern HANDLE thread_id;
 
+	#pragma pack(push, 8)
 	struct TlsParams
 	{
 		bool callback_pending;
 		void* last_branch_from;
 	};
+	#pragma pack(pop)
 
 	extern TlsParams* tls_params;
 
