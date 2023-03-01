@@ -120,7 +120,7 @@ namespace Aether
 
         extern  std::vector<LogEntry> log_buffer;
 
-        extern "C" extern void BranchCallbackInternal(GuestRegisters * registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP);
+        extern "C" extern void BranchCallbackInternal(GuestRegisters * registers, void* return_address, void* o_guest_rip);
 
         void Init();
 
@@ -144,8 +144,7 @@ namespace Aether
 
     void SetCallback(
         CALLBACK_ID handler_id,
-        void* address,
-        uint32_t tls_idx
+        void* address
     );
 
     int StopHv();
