@@ -1,4 +1,3 @@
-
 #include "aethervisor_kernel.h"
 #include "utils.h"
 

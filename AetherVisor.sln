@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AetherVisor-lib", "AetherVi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AetherVisor", "AetherVisor\AetherVisor.vcxproj", "{EEBE7609-CF06-424A-99AA-088B5747D4DF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AetherVisorDisabler", "AetherVisorDisabler\AetherVisorDisabler.vcxproj", "{66B61458-350B-4048-9FB9-4D86013E2FF4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -103,6 +105,30 @@ Global
 		{EEBE7609-CF06-424A-99AA-088B5747D4DF}.Release|x86.ActiveCfg = Release|Win32
 		{EEBE7609-CF06-424A-99AA-088B5747D4DF}.Release|x86.Build.0 = Release|Win32
 		{EEBE7609-CF06-424A-99AA-088B5747D4DF}.Release|x86.Deploy.0 = Release|Win32
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|ARM.ActiveCfg = Debug|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|ARM.Build.0 = Debug|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|ARM.Deploy.0 = Debug|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|ARM64.Build.0 = Debug|ARM64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|x64.ActiveCfg = Debug|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|x64.Build.0 = Debug|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|x64.Deploy.0 = Debug|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|x86.ActiveCfg = Debug|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|x86.Build.0 = Debug|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Debug|x86.Deploy.0 = Debug|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|ARM.ActiveCfg = Release|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|ARM.Build.0 = Release|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|ARM.Deploy.0 = Release|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|ARM64.ActiveCfg = Release|ARM64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|ARM64.Build.0 = Release|ARM64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|ARM64.Deploy.0 = Release|ARM64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|x64.ActiveCfg = Release|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|x64.Build.0 = Release|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|x64.Deploy.0 = Release|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|x86.ActiveCfg = Release|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|x86.Build.0 = Release|x64
+		{66B61458-350B-4048-9FB9-4D86013E2FF4}.Release|x86.Deploy.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
