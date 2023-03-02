@@ -30,11 +30,29 @@ namespace Aether
             return 0;
         }
 
+        
+        int UnboxPage(uintptr_t address, uintptr_t tag)
+        {
+            Util::TriggerCOW((uint8_t*)address);
+
+            svm_vmmcall(VMMCALL_ID::unbox_page, address, tag);
+
+            return 0;
+        }
+
         void SandboxRegion(uintptr_t base, uintptr_t size)
         {
             for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
             {
                 SandboxPage((uintptr_t)offset, NULL);
+            }
+        }
+
+        void UnboxRegion(uintptr_t base, uintptr_t size)
+        {
+            for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
+            {
+                UnboxPage((uintptr_t)offset, NULL);
             }
         }
 	}

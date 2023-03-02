@@ -13,37 +13,46 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\features">
+      <UniqueIdentifier>{f3b34dae-065f-4682-bb0b-cd3facfdefa1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="aethervisor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="branch_trace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="npt_hook.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="npt_sandbox.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="syscall_hook.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="branch_trace.cpp">
+      <Filter>Source Files\features</Filter>
+    </ClCompile>
+    <ClCompile Include="npt_hook.cpp">
+      <Filter>Source Files\features</Filter>
+    </ClCompile>
+    <ClCompile Include="syscall_hook.cpp">
+      <Filter>Source Files\features</Filter>
+    </ClCompile>
+    <ClCompile Include="npt_sandbox.cpp">
+      <Filter>Source Files\features</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\aethervisor_kernel.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="includes\utils.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="utils.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="vmmcall.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="event_callbacks.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="sandbox_handler.asm">
       <Filter>Source Files</Filter>
     </MASM>
   </ItemGroup>
