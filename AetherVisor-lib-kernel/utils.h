@@ -3,11 +3,6 @@
 #include    <Ntstrsafe.h>
 #include    <intrin.h>
 #include	<cstdint>
-//#include    <ntdef.h>
-//#include    <windef.h>
-//#include    <wdm.h>
-//#include	<TraceLoggingProvider.h>
-//
 
 #define PAGE_ALIGN(Va) ((PVOID)((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
 
@@ -24,8 +19,6 @@ extern "C"
 
 namespace Util
 {
-    int Exponent(int base, int power);
-
     int ForEachCore(void(*callback)(void* params), void* params);
 
     void WriteToReadOnly(void* address, uint8_t* bytes, size_t len);

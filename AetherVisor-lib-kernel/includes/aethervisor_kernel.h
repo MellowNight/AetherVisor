@@ -1,8 +1,6 @@
 #pragma once
 #include <cstdint>
 
-#define PAGE_SIZE 0x1000
-
 enum VMMCALL_ID : uintptr_t
 {
     disable_hv = 0x11111111,
@@ -13,8 +11,11 @@ enum VMMCALL_ID : uintptr_t
     instrumentation_hook = 0x11111117,
     deny_sandbox_reads = 0x11111118,
     start_branch_trace = 0x11111119,
-    hook_efer_syscall = 0x1111111A,
+    hook_efer_syscall = 0x1111111B,
+    unbox_page = 0x1111111C,
 };
+
+#define PAGE_SIZE 0x1000
 
 struct GuestRegisters
 {
@@ -44,13 +45,13 @@ extern "C" {
     extern void (*sandbox_mem_access_event)(GuestRegisters* registers, void* o_guest_rip);
     void __stdcall rw_handler_wrapper();
 
-    extern void (*branch_log_full_event)();
-    void __stdcall branch_log_full_event_wrap();
+    extern void (*branch_callback)(GuestRegisters* registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP);
+    void __stdcall branch_callback_wrapper();
 
     extern void (*branch_trace_finish_event)();
     void __stdcall branch_trace_finish_event_wrap();
 
-    extern void (*syscall_hook)(GuestRegisters* registers, void* guest_rip);
+    extern void (*syscall_hook)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
     void __stdcall syscall_hook_wrap();
 
     int __stdcall svm_vmmcall(VMMCALL_ID vmmcall_id, ...);
@@ -70,11 +71,21 @@ namespace Aether
     {
         sandbox_readwrite = 0,
         sandbox_execute = 1,
-        branch_log_full = 2,
+        branch = 2,
         branch_trace_finished = 3,
         syscall = 4,
         max_id
     };
+
+    struct Callback
+    {
+        CALLBACK_ID id;
+        void** handler;
+        void (*handler_wrapper)();
+        uint32_t tls_params_idx;
+    };
+
+    extern Callback instrumentation_hooks[];
 
     namespace NptHook
     {
@@ -90,52 +101,48 @@ namespace Aether
     }
 
     namespace BranchTracer
-    {
-        union BranchLog
-        {
-            struct LogEntry
-            {
-                uintptr_t branch_address;
-                uintptr_t branch_target;
-            };
+    {        
+        
+        // BRANCH TRACER KERNEL INTERFACE TO BE DONE LATER!!!!!
 
-            struct
-            {
-                int capacity;
-                int buffer_idx;
-                LogEntry* buffer;
-            } info;
+        //struct LogEntry
+        //{
+        //    uintptr_t branch_address;
+        //    uintptr_t branch_target;
+        //};
 
-            LogEntry log_entries[PAGE_SIZE / sizeof(LogEntry)];
+        //struct TlsParams
+        //{
+        //    bool callback_pending;
+        //    void* last_branch_from;
+        //};
 
-            void Init();    // for kernel driver ExAllocatePool
-            // BranchLog() for usermode CPP
-        };
+        //extern  std::vector<LogEntry> log_buffer;
 
-        extern BranchLog* log_buffer;
+        //extern "C" extern void BranchCallbackInternal(GuestRegisters * registers, void* return_address, void* o_guest_rip);
 
-        void Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL);
+        //void Init();
+
+        //void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL);
     }
 
     namespace SyscallHook
     {
-        int Disable();
         int Enable();
+        int Disable();
     }
 
     namespace Sandbox
     {
-        void DenyPageAccess(void* page_addr, bool allow_reads);
-
         void DenyRegionAccess(void* base, size_t range, bool allow_reads);
 
-        int SandboxPage(uintptr_t address, uintptr_t tag);
-
         void SandboxRegion(uintptr_t base, uintptr_t size);
+
+        void UnboxRegion(uintptr_t base, uintptr_t size);
     }
 
     void SetCallback(
-        CALLBACK_ID handler_id, 
+        CALLBACK_ID handler_id,
         void* address
     );
 

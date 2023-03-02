@@ -38,7 +38,7 @@ namespace Util
         auto status = ZwProtectVirtualMemory(ZwCurrentProcess(),
             (void**)&address, &size, PAGE_EXECUTE_READWRITE, &old_prot);
 
-        DbgPrint("WriteToReadOnly status1 %p \n", status);
+      //  DbgPrint("WriteToReadOnly status1 %p \n", status);
 
         memcpy((void*)address, (void*)bytes, len);
 
@@ -46,7 +46,7 @@ namespace Util
         status = ZwProtectVirtualMemory(ZwCurrentProcess(),
             (void**)&address, &size, old_prot, &old_prot2);
 
-        DbgPrint("WriteToReadOnly status2 %p \n", status);
+     //   DbgPrint("WriteToReadOnly status2 %p \n", status);
 
     }
 
@@ -54,7 +54,7 @@ namespace Util
 
     void TriggerCOW(void* address)
     {
-        uint8_t buffer;
+        auto buffer = *(uint8_t*)address;
 
         /*	trigger COW	*/
 

@@ -44,9 +44,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\aethervisor_kernel.h" />
-    <ClInclude Include="includes\utils.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <MASM Include="event_callbacks.asm" />
+    <MASM Include="sandbox_handler.asm" />
     <MASM Include="vmmcall.asm" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
