@@ -13,4 +13,6 @@ extern "C"
     NTKERNELAPI  PPEB NTAPI PsGetProcessPeb(
         IN PEPROCESS Process
     );
+
+    extern char* PsGetProcessImageFileName(PEPROCESS p);
 }

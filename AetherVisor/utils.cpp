@@ -92,7 +92,50 @@ namespace Utils
         }
     }
 
-    int parsed = 0;
+    uintptr_t GetModuleFromAddress32(PEPROCESS pProcess, uintptr_t address, PUNICODE_STRING ModuleName)
+    {
+        LARGE_INTEGER time = { 0 };
+        time.QuadPart = -250ll * 10 * 1000;     // 250 msec.
+
+        PPEB32 pPeb32 = (PPEB32)PsGetProcessWow64Process(pProcess);
+        if (pPeb32 == NULL)
+        {
+            DbgPrint("BlackBone: %s: No PEB present. Aborting\n", __FUNCTION__);
+            return NULL;
+        }
+
+        // Wait for loader a bit
+        for (INT i = 0; !pPeb32->Ldr && i < 10; i++)
+        {
+            DbgPrint("BlackBone: %s: Loader not intialiezd, waiting\n", __FUNCTION__);
+            KeDelayExecutionThread(KernelMode, TRUE, &time);
+        }
+
+        // Still no loader
+        if (!pPeb32->Ldr)
+        {
+            DbgPrint("BlackBone: %s: Loader was not intialiezd in time. Aborting\n", __FUNCTION__);
+            return NULL;
+        }
+
+        // Search in InLoadOrderModuleList
+        for (PLIST_ENTRY32 pListEntry = (PLIST_ENTRY32)((PPEB_LDR_DATA32)pPeb32->Ldr)->InLoadOrderModuleList.Flink;
+            pListEntry != &((PPEB_LDR_DATA32)pPeb32->Ldr)->InLoadOrderModuleList;
+            pListEntry = (PLIST_ENTRY32)pListEntry->Flink)
+        {
+            PLDR_DATA_TABLE_ENTRY32 pEntry = CONTAINING_RECORD(pListEntry, LDR_DATA_TABLE_ENTRY32, InLoadOrderLinks);
+
+            if (address > pEntry->DllBase && (address < (pEntry->DllBase + pEntry->SizeOfImage)))
+            {
+                RtlUnicodeStringInit(ModuleName, (PWCH)pEntry->BaseDllName.Buffer);
+
+                return pEntry->DllBase;
+            }
+
+        }
+
+        return NULL;
+    }
 
     void* GetUserModule(PEPROCESS pProcess, PUNICODE_STRING ModuleName, PPEB peb)
     {
@@ -124,7 +167,6 @@ namespace Utils
 
                 return pEntry->DllBase;
             }
-            parsed = 1337;
         }
 
         return NULL;

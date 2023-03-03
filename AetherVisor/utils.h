@@ -6,6 +6,7 @@
 namespace Utils
 {
     void* GetUserModule32(PEPROCESS pProcess, PUNICODE_STRING ModuleName);
+    uintptr_t GetModuleFromAddress32(PEPROCESS pProcess, uintptr_t address, PUNICODE_STRING ModuleName);
 
 	void* GetKernelModule(size_t* out_size, UNICODE_STRING DriverName);
 
