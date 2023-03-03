@@ -138,5 +138,8 @@ namespace AetherVisor
         void* address
     );
 
-    int StopHv();
+    extern "C"
+    {
+        int _cdecl StopHv();
+    }
 };

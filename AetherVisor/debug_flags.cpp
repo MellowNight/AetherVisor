@@ -1,5 +1,6 @@
 #include "vmexit.h"
 #include "branch_tracer.h"
+#include "kernel_exports.h"
 
 void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 {
@@ -89,6 +90,9 @@ void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 int last_intercept = 0;
 uintptr_t last_rip = 0;
 
+uintptr_t eac_base = 0;
+uintptr_t eac_size = 0;
+
 void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 {
 	VmcbSaveStateArea& save_state_area = guest_vmcb.save_state_area;
@@ -115,29 +119,58 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 		((RFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
 		((RFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
 
-		if (BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags && BranchTracer::active)
+		if ((BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags) && BranchTracer::active)
 		{
 			((RFLAGS*)save_state_area.rsp)->TrapFlag = 0;
 		}
 	}
 	else if (save_state_area.cs_attrib.fields.long_mode == 0)
 	{
+
+	/*	if (eac_base == 0 && eac_size == 0 && save_state_area.cpl == 3)
+		{
+			UNICODE_STRING eac_name = RTL_CONSTANT_STRING(L"EasyAntiCheat_EOS_Setup.exe");
+
+			eac_base = (uintptr_t)Utils::GetUserModule32(PsGetCurrentProcess(), &eac_name);
+			eac_size = PE_HEADER(eac_base)->OptionalHeader.SizeOfImage;
+
+			if (!eac_base)
+			{
+				UNICODE_STRING eac_name2 = RTL_CONSTANT_STRING(L"RogueCompanyEAC.exe");
+
+				eac_base = (uintptr_t)Utils::GetUserModule32(PsGetCurrentProcess(), &eac_name);
+				eac_size = PE_HEADER(eac_base)->OptionalHeader.SizeOfImage;
+
+			}
+
+			DbgPrint("EasyAntiCheat_EOS_Setup.exe 0x%p  \n", eac_base);
+
+		}*/
+
+
 		last_intercept = 3;		last_rip = save_state_area.rip;
 
 
 		save_state_area.rsp -= sizeof(uint32_t);
 
-		uint32_t value = ((save_state_area.rflags.Flags & 0xFFFFFFFF00000000LL) >> 32);
+		int32_t value = (save_state_area.rflags.Flags & UINT32_MAX);
 
-		*(uint32_t*)save_state_area.rsp = value;
+		*(int32_t*)save_state_area.rsp = value;
 
-		((RFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
-		((EFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
+	//	((RFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
+	//	((EFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
 
-		if (BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags && BranchTracer::active)
+		if ((BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags) && BranchTracer::active)
 		{
 			((RFLAGS*)save_state_area.rsp)->TrapFlag = 0;
 		}
+
+
+
+		//if (eac_base && save_state_area.cpl == 3)
+		//{
+		//	DbgPrint("EAC save_state_area.rip +0x%p  flags pushed onto stack val 0x%p \n", save_state_area.rip, value);
+		//}
 	}
 
 	////DbgPrint("[PushfExit]	guest_rip 0x%p guest_vmcb.control_area.nrip 0x%p \n",

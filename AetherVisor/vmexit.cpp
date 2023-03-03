@@ -28,6 +28,8 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx)
 
     bool end_hypervisor = false;
 
+    vcpu->suppress_nrip_increment = FALSE;
+
     switch (vcpu->guest_vmcb.control_area.exit_code)
     {
     case VMEXIT::MSR:

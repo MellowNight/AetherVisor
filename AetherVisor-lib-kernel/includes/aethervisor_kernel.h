@@ -59,92 +59,95 @@ extern "C" {
 
 namespace Aether
 {
-    enum NCR3_DIRECTORIES
+    extern "C"
     {
-        primary,
-        shadow,
-        sandbox,
-        sandbox_single_step
-    };
+        enum NCR3_DIRECTORIES
+        {
+            primary,
+            shadow,
+            sandbox,
+            sandbox_single_step
+        };
 
-    enum CALLBACK_ID
-    {
-        sandbox_readwrite = 0,
-        sandbox_execute = 1,
-        branch = 2,
-        branch_trace_finished = 3,
-        syscall = 4,
-        max_id
-    };
+        enum CALLBACK_ID
+        {
+            sandbox_readwrite = 0,
+            sandbox_execute = 1,
+            branch = 2,
+            branch_trace_finished = 3,
+            syscall = 4,
+            max_id
+        };
 
-    struct Callback
-    {
-        CALLBACK_ID id;
-        void** handler;
-        void (*handler_wrapper)();
-        uint32_t tls_params_idx;
-    };
+        struct Callback
+        {
+            CALLBACK_ID id;
+            void** handler;
+            void (*handler_wrapper)();
+            uint32_t tls_params_idx;
+        };
 
-    extern Callback instrumentation_hooks[];
+        extern Callback instrumentation_hooks[];
 
-    namespace NptHook
-    {
-        int Set(
-            uintptr_t address,
-            uint8_t* patch,
-            size_t patch_len,
-            NCR3_DIRECTORIES ncr3_id = NCR3_DIRECTORIES::primary,
-            bool global_page = false
+        namespace NptHook
+        {
+            int Set(
+                uintptr_t address,
+                uint8_t* patch,
+                size_t patch_len,
+                NCR3_DIRECTORIES ncr3_id = NCR3_DIRECTORIES::primary,
+                bool global_page = false
+            );
+
+            int Remove(uintptr_t address);
+        }
+
+        namespace BranchTracer
+        {        
+        
+            // BRANCH TRACER KERNEL INTERFACE TO BE DONE LATER!!!!!
+
+            //struct LogEntry
+            //{
+            //    uintptr_t branch_address;
+            //    uintptr_t branch_target;
+            //};
+
+            //struct TlsParams
+            //{
+            //    bool callback_pending;
+            //    void* last_branch_from;
+            //};
+
+            //extern  std::vector<LogEntry> log_buffer;
+
+            //extern "C" extern void BranchCallbackInternal(GuestRegisters * registers, void* return_address, void* o_guest_rip);
+
+            //void Init();
+
+            //void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL);
+        }
+
+        namespace SyscallHook
+        {
+            int Enable();
+            int Disable();
+        }
+
+        namespace Sandbox
+        {
+            void DenyRegionAccess(void* base, size_t range, bool allow_reads);
+
+            void SandboxRegion(uintptr_t base, uintptr_t size);
+
+            void UnboxRegion(uintptr_t base, uintptr_t size);
+        }
+
+        void SetCallback(
+            CALLBACK_ID handler_id,
+            void* address
         );
 
-        int Remove(uintptr_t address);
+        int StopHv();
     }
-
-    namespace BranchTracer
-    {        
-        
-        // BRANCH TRACER KERNEL INTERFACE TO BE DONE LATER!!!!!
-
-        //struct LogEntry
-        //{
-        //    uintptr_t branch_address;
-        //    uintptr_t branch_target;
-        //};
-
-        //struct TlsParams
-        //{
-        //    bool callback_pending;
-        //    void* last_branch_from;
-        //};
-
-        //extern  std::vector<LogEntry> log_buffer;
-
-        //extern "C" extern void BranchCallbackInternal(GuestRegisters * registers, void* return_address, void* o_guest_rip);
-
-        //void Init();
-
-        //void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL);
-    }
-
-    namespace SyscallHook
-    {
-        int Enable();
-        int Disable();
-    }
-
-    namespace Sandbox
-    {
-        void DenyRegionAccess(void* base, size_t range, bool allow_reads);
-
-        void SandboxRegion(uintptr_t base, uintptr_t size);
-
-        void UnboxRegion(uintptr_t base, uintptr_t size);
-    }
-
-    void SetCallback(
-        CALLBACK_ID handler_id,
-        void* address
-    );
-
-    int StopHv();
 };

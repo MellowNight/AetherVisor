@@ -6,45 +6,48 @@ namespace Aether
 {
     namespace BranchTracer
     {
-        // BRANCH TRACER KERNEL INTERFACE TO BE DONE LATER!!!!!
-        
+        extern "C"
+        {
+            /// BRANCH TRACER KERNEL INTERFACE TO BE DONE LATER!!!!!
 
 
-        //std::vector<LogEntry> log_buffer;
 
-        //TlsParams* tracer_params;
+           //std::vector<LogEntry> log_buffer;
 
-        //void BranchCallbackInternal(GuestRegisters* registers, void* return_address, void* o_guest_rip)
-        //{
-        //    branch_callback(registers, return_address, o_guest_rip, tracer_params->last_branch_from);
+           //TlsParams* tracer_params;
 
-        //    if (log_buffer.size() < log_buffer.capacity())
-        //    {
-        //        log_buffer.push_back(LogEntry{ (uintptr_t)tracer_params->last_branch_from, (uintptr_t)o_guest_rip });
-        //    }
-        //    else
-        //    {
-        //        log_buffer.clear();
-        //    }
-        //}
+            void BranchCallbackInternal(GuestRegisters* registers, void* return_address, void* o_guest_rip)
+            {
+                /*      branch_callback(registers, return_address, o_guest_rip, tracer_params->last_branch_from);
 
-        //void Init()
-        //{
-        //    instrumentation_hooks[branch].tls_params_idx = TlsAlloc();
+                      if (log_buffer.size() < log_buffer.capacity())
+                      {
+                          log_buffer.push_back(LogEntry{ (uintptr_t)tracer_params->last_branch_from, (uintptr_t)o_guest_rip });
+                      }
+                      else
+                      {
+                          log_buffer.clear();
+                      }*/
+            }
 
-        //    log_buffer.reserve(PAGE_SIZE / sizeof(LogEntry));
+            void Init()
+            {
+                //instrumentation_hooks[branch].tls_params_idx = TlsAlloc();
 
-        //    tracer_params = new TlsParams{ false, NULL };
-        //}
+                //log_buffer.reserve(PAGE_SIZE / sizeof(LogEntry));
 
-        //void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr)
-        //{
-        //    NptHook::Set((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, primary);
-        //  //  NptHook::Set((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox);
+                //tracer_params = new TlsParams{ false, NULL };
+            }
 
-        //    svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, stop_addr, range_base, range_size, tracer_params);
+            void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr)
+            {
+                //NptHook::Set((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, primary);
+                ////  NptHook::Set((uintptr_t)start_addr, (uint8_t*)"\xCC", 1, sandbox);
 
-        //    return NULL;
-        //}
+                //svm_vmmcall(VMMCALL_ID::start_branch_trace, start_addr, stop_addr, range_base, range_size, tracer_params);
+
+                return NULL;
+            }
+        }
     }
 }

@@ -1,0 +1,6 @@
+Microsoft (R) COFF/PE Dumper Version 14.32.31332.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file my_lib_name.lib
+LINK : fatal error LNK1181: cannot open input file 'my_lib_name.lib'

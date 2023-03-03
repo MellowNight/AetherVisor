@@ -5,6 +5,8 @@
 
 namespace Utils
 {
+    void* GetUserModule32(PEPROCESS pProcess, PUNICODE_STRING ModuleName);
+
 	void* GetKernelModule(size_t* out_size, UNICODE_STRING DriverName);
 
 	int Exponent(
@@ -54,6 +56,8 @@ namespace Utils
         int (*page_table_callback)(PT_ENTRY_64*, void*) = NULL, 
         void* callback_data = NULL
     );
+
+    void* GetUserModule(IN PEPROCESS pProcess, IN PUNICODE_STRING ModuleName, PPEB peb);
     
     template <typename T>
     T** GetTlsPtr(uintptr_t gs_base, uint32_t tls_index)

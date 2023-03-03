@@ -41,7 +41,7 @@ namespace Aether
             handler_id, *instrumentation_hooks[handler_id].handler_wrapper, instrumentation_hooks[handler_id].tls_params_idx);
     }
 
-    int StopHv()
+    int _cdecl StopHv()
     {
         Util::ForEachCore(
             [](void* params) -> void 
