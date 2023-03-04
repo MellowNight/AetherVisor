@@ -40,9 +40,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="npt.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="includes.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -103,12 +100,12 @@
     <ClInclude Include="vmexit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="npt.h">
+      <Filter>Source Files\NPT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="npt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vmexit.cpp">
@@ -164,6 +161,9 @@
     </ClCompile>
     <ClCompile Include="debug_flags.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="npt.cpp">
+      <Filter>Source Files\NPT</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

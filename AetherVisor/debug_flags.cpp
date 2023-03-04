@@ -87,12 +87,6 @@ void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 	}	
 }
 
-int last_intercept = 0;
-uintptr_t last_rip = 0;
-
-uintptr_t eac_base = 0;
-uintptr_t eac_size = 0;
-
 void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 {
 	VmcbSaveStateArea& save_state_area = guest_vmcb.save_state_area;
@@ -105,24 +99,18 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 
 	if (*(uint8_t*)save_state_area.rip == 0x66)
 	{
-		last_intercept = 1;
-		last_rip = save_state_area.rip;
-
 		save_state_area.rsp -= sizeof(uint16_t);
 
 		*(uint16_t*)save_state_area.rsp = (uint16_t)(save_state_area.rflags.Flags & UINT16_MAX);
 	}
 	else if (save_state_area.cs_attrib.fields.long_mode == 1)
 	{
-		last_intercept = 2;		last_rip = save_state_area.rip;
-
-
 		save_state_area.rsp -= sizeof(uintptr_t);
 
 		*(uint64_t*)save_state_area.rsp = save_state_area.rflags.Flags;
 //
-	//	((RFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
-		//((RFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
+		((EFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
+		((EFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
 
 		//if ((BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags) && BranchTracer::active)
 		//{
@@ -132,25 +120,25 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 	else if (save_state_area.cs_attrib.fields.long_mode == 0/* && save_state_area.rflags.Virtual8086ModeFlag == 0*/)
 	{
 
-		if (eac_base == 0 && eac_size == 0 && save_state_area.cpl == 3)
-		{
-			UNICODE_STRING eac_name = RTL_CONSTANT_STRING(L"RogueCompanyEAC.exe");
+		//if (eac_base == 0 && eac_size == 0 && save_state_area.cpl == 3)
+		//{
+		//	UNICODE_STRING eac_name = RTL_CONSTANT_STRING(L"RogueCompanyEAC.exe");
 
-			eac_base = (uintptr_t)Utils::GetUserModule32(PsGetCurrentProcess(), &eac_name);
-			eac_size = PE_HEADER(eac_base)->OptionalHeader.SizeOfImage;
+		//	eac_base = (uintptr_t)Utils::GetUserModule32(PsGetCurrentProcess(), &eac_name);
+		//	eac_size = PE_HEADER(eac_base)->OptionalHeader.SizeOfImage;
 
-			DbgPrint("PsGetProcessImageFileName %s 0x%p  save_state_area.rflags.Virtual8086ModeFlag %p \n", PsGetProcessImageFileName(PsGetCurrentProcess()), eac_base, save_state_area.rflags.Virtual8086ModeFlag);
+		//	DbgPrint("PsGetProcessImageFileName %s 0x%p  save_state_area.rflags.Virtual8086ModeFlag %p \n", PsGetProcessImageFileName(PsGetCurrentProcess()), eac_base, save_state_area.rflags.Virtual8086ModeFlag);
 
-		}
-
-
-		last_intercept = 3;		last_rip = save_state_area.rip;
+		//}
 
 		save_state_area.rsp -= sizeof(uint32_t);
 
 		uint32_t value = (uint32_t)((save_state_area.rflags.Flags & UINT32_MAX)); // & ~(/*RFLAGS_VIRTUAL_8086_MODE_FLAG_FLAG | */RFLAGS_RESUME_FLAG_FLAG));
 
 		*(uint32_t*)save_state_area.rsp = value;
+
+		((EFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
+		((EFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
 
 		//if ((BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags) && BranchTracer::active)
 		//{
@@ -173,8 +161,6 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 
 		save_state_area.rip = control_area.nrip;
 	}
-	////DbgPrint("[PushfExit]	guest_rip 0x%p guest_vmcb.control_area.nrip 0x%p \n",
-	//	save_state_area.rip, guest_vmcb.control_area.nrip);
 }
 
 void VcpuData::PopfExit(GuestRegisters* guest_ctx)
@@ -234,7 +220,6 @@ void VcpuData::PopfExit(GuestRegisters* guest_ctx)
 	{
 		save_state_area.rflags.TrapFlag = 1;
 	}
-
 
 	save_state_area.rsp += operand_size;
 }
