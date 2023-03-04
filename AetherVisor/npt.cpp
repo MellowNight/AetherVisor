@@ -87,6 +87,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 		if (denied_read_page && ncr3.QuadPart == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
+			//KeBugCheck(MANUALLY_INITIATED_CRASH);
 			DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
 
 			/*
@@ -122,25 +123,25 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 		//	BranchTracer::Resume(this);
 		//}
 
-		if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
-		{
-			/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
+		//if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
+		//{
+		//	/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
-			Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute);
-		}
+		//	Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute);
+		//}
 
-		auto sandbox_npte = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
+		//auto sandbox_npte = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
-		if (sandbox_npte->ExecuteDisable == FALSE)
-		{
-			/*  enter into the sandbox context	*/
+		//if (sandbox_npte->ExecuteDisable == FALSE)
+		//{
+		//	/*  enter into the sandbox context	*/
 
-			// DbgPrint("0x%p is a sandbox page! \n", faulting_physical.QuadPart);
+		//	// DbgPrint("0x%p is a sandbox page! \n", faulting_physical.QuadPart);
 
-			guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
+		//	guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
 
-			return;
-		}
+		//	return;
+		//}
 
 		auto npthooked_page = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[shadow]);
 
