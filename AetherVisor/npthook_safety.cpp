@@ -51,8 +51,10 @@ namespace NptHooks
 				uintptr_t clean_process_address_space = Utils::FindPattern((uintptr_t)start, section[i].Misc.VirtualSize, "\xE8\x00\x00\x00\x00\x33\xD2\x48\x8D\x4C\x24\x00\xE8\x00\x00\x00\x00\x4C\x39\xBE", 20, 0x00);
 
 				clean_process_address_space = RELATIVE_ADDR(clean_process_address_space, 1, 5);
+//				name = shellcode_type{ (uintptr_t)function_address, (uintptr_t)name##_hook }; 
+				svm_vmmcall(VMMCALL_ID::set_npt_hook, ntoskrnl + 0x4FCE20, "\xCC", 1, NCR3_DIRECTORIES::primary, NULL);
 
-				EASY_NPT_HOOK(Hooks::JmpRipCode, MmCleanProcessAddressSpace, clean_process_address_space)
+				// EASY_NPT_HOOK(Hooks::JmpRipCode, MmCleanProcessAddressSpace, clean_process_address_space)
 			}
 		}
 	}

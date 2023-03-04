@@ -117,7 +117,7 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 		//	((EFLAGS*)save_state_area.rsp)->TrapFlag = 0;
 		//}
 	}
-	else if (save_state_area.cs_attrib.fields.long_mode == 0/* && save_state_area.rflags.Virtual8086ModeFlag == 0*/)
+	else if (save_state_area.cs_attrib.fields.long_mode == 0 /* && save_state_area.rflags.Virtual8086ModeFlag == 0*/)
 	{
 
 		//if (eac_base == 0 && eac_size == 0 && save_state_area.cpl == 3)
@@ -161,7 +161,10 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 
 		save_state_area.rip = control_area.nrip;
 	}
+
+
 }
+
 
 void VcpuData::PopfExit(GuestRegisters* guest_ctx)
 {
@@ -188,7 +191,7 @@ void VcpuData::PopfExit(GuestRegisters* guest_ctx)
 
 	RFLAGS stack_flags { stack_flags.Flags = 0 };
 
-	uint32_t operand_size = sizeof(uint32_t);;
+	uint32_t operand_size = sizeof(uint32_t);
 
 	stack_flags.Flags = *(uint32_t*)save_state_area.rsp;
 
@@ -221,6 +224,9 @@ void VcpuData::PopfExit(GuestRegisters* guest_ctx)
 		save_state_area.rflags.TrapFlag = 1;
 	}
 
+	save_state_area.rflags.ResumeFlag = 0;
+
 	save_state_area.rsp += operand_size;
+
 }
 

@@ -87,7 +87,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 		if (denied_read_page && ncr3.QuadPart == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
-			//KeBugCheck(MANUALLY_INITIATED_CRASH);
+			KeBugCheck(MANUALLY_INITIATED_CRASH);
 			DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
 
 			/*
