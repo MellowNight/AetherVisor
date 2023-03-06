@@ -115,33 +115,40 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 	if (exit_info1.fields.execute == 1)
 	{
-		//if (guest_rip > BranchTracer::range_base && guest_rip < (BranchTracer::range_size + BranchTracer::range_base))
-		//{
-		//	/*  Resume the branch tracer after an NCR3 switch, if the tracer is active.
-		//		Single-stepping mode => only #DB on branches
-		//	*/
-		//	BranchTracer::Resume(this);
-		//}
+		if (guest_rip > BranchTracer::range_base && guest_rip < (BranchTracer::range_size + BranchTracer::range_base))
+		{
+			/*  Resume the branch tracer after an NCR3 switch, if the tracer is active.
+				Single-stepping mode => only #DB on branches
+			*/
+			BranchTracer::Resume(this);
+		}
 
-		//if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
-		//{
-		//	/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
+		if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
+		{
+			ZydisDecodedOperand operands[5];
+			
+			auto insn_category = Disasm::Disassemble((uint8_t*)guest_rip, operands).meta.category;
 
-		//	Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute);
-		//}
+			if (insn_category == ZYDIS_CATEGORY_COND_BR || insn_category == ZYDIS_CATEGORY_RET || insn_category == ZYDIS_CATEGORY_CALL || insn_category == ZYDIS_CATEGORY_UNCOND_BR)
+			{
+				/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
-		//auto sandbox_npte = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
+				Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute);
+			}
+		}
 
-		//if (sandbox_npte->ExecuteDisable == FALSE)
-		//{
-		//	/*  enter into the sandbox context	*/
+		auto sandbox_npte = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
-		//	// DbgPrint("0x%p is a sandbox page! \n", faulting_physical.QuadPart);
+		if (sandbox_npte->ExecuteDisable == FALSE)
+		{
+			/*  enter into the sandbox context	*/
 
-		//	guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
+			// DbgPrint("0x%p is a sandbox page! \n", faulting_physical.QuadPart);
 
-		//	return;
-		//}
+			guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
+
+			return;
+		}
 
 		auto npthooked_page = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[shadow]);
 

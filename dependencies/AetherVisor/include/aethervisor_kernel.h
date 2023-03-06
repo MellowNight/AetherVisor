@@ -128,7 +128,7 @@ namespace AetherVisor
 
         void DenyRegionAccess(void* base, size_t range, bool allow_reads);
 
-        int SandboxPage(uintptr_t address, uintptr_t tag);
+        int SandboxPage(uintptr_t address, uintptr_t tag, bool global_page = false);
 
         void SandboxRegion(uintptr_t base, uintptr_t size);
     }

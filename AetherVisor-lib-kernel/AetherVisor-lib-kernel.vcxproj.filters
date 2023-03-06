@@ -38,11 +38,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="includes\aethervisor_kernel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="utils.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\aethervisor_kernel.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -50,9 +50,6 @@
       <Filter>Source Files</Filter>
     </MASM>
     <MASM Include="event_callbacks.asm">
-      <Filter>Source Files</Filter>
-    </MASM>
-    <MASM Include="sandbox_handler.asm">
       <Filter>Source Files</Filter>
     </MASM>
   </ItemGroup>

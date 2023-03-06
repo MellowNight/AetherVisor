@@ -40,6 +40,7 @@ struct GuestRegisters
 extern "C" {
 
     extern void (*sandbox_execute_event)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
+
     void __stdcall execute_handler_wrapper();
 
     extern void (*sandbox_mem_access_event)(GuestRegisters* registers, void* o_guest_rip);
@@ -138,7 +139,7 @@ namespace Aether
         {
             void DenyRegionAccess(void* base, size_t range, bool allow_reads);
 
-            void SandboxRegion(uintptr_t base, uintptr_t size);
+            void SandboxRegion(uintptr_t base, uintptr_t size, bool COW = false);
 
             void UnboxRegion(uintptr_t base, uintptr_t size);
         }

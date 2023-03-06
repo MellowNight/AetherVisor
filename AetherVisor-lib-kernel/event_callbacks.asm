@@ -46,17 +46,31 @@ endm
 
 execute_handler_wrapper proc frame
 	
+    pushfq
     PUSHAQ
 
     .endprolog
- 
+
     mov rcx, rsp                    ; pass the registers
-    mov rdx, [rsp + 8 * 16 + 8]     ; pass the return address
-    mov r8, [rsp + 8 * 16]          ; pass the original guest RIP
+    mov rdx, [rsp + 8 * 17 + 8]     ; pass the return address
+    mov r8, [rsp + 8 * 17]          ; pass the original guest RIP
+        
+    ; Align the stack pointer to 16 bytes
+    push rbp
+    mov rbp, rsp
+    and rsp, 0FFFFFFFFFFFFFFF0h
     
+    sub rsp, 20h
+
     call sandbox_execute_event
+    
+    add rsp, 20h
+
+    mov rsp, rbp ; Add back the value that was subtracted
+    pop rbp
 
     POPAQ
+    popfq
 
     ret
 	

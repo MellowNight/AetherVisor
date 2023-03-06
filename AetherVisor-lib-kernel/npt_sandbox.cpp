@@ -23,9 +23,12 @@ namespace Aether
                 }
             }
 
-            int SandboxPage(uintptr_t address, uintptr_t tag)
+            int SandboxPage(uintptr_t address, uintptr_t tag, bool global_page = false)
             {
-                Util::TriggerCOW((uint8_t*)address);
+                if (global_page)
+                {
+                    Util::TriggerCOW((uint8_t*)address);
+                }
 
                 svm_vmmcall(VMMCALL_ID::sandbox_page, address, tag);
 
@@ -42,11 +45,11 @@ namespace Aether
                 return 0;
             }
 
-            void SandboxRegion(uintptr_t base, uintptr_t size)
+            void SandboxRegion(uintptr_t base, uintptr_t size, bool COW)
             {
                 for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
                 {
-                    SandboxPage((uintptr_t)offset, NULL);
+                    SandboxPage((uintptr_t)offset, NULL, COW);
                 }
             }
 
