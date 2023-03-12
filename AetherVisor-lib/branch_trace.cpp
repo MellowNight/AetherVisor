@@ -16,11 +16,12 @@ namespace Aether
 
             if (log_buffer.size() < log_buffer.capacity())
             {
-                log_buffer.push_back(LogEntry{ (uintptr_t)tracer_params->last_branch_from, (uintptr_t)o_guest_rip });
+                log_buffer.push_back(LogEntry{ (uintptr_t)tracer_params->last_branch_from, (uintptr_t)o_guest_rip, tracer_params->resume_address });
             }
             else
             {
                 log_buffer.clear();
+                log_buffer.push_back(LogEntry{ (uintptr_t)tracer_params->last_branch_from, (uintptr_t)o_guest_rip, tracer_params->resume_address });
             }
         }
 

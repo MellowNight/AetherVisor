@@ -106,16 +106,20 @@ namespace Aether
 
     namespace BranchTracer
     {
+        #pragma pack(push, 16)
         struct LogEntry
         {
             uintptr_t branch_address;
             uintptr_t branch_target;
+            uintptr_t resume_guest_rip;
         };
+        #pragma pack(pop)
 
         struct TlsParams
         {
             bool callback_pending;
             void* last_branch_from;
+            uintptr_t resume_address;
         };
 
         extern  std::vector<LogEntry> log_buffer;

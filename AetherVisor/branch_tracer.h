@@ -28,6 +28,7 @@ namespace BranchTracer
 	{
 		bool callback_pending;
 		void* last_branch_from;
+		uintptr_t resume_address;
 	};
 	#pragma pack(pop)
 

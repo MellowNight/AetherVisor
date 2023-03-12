@@ -7,6 +7,29 @@ using namespace Instrumentation;
 
 void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 {
+    if (guest_vmcb.save_state_area.rip == BranchTracer::resume_address)
+    {
+        /*	transition out of branch callback, continue branch single-stepping	*/
+
+       // DbgPrint("[UpdateState]		Branch hook finished, guest_rip %p \n", guest_vmcb.save_state_area.rip);
+
+        BranchTracer::resume_address = NULL;
+
+        auto tls_params = Utils::GetTlsPtr<BranchTracer::TlsParams>(guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
+
+        (*tls_params)->callback_pending = false;
+        (*tls_params)->resume_address = guest_vmcb.save_state_area.rip;
+
+        /*  capture the ID of the target thread & start the tracer  */
+
+        BranchTracer::Resume(this);
+
+        guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 0;
+        guest_vmcb.save_state_area.dr6.SingleInstruction = 0;
+
+        return;
+    }
+
     DR6 dr6 = guest_vmcb.save_state_area.dr6;
 
     if (dr6.SingleInstruction == 1)
@@ -16,28 +39,6 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
         DbgPrint("[DebugFaultHandler]   BranchTracer::range_base + BranchTracer::range_size %p \n\n\n", BranchTracer::range_size + BranchTracer::range_base);*/
 
        // DbgPrint("[DebugFaultHandler]   guest_rip %p \n", guest_vmcb.save_state_area.rip);
-
-        if (guest_vmcb.save_state_area.rip == BranchTracer::resume_address)
-        {			
-            /*	transition out of branch callback, continue branch single-stepping	*/
-
-           // DbgPrint("[UpdateState]		Branch hook finished, guest_rip %p \n", guest_vmcb.save_state_area.rip);
-
-            BranchTracer::resume_address = NULL;
-
-            auto tls_params = Utils::GetTlsPtr<BranchTracer::TlsParams>(guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
-
-            (*tls_params)->callback_pending = false;
-
-            /*  capture the ID of the target thread & start the tracer  */
-
-            BranchTracer::Resume(this);
-
-            guest_vmcb.save_state_area.dr7.GlobalBreakpoint0 = 0;
-            guest_vmcb.save_state_area.dr6.SingleInstruction = 0;
-
-            return;
-        }
 
         if (BranchTracer::active == true)
         {
