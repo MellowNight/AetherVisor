@@ -8,43 +8,47 @@
 
 namespace BranchTracer
 {
-	extern CR3 process_cr3;
+    extern CR3 process_cr3;
 
-	extern bool active;
-	extern bool initialized;
+    extern bool active;
+    extern bool initialized;
 
-	extern uintptr_t range_base;
-	extern uintptr_t range_size;
+    extern uintptr_t range_base;
+    extern uintptr_t range_size;
 
-	extern uintptr_t stop_address;
-	extern uintptr_t start_address;
+    extern uintptr_t stop_address;
+    extern uintptr_t start_address;
 
-	extern uintptr_t resume_address;
+    extern uintptr_t resume_address;
 
-	extern HANDLE thread_id;
+    extern HANDLE thread_id;
 
-	#pragma pack(push, 8)
-	struct TlsParams
-	{
-		bool callback_pending;
-		void* last_branch_from;
-		uintptr_t resume_address;
-	};
-	#pragma pack(pop)
+#pragma pack(push, 8)
+    struct TlsParams
+    {
+        bool callback_pending;
+        void* last_branch_from;
+        uintptr_t resume_address;
+    };
+#pragma pack(pop)
 
-	extern TlsParams* tls_params;
+    extern TlsParams* tls_params;
 
-	void Start(VcpuData* vcpu);
-	void Stop(VcpuData* vcpu);
+    void SetLBR(VcpuData* vcpu, BOOL value);
 
-	void Pause(VcpuData* vcpu);
-	void Resume(VcpuData* vcpu);
+    void SetBTF(VcpuData* vcpu, BOOL value);
 
-	void Init(
-		VcpuData* vcpu, 
-		uintptr_t start_addr,
-		uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size, TlsParams* tracer_params);
+    void Start(VcpuData* vcpu);
+    void Stop(VcpuData* vcpu);
 
-	void UpdateState(VcpuData* vcpu, GuestRegisters* guest_ctx);
+    void Pause(VcpuData* vcpu);
+    void Resume(VcpuData* vcpu);
+
+    void Init(
+        VcpuData* vcpu,
+        uintptr_t start_addr,
+        uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size, TlsParams* tracer_params);
+
+    void UpdateState(VcpuData* vcpu, GuestRegisters* guest_ctx);
 
 };

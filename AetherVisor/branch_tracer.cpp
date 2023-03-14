@@ -17,7 +17,7 @@ namespace BranchTracer
 
 	uintptr_t range_base;
 	uintptr_t range_size;
-	
+
 	uintptr_t resume_address;
 
 	HANDLE thread_id;
@@ -58,7 +58,7 @@ namespace BranchTracer
 
 		KeSetSystemAffinityThread(affinity);
 
-	//	DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
+		//	DbgPrint("BranchTracer::Start vcpu->guest_vmcb.save_state_area.Rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 		active = true;
 
@@ -74,7 +74,7 @@ namespace BranchTracer
 				return false;
 			},
 			(void*)vcpu->guest_vmcb.save_state_area.rip
-		);
+				);
 
 		auto tls_buffer = Utils::GetTlsPtr<TlsParams>(
 			vcpu->guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
@@ -90,11 +90,39 @@ namespace BranchTracer
 		Resume(vcpu);
 	}
 
+	void SetLBR(VcpuData* vcpu, BOOL value)
+	{
+		if (value)
+		{
+			vcpu->guest_vmcb.save_state_area.dbg_ctl.Lbr = 1;
+			vcpu->guest_vmcb.save_state_area.dr7.Flags |= (1 << 8);	// lbr
+		}
+		else
+		{
+			vcpu->guest_vmcb.save_state_area.dbg_ctl.Lbr = 0;
+			vcpu->guest_vmcb.save_state_area.dr7.Flags &= ~((int64_t)1 << 8);
+		}
+	}
+
+	void SetBTF(VcpuData* vcpu, BOOL value)
+	{
+		if (value)
+		{
+			vcpu->guest_vmcb.save_state_area.dbg_ctl.Btf = 1;
+			vcpu->guest_vmcb.save_state_area.dr7.Flags |= (1 << 9);	// btf
+		}
+		else
+		{
+			vcpu->guest_vmcb.save_state_area.dbg_ctl.Btf = 0;
+			vcpu->guest_vmcb.save_state_area.dr7.Flags &= ~((int64_t)1 << 9);
+		}
+	}
+
 	void Resume(VcpuData* vcpu)
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-		//	DbgPrint("[BranchTracer::Resume]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
+			//	DbgPrint("[BranchTracer::Resume]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
 			int cpuinfo[4];
 
@@ -109,13 +137,10 @@ namespace BranchTracer
 
 			vcpu->guest_vmcb.control_area.lbr_virt_enable |= (1 << 0);
 
+			SetBTF(vcpu, TRUE);
+			SetLBR(vcpu, TRUE);
+
 			/*	BTF, LBR, and trap flag enable	*/
-
-			vcpu->guest_vmcb.save_state_area.dbg_ctl.Btf = 1;
-			vcpu->guest_vmcb.save_state_area.dbg_ctl.Lbr = 1;
-
-			vcpu->guest_vmcb.save_state_area.dr7.Flags |= (1 << 9);	// btf
-			vcpu->guest_vmcb.save_state_area.dr7.Flags |= (1 << 8);	// lbr
 
 			vcpu->guest_vmcb.save_state_area.rflags.TrapFlag = 1;
 		}
@@ -125,15 +150,12 @@ namespace BranchTracer
 	{
 		if (active && PsGetCurrentThreadId() == thread_id)
 		{
-		//	DbgPrint("[BranchTracer::Pause]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
+			//	DbgPrint("[BranchTracer::Pause]	guest_rip = %p \n\n", vcpu->guest_vmcb.save_state_area.rip);
 
-			/*	BTF, LBR, and trap flag disable	*/
+				/*	BTF, LBR, and trap flag disable	*/
 
-			vcpu->guest_vmcb.save_state_area.dbg_ctl.Btf = 0;
-			vcpu->guest_vmcb.save_state_area.dbg_ctl.Lbr = 0;
-
-			vcpu->guest_vmcb.save_state_area.dr7.Flags &= ~((int64_t)1 << 9);
-			vcpu->guest_vmcb.save_state_area.dr7.Flags &= ~((int64_t)1 << 8);
+			SetBTF(vcpu, FALSE);
+			SetLBR(vcpu, FALSE);
 
 			vcpu->guest_vmcb.save_state_area.rflags.TrapFlag = 0;
 		}
@@ -158,20 +180,20 @@ namespace BranchTracer
 			(guest_vmcb.save_state_area.cr3.Flags == BranchTracer::process_cr3.Flags))
 		{
 
-//			DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
+			//			DbgPrint("[UpdateState]		LastBranchFromIP %p guest_rip = %p  \n\n\n", guest_vmcb.save_state_area.br_from, guest_rip);
 
-			/*	completely stop the branch tracer	*/
+						/*	completely stop the branch tracer	*/
 
 			if (guest_rip == BranchTracer::stop_address)
 			{
 				BranchTracer::Stop(vcpu);
-				
+
 				Instrumentation::InvokeHook(vcpu, Instrumentation::branch_trace_finished);
 
 				return;
 			}
 
-			/*  
+			/*
 				Do not trace the branch hook itself.
 
 				Pause branch tracer when a branch to outside of the specified range occurs,
@@ -196,7 +218,7 @@ namespace BranchTracer
 				(*tls_buffer)->last_branch_from = (void*)guest_vmcb.save_state_area.br_from;
 				(*tls_buffer)->callback_pending = true;
 
-				if (guest_rip < BranchTracer::range_base || guest_rip > (BranchTracer::range_size + BranchTracer::range_base))
+				if (guest_rip < BranchTracer::range_base || guest_rip >(BranchTracer::range_size + BranchTracer::range_base))
 				{
 					resume_address = *(uintptr_t*)guest_vmcb.save_state_area.rsp;
 				}
