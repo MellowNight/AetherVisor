@@ -129,7 +129,14 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 			ZydisDecodedOperand operands[5];
 
-			auto insn_category = Disasm::Disassemble((uint8_t*)guest_vmcb.save_state_area.br_from, operands).meta.category;
+			auto insn = Disasm::Disassemble((uint8_t*)guest_vmcb.save_state_area.br_from, operands);
+
+			auto insn_category = insn.meta.category;
+
+		//	CHAR printBuffer[128];
+
+
+			//Disasm::format(guest_vmcb.save_state_area.br_from, &insn, printBuffer);
 
 			if (insn_category == ZYDIS_CATEGORY_COND_BR || insn_category == ZYDIS_CATEGORY_RET || insn_category == ZYDIS_CATEGORY_CALL || insn_category == ZYDIS_CATEGORY_UNCOND_BR)
 			{
@@ -137,17 +144,26 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 				Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute);
 			}
+			else if (guest_vmcb.save_state_area.br_from == 0)
+			{
+				DbgPrint("guest_vmcb.save_state_area.br_from 0x%p \n", guest_vmcb.save_state_area.br_from);
+			}
+			else
+			{
+				// DbgPrint("guest_vmcb.save_state_area.br_from 0x%p, instruction %s \n", guest_vmcb.save_state_area.br_from, printBuffer);
+			}
 		}
 
 		auto sandbox_npte = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
 		if (sandbox_npte->ExecuteDisable == FALSE)
 		{
+
 			BranchTracer::SetLBR(this, TRUE);
 
 			/*  enter into the sandbox context    */
 
-			// DbgPrint("0x%p is a sandbox page! \n", faulting_physical.QuadPart);
+			// DbgPrint("0x%p is a sandbox page! \n", fault_physical.QuadPart);
 
 			guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
 

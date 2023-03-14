@@ -3,6 +3,8 @@
 
 namespace Disasm
 {
+	ZydisFormatter formatter;
+
 	void MyRegContextToZydisRegContext(VcpuData* vcpu, GuestRegisters* guest_regs, ZydisRegisterContext* context)
 	{
 		context->values[ZYDIS_REGISTER_RAX] = vcpu->guest_vmcb.save_state_area.rax;
@@ -56,8 +58,19 @@ namespace Disasm
 		return insns_len;
 	}
 
+	void format(uintptr_t address, ZydisDecodedInstruction* instruction, char* out_buf, int size)
+	{
+		ZydisDecodedOperand operands[5];
+
+		ZydisFormatterFormatInstruction(
+			&formatter, instruction, operands, instruction->operand_count_visible, out_buf,
+			size, address);
+	}
+
 	int Init()
 	{
+		ZydisFormatterInit(&formatter, ZYDIS_FORMATTER_STYLE_INTEL);
+
 		return ZydisDecoderInit(&zydis_decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
 	}
 };

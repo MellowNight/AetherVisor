@@ -24,5 +24,7 @@ namespace Disasm
 		ZydisRegisterContext* context
 	);
 
+	void format(uintptr_t address, ZydisDecodedInstruction* instruction, char* out_buf, int size = 128);
+
 	int Init();
 };

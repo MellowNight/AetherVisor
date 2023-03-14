@@ -94,6 +94,8 @@ namespace BranchTracer
 	{
 		if (value)
 		{
+			vcpu->guest_vmcb.control_area.lbr_virt_enable |= (1 << 0);
+
 			vcpu->guest_vmcb.save_state_area.dbg_ctl.Lbr = 1;
 			vcpu->guest_vmcb.save_state_area.dr7.Flags |= (1 << 8);	// lbr
 		}
@@ -134,8 +136,6 @@ namespace BranchTracer
 
 				KeBugCheckEx(MANUALLY_INITIATED_CRASH, cpuinfo[3], 0, 0, 0);
 			}
-
-			vcpu->guest_vmcb.control_area.lbr_virt_enable |= (1 << 0);
 
 			SetBTF(vcpu, TRUE);
 			SetLBR(vcpu, TRUE);
