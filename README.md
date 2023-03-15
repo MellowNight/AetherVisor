@@ -110,6 +110,8 @@ Intercept read/write access to pages outside of the sandbox for code inside of t
 
 `allow_reads` - If true, only hook write access; otherwise, hook both read and write access.
 
+<br>
+
 ```
 Aether::Sandbox::UnboxRegion(uintptr_t base, uintptr_t size);
 ```
