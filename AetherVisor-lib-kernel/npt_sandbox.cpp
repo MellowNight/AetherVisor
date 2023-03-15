@@ -49,6 +49,10 @@ namespace Aether
             {
                 for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
                 {
+                    LARGE_INTEGER interval;
+                    interval.QuadPart = -1 * 1000 * 1000; /* 1/10 second */
+                    KeDelayExecutionThread(KernelMode, FALSE, &interval);
+
                     SandboxPage((uintptr_t)offset, NULL, COW);
                 }
             }
