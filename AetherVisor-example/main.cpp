@@ -1,4 +1,3 @@
-#include "global.h"
 #include "portable_executable.h"
 
 #include "test_branch_trace.h"
@@ -8,8 +7,8 @@
 
 int main()
 {
-	TestNptHook();
-	TestEferHook();
-	TestNptSandbox();
-	TestBranchTracing();
+	NptHookTest();
+	EferSyscallHookTest();
+	SandboxTest();
+	BranchTraceTest();
 }

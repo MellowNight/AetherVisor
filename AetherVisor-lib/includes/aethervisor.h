@@ -133,6 +133,12 @@ namespace Aether
 
     namespace SyscallHook
     {
+        struct TlsParams
+        {
+            bool callback_pending;
+        };
+
+        void Init();
         int Enable();
         int Disable();
     }
@@ -148,7 +154,8 @@ namespace Aether
 
     void SetCallback(
         CALLBACK_ID handler_id,
-        void* address
+        void* address,
+        uint32_t tls_idx = NULL
     );
 
     int StopHv();

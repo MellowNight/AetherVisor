@@ -131,6 +131,11 @@ namespace Aether
 
         namespace SyscallHook
         {
+            struct TlsParams
+            {
+                bool callback_pending;
+            };
+
             int Enable();
             int Disable();
         }

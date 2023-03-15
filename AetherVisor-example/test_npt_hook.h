@@ -35,7 +35,7 @@ void NptHookTest()
     auto veh = AddVectoredExceptionHandler(1, UdExceptionVEH);
 
     Aether::NptHook::Set((uintptr_t)MessageBoxA,
-        (uint8_t*)"\x0F\x0B", 2, Aether::sandbox, true);
+        (uint8_t*)"\x0F\x0B", 2, Aether::primary, true);
 
     MessageBoxA(NULL, "This messagebox shouldn't be called!!!!!", "NPT hook test", MB_OK);
 

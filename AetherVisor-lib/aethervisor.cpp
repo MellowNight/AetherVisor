@@ -33,8 +33,13 @@ namespace Aether
         {syscall, (void**)&syscall_hook, syscall_hook_wrap, NULL}
     };
 
-    void SetCallback(CALLBACK_ID handler_id, void* address)
+    void SetCallback(CALLBACK_ID handler_id, void* address, uint32_t tls_idx)
     {
+        if (tls_idx != NULL)
+        {
+            instrumentation_hooks[handler_id].tls_params_idx = tls_idx;
+        }
+
         *instrumentation_hooks[handler_id].handler = address;
 
         svm_vmmcall(VMMCALL_ID::instrumentation_hook, 

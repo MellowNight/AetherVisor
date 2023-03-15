@@ -6,15 +6,20 @@ namespace Aether
 {
     namespace SyscallHook
     {
-        uint32_t tls_index = 0;
+        TlsParams* tracer_params;
+
+        void Init()
+        {
+            instrumentation_hooks[syscall].tls_params_idx = TlsAlloc();
+
+            tracer_params = new TlsParams{ false };
+        }
 
         int Enable()
         {
-            tls_index = TlsAlloc();
-
             Util::ForEachCore(
                 [](void* params) -> void {
-                    svm_vmmcall(VMMCALL_ID::hook_efer_syscall, TRUE, tls_index);
+                    svm_vmmcall(VMMCALL_ID::hook_efer_syscall, TRUE);
                 }, NULL
             );
 
@@ -23,12 +28,12 @@ namespace Aether
         
         int Disable()
         {
-            TlsFree(tls_index);
+            TlsFree(instrumentation_hooks[syscall].tls_params_idx);
 
             Util::ForEachCore(
                 [](void* params) -> void 
                 {
-                    svm_vmmcall(VMMCALL_ID::hook_efer_syscall, FALSE, tls_index);
+                    svm_vmmcall(VMMCALL_ID::hook_efer_syscall, FALSE);
                 }, NULL
             );
 
