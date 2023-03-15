@@ -4,7 +4,7 @@ AetherVisor is a minimalistic type-1 AMD hypervisor that provides a memory hacki
 
 Here's how AetherVisor's features are implemented: https://mellownight.github.io/2023/01/19/AetherVisor.html. 
 
-In the writeup, I mentioned multiple potential bugs that I fixed with band-aid solutions. If you experience any of these bugs, feel free to open an issue and/or propose a better fix.
+If you experience any bugs, feel free to open an issue and/or propose a better fix.
 
 ## Features
 
@@ -75,8 +75,12 @@ Aether::NptHook::Set(uintptr_t address, uint8_t* patch, size_t patch_len, NCR3_D
 
 
 #### callback IDs and callback function prototypes:
+
 <br>
-<code>enum CALLBACK_ID
+
+<code>
+
+enum CALLBACK_ID
 {
     //  void (*sandbox_mem_access_event)(GuestRegisters* registers, void* o_guest_rip);
     sandbox_readwrite = 0, 
@@ -95,10 +99,11 @@ Aether::NptHook::Set(uintptr_t address, uint8_t* patch, size_t patch_len, NCR3_D
 
     max_id,
 };
+
 </code>
 
 
-#### vmmcall interface
+### vmmcall interface
 
 ```svm_vmmcall(VMMCALL_ID, ...)``` - Calls the hypervisor to do stuff
 
