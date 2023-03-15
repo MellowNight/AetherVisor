@@ -119,6 +119,7 @@ Removes pages from the sandbox.
 
 `size` - Size of the region
 
+<br>
 
 ```
 Aether::SetCallback(CALLBACK_ID handler_id, void* address);
