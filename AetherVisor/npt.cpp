@@ -133,10 +133,10 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 			auto insn_category = insn.meta.category;
 
-		//	CHAR printBuffer[128];
+			//	CHAR printBuffer[128];
 
 
-			//Disasm::format(guest_vmcb.save_state_area.br_from, &insn, printBuffer);
+				//Disasm::format(guest_vmcb.save_state_area.br_from, &insn, printBuffer);
 
 			if (insn_category == ZYDIS_CATEGORY_COND_BR || insn_category == ZYDIS_CATEGORY_RET || insn_category == ZYDIS_CATEGORY_CALL || insn_category == ZYDIS_CATEGORY_UNCOND_BR)
 			{
