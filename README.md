@@ -6,23 +6,40 @@ Here's how AetherVisor's features are implemented: https://mellownight.github.io
 
 If you experience any bugs, feel free to open an issue and/or propose a better fix.
 
-## Features
+<br>
+
+> ## Features
 
 <br>
 
-### Syscall hooks via MSR_LSTAR
-```Aether::SyscallHook::Enable()``` - Enables process-wide system call hooks.
+### <b>Syscall hooks via MSR_LSTAR</b>
 
-```Aether::SyscallHook::Disable()``` - Disables system call hooks.
+<br>
+
+```
+Aether::SyscallHook::Enable()
+```
+Enables process-wide system call hooks.
+
+<br>
+
+```
+Aether::SyscallHook::Disable()
+``` 
+Disables system call hooks.
 
 
 <br>
 
-### NPT inline hooks
+### <b>NPT hooks</b>
 
-<code>
-Aether::NptHook::Set(uintptr_t address, uint8_t* patch, size_t patch_len, NCR3_DIRECTORIES ncr3_id = NCR3_DIRECTORIES::primary, bool global_page = false);</code> - Sets an NPT hook. 
 <br>
+
+```
+Aether::NptHook::Set(uintptr_t address, uint8_t* patch, size_t patch_len, NCR3_DIRECTORIES ncr3_id = NCR3_DIRECTORIES::primary, bool global_page = false);
+```
+
+Sets an NPT hook. 
 
 `patch` - Hook shellcode 
 
@@ -34,13 +51,32 @@ Aether::NptHook::Set(uintptr_t address, uint8_t* patch, size_t patch_len, NCR3_D
 
 `global_page` - Indicates that a global copy-on-write page (e.g. kernel32.dll, ntdll.dll, etc.) is being hooked.
 
+<br>
+
+```
+Aether::NptHook::Remove(uintptr_t address);
+```
+Removes an NPT hook
+
+`address` - virtual address of the hook
 
 <br>
 
-### Branch tracing
-```Aether::BranchTracer::Init() ``` - Initializes Branch tracer.
+### <b>Branch tracing</b>
 
-```Aether::BranchTracer::Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL) ``` - Logs every branch executed until either the return address or the `stop_addr` is reached.
+<br>
+
+```
+Aether::BranchTracer::Init()
+```
+Initializes Branch tracer.
+
+<br>
+
+```
+Aether::BranchTracer::Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr = NULL)
+```
+Logs every branch executed until either the return address or the `stop_addr` is reached.
 
 `start_addr` - Where to start tracing
 
@@ -52,11 +88,21 @@ Aether::NptHook::Set(uintptr_t address, uint8_t* patch, size_t patch_len, NCR3_D
  
 <br>
 
-#### Sandboxing and Read/Write/Execute instrumentation
+### <b>Sandboxing and Read/Write/Execute instrumentation</b>
 
-```Aether::Sandbox::SandboxRegion(uintptr_t base, uintptr_t size);``` - Puts a region of memory/code into the no-execute region.
+<br>
 
-```Aether::Sandbox::DenyRegionAccess(void* base, size_t range, bool allow_reads);``` - Deny read/write access to pages outside of the sandbox for code inside of the sandbox.
+```
+Aether::Sandbox::SandboxRegion(uintptr_t base, uintptr_t size);
+``` 
+Put a region of memory/code into the no-execute region.
+
+<br>
+
+```
+Aether::Sandbox::DenyRegionAccess(void* base, size_t range, bool allow_reads);
+``` 
+Intercept read/write access to pages outside of the sandbox for code inside of the sandbox.
 
 `base` - Base of the region
 
@@ -64,21 +110,28 @@ Aether::NptHook::Set(uintptr_t address, uint8_t* patch, size_t patch_len, NCR3_D
 
 `allow_reads` - If true, only hook write access; otherwise, hook both read and write access.
 
-```Aether::Sandbox::UnboxRegion(uintptr_t base, uintptr_t size);``` - Removes pages from the sandbox.
+```
+Aether::Sandbox::UnboxRegion(uintptr_t base, uintptr_t size);
+```
+Removes pages from the sandbox.
 
 `base` - Base of the region
 
 `size` - Size of the region
 
 
-```Aether::SetCallback(CALLBACK_ID handler_id, void* address);``` - Registers an instrumentation callback at `address` to handle an event at `handler_id`
-
-
-#### callback IDs and callback function prototypes:
+```
+Aether::SetCallback(CALLBACK_ID handler_id, void* address);
+```
+Registers an instrumentation callback at `address` to handle an event at `handler_id`
 
 <br>
 
-<code>
+### <b>Callback IDs and callback function prototypes:</b>
+
+<br>
+
+```
 
 enum CALLBACK_ID
 {
@@ -100,14 +153,20 @@ enum CALLBACK_ID
     max_id,
 };
 
-</code>
+```
 
+### <b>vmmcall interface</b>
 
-### vmmcall interface
+```
+svm_vmmcall(VMMCALL_ID, ...)
+``` 
+Calls the hypervisor to do stuff
 
-```svm_vmmcall(VMMCALL_ID, ...)``` - Calls the hypervisor to do stuff
+<br> 
 
-## Components ##
+> ## Components ##
+
+<br> 
 
 **AetherVisor-lib -** Static library that contains wrappers for interfacing with AetherVisor via vmmcall.
 
@@ -115,9 +174,15 @@ enum CALLBACK_ID
 
 **AetherVisor-example -** EXE demonstrating AetherVisor's features.
 
-## Supported hardware ##
- Intel processors with VT-x and EPT support
+<br> 
 
-## Supported platforms ##
- Windows 7 - Windows 10, x64 only
+> ## Supported hardware ##
+
+Intel processors with VT-x and EPT support
+
+<br> 
+
+> ## Supported platforms ##
+
+Windows 7 - Windows 10, x64 only
  
