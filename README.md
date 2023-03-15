@@ -58,36 +58,49 @@ Aether::NptHook::Set(uintptr_t address, uint8_t* patch, size_t patch_len, NCR3_D
 
 ```Aether::Sandbox::DenyRegionAccess(void* base, size_t range, bool allow_reads);``` - Deny read/write access to pages outside of the sandbox for code inside of the sandbox.
 
+`base` - Base of the region
+
+`range` - Size of the region
+
+`allow_reads` - If true, only hook write access; otherwise, hook both read and write access.
+
 ```Aether::Sandbox::UnboxRegion(uintptr_t base, uintptr_t size);``` - Removes pages from the sandbox.
 
-#### vmmcall interface
-```svm_vmmcall(VMMCALL_ID, ...)``` -
+`base` - Base of the region
 
-```
-// callback IDs and function prototypes:
+`size` - Size of the region
 
-enum CALLBACK_ID
+
+```Aether::SetCallback(CALLBACK_ID handler_id, void* address);``` - Registers an instrumentation callback at `address` to handle an event at `handler_id`
+
+
+#### callback IDs and callback function prototypes:
+<br>
+<code>enum CALLBACK_ID
 {
-    // 
+    //  void (*sandbox_mem_access_event)(GuestRegisters* registers, void* o_guest_rip);
     sandbox_readwrite = 0, 
 
-    // 
+    //  void (*sandbox_execute_event)(GuestRegisters* registers, void* return_address, void* original_guest_rip);
     sandbox_execute = 1,
 
-    //
+    //  void (*branch_callback)(GuestRegisters* registers, void* return_address, void* original_guest_rip, void* LastBranchFromIP);
     branch = 2,
 
-    //
+    //  void (*branch_trace_finish_event)();
     branch_trace_finished = 3,
 
-    //
+    //  void (*syscall_hook)(GuestRegisters* registers, void* return_address, void* o_guest_rip);
     syscall = 4,
 
-    max_id
+    max_id,
 };
+</code>
 
-Aether::SetCallback(CALLBACK_ID handler_id, void* address);
-```
+
+#### vmmcall interface
+
+```svm_vmmcall(VMMCALL_ID, ...)``` - Calls the hypervisor to do stuff
 
 ## Components ##
 
