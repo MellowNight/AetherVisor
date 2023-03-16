@@ -11,7 +11,7 @@ void SyscallHandler(GuestRegisters* registers, void* return_address, void* o_gue
 
     std::stringstream stream;
 
-    stream << std::hex << "[Aether::SyscallHook] - syscall index 0x" << registers->rcx
+    stream << std::hex << "[Aether::SyscallHook] - syscall index 0x" << registers->rax
         << " guest_rip 0x" << o_guest_rip
         << " return address 0x" << return_address 
         << std::endl;

@@ -78,37 +78,37 @@ namespace SyscallHook
     {
         uintptr_t guest_rip = vcpu->guest_vmcb.save_state_area.rip;
 
-        //if (vcpu->guest_vmcb.save_state_area.cr3.Flags == process_cr3.Flags)
-        //{
-        //    /*  prevent infinite loops caused by syscalling from a syscall hook handler */
+        if (vcpu->guest_vmcb.save_state_area.cr3.Flags == process_cr3.Flags)
+        {
+            /*  prevent infinite loops caused by syscalling from a syscall hook handler */
 
-        //    auto tls_ptr = Utils::GetTlsPtr<void>(vcpu->guest_vmcb.save_state_area.gs_base, callbacks[syscall].tls_params_idx);
+            auto tls_ptr = Utils::GetTlsPtr<void>(vcpu->guest_vmcb.save_state_area.gs_base, callbacks[syscall].tls_params_idx);
 
-        //    if (!*tls_ptr)
-        //    {
-        //        DbgPrint("syscall hook start \n");
+            if (!*tls_ptr)
+            {
+            //    DbgPrint("syscall hook start \n");
 
-        //        captured_rsp = vcpu->guest_vmcb.save_state_area.rsp;
-        //        captured_rip = guest_rip;
+                captured_rsp = vcpu->guest_vmcb.save_state_area.rsp;
+                captured_rip = guest_rip;
 
-        //        captured_retaddr = *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp;
+                captured_retaddr = *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp;
 
-        //        *tls_ptr = (void*)TRUE;
+                *tls_ptr = (void*)TRUE;
 
-        //        Instrumentation::InvokeHook(vcpu, Instrumentation::syscall);
+                Instrumentation::InvokeHook(vcpu, Instrumentation::syscall);
 
-        //        return false;
-        //    }
-        //    else if (
-        //        vcpu->guest_vmcb.save_state_area.rsp == captured_rsp &&
-        //        guest_rip == captured_rip &&
-        //        captured_retaddr == *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp)
-        //    {
-        //        DbgPrint("syscall hook finished \n");
+                return false;
+            }
+            else if (
+                vcpu->guest_vmcb.save_state_area.rsp == captured_rsp &&
+                guest_rip == captured_rip &&
+                captured_retaddr == *(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp)
+            {
+            //    DbgPrint("syscall hook finished \n");
 
-        //        *tls_ptr = FALSE;
-        //    }
-        //}
+                *tls_ptr = FALSE;
+            }
+        }
 
         ZydisDecodedOperand operands[5];
 
