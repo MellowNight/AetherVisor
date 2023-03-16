@@ -181,7 +181,7 @@ Calls the hypervisor to do stuff
 
 > ## Supported hardware ##
 
-Intel processors with VT-x and EPT support
+AMD processors with SVM support
 
 <br> 
 
