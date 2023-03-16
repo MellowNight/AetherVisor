@@ -34,10 +34,6 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
     if (dr6.SingleInstruction == 1)
     {
-      /*  DbgPrint("[DebugFaultHandler]   guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9)) = %i \n", guest_vmcb.save_state_area.dr7.Flags & ((uint64_t)1 << 9));
-        DbgPrint("[DebugFaultHandler]   BranchTracer::range_base %p \n", BranchTracer::range_base);
-        DbgPrint("[DebugFaultHandler]   BranchTracer::range_base + BranchTracer::range_size %p \n\n\n", BranchTracer::range_size + BranchTracer::range_base);*/
-
        // DbgPrint("[DebugFaultHandler]   guest_rip %p \n", guest_vmcb.save_state_area.rip);
 
         if (BranchTracer::active == true)
@@ -52,7 +48,10 @@ void VcpuData::DebugFaultHandler(GuestRegisters* guest_ctx)
 
             BranchTracer::Pause(this);
 
-            DbgPrint("[DebugFaultHandler]   Finished single stepping %p \n", guest_vmcb.save_state_area.rip);
+            guest_vmcb.save_state_area.rflags.TrapFlag = 0;
+            guest_vmcb.save_state_area.dr6.SingleInstruction = 0;
+
+            // DbgPrint("[DebugFaultHandler]   Finished single stepping %p \n", guest_vmcb.save_state_area.rip);
 
             Instrumentation::InvokeHook(this, Instrumentation::sandbox_readwrite);
         }

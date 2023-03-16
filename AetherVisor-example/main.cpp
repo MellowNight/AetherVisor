@@ -7,8 +7,8 @@
 
 int main()
 {
-	NptHookTest();
-	EferSyscallHookTest();
 	SandboxTest();
 	BranchTraceTest();
+	EferSyscallHookTest();
+	NptHookTest();
 }

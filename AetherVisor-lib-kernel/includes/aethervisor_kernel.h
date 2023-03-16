@@ -146,7 +146,7 @@ namespace Aether
 
             void SandboxRegion(uintptr_t base, uintptr_t size, bool COW = false);
 
-            void UnboxRegion(uintptr_t base, uintptr_t size);
+            void UnboxRegion(uintptr_t base, uintptr_t size, bool global_page = false);
         }
 
         void SetCallback(

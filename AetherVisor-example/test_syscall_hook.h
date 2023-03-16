@@ -26,6 +26,8 @@ void SyscallHandler(GuestRegisters* registers, void* return_address, void* o_gue
 
 void EferSyscallHookTest()
 {
+    Aether::SyscallHook::Init();
+
     Aether::SetCallback(Aether::syscall, SyscallHandler);
 
     Aether::SyscallHook::Enable();

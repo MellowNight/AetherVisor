@@ -27,11 +27,15 @@ namespace Aether
 
         void Init()
         {
-            instrumentation_hooks[branch].tls_params_idx = TlsAlloc();
-
             log_buffer.reserve(PAGE_SIZE / sizeof(LogEntry));
 
-            tracer_params = new TlsParams{ false, NULL };
+            tracer_params = new TlsParams{ false, NULL };            
+            
+            auto tls_idx = TlsAlloc();
+
+            instrumentation_hooks[branch].tls_params_idx = tls_idx;
+
+            TlsSetValue(tls_idx, tracer_params);
         }
 
         void* Trace(uint8_t* start_addr, uintptr_t range_base, uintptr_t range_size, uint8_t* stop_addr)

@@ -106,16 +106,20 @@ namespace Aether
 
     namespace BranchTracer
     {
+#pragma pack(push, 16)
         struct LogEntry
         {
             uintptr_t branch_address;
             uintptr_t branch_target;
+            uintptr_t resume_guest_rip;
         };
+#pragma pack(pop)
 
         struct TlsParams
         {
             bool callback_pending;
             void* last_branch_from;
+            uintptr_t resume_address;
         };
 
         extern  std::vector<LogEntry> log_buffer;
@@ -129,22 +133,24 @@ namespace Aether
 
     namespace SyscallHook
     {
+        void Init();
         int Enable();
         int Disable();
     }
 
     namespace Sandbox
     {
-        void DenyRegionAccess(void* base, size_t range, bool allow_reads);
+        void DenyRegionAccess(void* base, size_t range, bool allow_reads, bool global_page = false);
 
-        void SandboxRegion(uintptr_t base, uintptr_t size);
+        void SandboxRegion(uintptr_t base, uintptr_t size, bool global_page = false);
 
-        void UnboxRegion(uintptr_t base, uintptr_t size);
+        void UnboxRegion(uintptr_t base, uintptr_t size, bool global_page = false);
     }
 
     void SetCallback(
         CALLBACK_ID handler_id,
-        void* address
+        void* address,
+        uint32_t tls_idx = NULL
     );
 
     int StopHv();

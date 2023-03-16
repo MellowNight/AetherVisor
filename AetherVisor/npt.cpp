@@ -71,43 +71,58 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 	if (exit_info1.fields.valid == 0)
 	{
-		auto denied_read_page = Sandbox::ForEachHook(
-			[](auto hook_entry, auto data) -> auto {
-
-				if (data == hook_entry->guest_physical && hook_entry->unreadable)
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}, PAGE_ALIGN(fault_physical.QuadPart)
-		);
-
-		if (denied_read_page && ncr3.QuadPart == Hypervisor::Get()->ncr3_dirs[sandbox])
+		if (ncr3.QuadPart == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
-			KeBugCheck(MANUALLY_INITIATED_CRASH);
-			DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
+			DbgPrint("PAGE_ALIGN(fault_physical.QuadPart) = %p \n", PAGE_ALIGN(fault_physical.QuadPart));
+			
+			auto denied_read_page = Sandbox::ForEachHook(
+				[](auto hook_entry, auto data) -> auto {
 
-			/*
-				Single-step the read/write in the ncr3 that allows all pages to be executable.
-				Single-stepping mode => single-step on every instruction
-			*/
+					DbgPrint("PAGE_ALIGN(hook_entry->guest_physical) = %p \n", PAGE_ALIGN(hook_entry->guest_physical));
 
-			BranchTracer::Pause(this);
+					if (data == PAGE_ALIGN(hook_entry->guest_physical) && hook_entry->denied_access)
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
 
-			guest_vmcb.save_state_area.rflags.TrapFlag = 1;
+				}, PAGE_ALIGN(fault_physical.QuadPart)
+			);
 
-			guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
+			if (denied_read_page)
+			{
+				DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
+
+				/*
+					Single-step the read/write in the ncr3 that allows all pages to be executable.
+					Single-stepping mode => single-step on every instruction
+				*/
+
+				BranchTracer::Pause(this);
+
+				guest_vmcb.save_state_area.rflags.TrapFlag = 1;
+
+				guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox_single_step];
+
+				return;
+			}
+		}
+		
+		/*	map in the missing memory (primary and hook NCR3 only)	*/
+
+		auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
+
+		if (ncr3.QuadPart == Hypervisor::Get()->ncr3_dirs[sandbox] || ncr3.QuadPart == Hypervisor::Get()->ncr3_dirs[shadow])
+		{
+			auto pte = AssignNptEntry((PML4E_64*)pml4_base, fault_physical.QuadPart, PTEAccess{ true, true, false });
 		}
 		else
 		{
-			/*	map in the missing memory (primary and hook NCR3 only)	*/
-
-			auto pml4_base = (PML4E_64*)MmGetVirtualForPhysical(ncr3);
-
 			auto pte = AssignNptEntry((PML4E_64*)pml4_base, fault_physical.QuadPart, PTEAccess{ true, true, true });
+
 		}
 
 		return;

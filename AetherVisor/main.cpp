@@ -79,7 +79,7 @@ bool VirtualizeAllProcessors()
 		}
 	}, NULL);
 
-	
+	//	unlock MDLs and remove NPT hooks in terminating processes
 
 	NptHooks::CleanupOnProcessExit();
 }

@@ -36,9 +36,12 @@ namespace Aether
             }
 
 
-            int UnboxPage(uintptr_t address, uintptr_t tag)
+            int UnboxPage(uintptr_t address, uintptr_t tag, bool global_page = false)
             {
-                Util::TriggerCOW((uint8_t*)address);
+                if (global_page)
+                {
+                    Util::TriggerCOW((uint8_t*)address);
+                }
 
                 svm_vmmcall(VMMCALL_ID::unbox_page, address, tag);
 
@@ -57,11 +60,11 @@ namespace Aether
                 }
             }
 
-            void UnboxRegion(uintptr_t base, uintptr_t size)
+            void UnboxRegion(uintptr_t base, uintptr_t size, bool global_page)
             {
                 for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
                 {
-                    UnboxPage((uintptr_t)offset, NULL);
+                    UnboxPage((uintptr_t)offset, NULL, global_page);
                 }
             }}
 	}

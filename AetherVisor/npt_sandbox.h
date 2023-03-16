@@ -6,7 +6,9 @@ namespace Sandbox
 {
 	struct SandboxPage
 	{
-		LIST_ENTRY	list_entry;
+		uintptr_t process_cr3;
+
+		uint32_t id;
 
 		PMDL mdl;		/*	mdl used for locking hooked pages	*/
 
@@ -14,7 +16,7 @@ namespace Sandbox
 
 		void* guest_physical;		/*	guest physical page address	*/
 
-		bool unreadable;	/*	is this page an unreadable page?	*/
+		bool denied_access;	/*	is this page an unreadable page?	*/
 	};
 
 	extern SandboxPage*	sandbox_page_array;

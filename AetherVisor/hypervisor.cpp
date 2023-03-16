@@ -29,7 +29,7 @@ bool VcpuData::IsPagePresent(void* address)
     {
         guest_vmcb.save_state_area.cr2 = (uintptr_t)address;
 
-        InjectException(EXCEPTION_VECTOR::PageFault, true, guest_vmcb.control_area.exit_info1);
+        InjectException(EXCEPTION_VECTOR::PageFault, true, NULL);
 
         suppress_nrip_increment = TRUE;
 

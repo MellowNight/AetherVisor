@@ -6,24 +6,30 @@ namespace Aether
 {
 	namespace Sandbox
 	{
-        void DenyPageAccess(void* page_addr, bool allow_reads)
+        void DenyPageAccess(void* page_addr, bool allow_reads, bool global_page)
         {
-            svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, PAGE_ALIGN(page_addr));
+            if (global_page)
+            {
+                Util::TriggerCOW((uint8_t*)page_addr);
+            }
+
+            svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, PAGE_ALIGN(page_addr), allow_reads);
         }
 
-        void DenyRegionAccess(void* base, size_t range, bool allow_reads)
+        void DenyRegionAccess(void* base, size_t range, bool allow_reads, bool global_page)
         {
-            auto aligned_range = (uintptr_t)PAGE_ALIGN(range + 0x1000);
-
-            for (auto offset = (uint8_t*)base; offset < (uint8_t*)base + aligned_range; offset += PAGE_SIZE)
+            for (auto offset = (uint8_t*)base; offset < (uint8_t*)base + range; offset += PAGE_SIZE)
             {
-                svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, base, offset);
+                DenyPageAccess(offset, allow_reads, global_page);
             }
         }
 
-        int SandboxPage(uintptr_t address, uintptr_t tag)
+        int SandboxPage(uintptr_t address, uintptr_t tag, bool global_page = false)
         {
-            Util::TriggerCOW((uint8_t*)address);
+            if (global_page)
+            {
+                Util::TriggerCOW((uint8_t*)address);
+            }
 
             svm_vmmcall(VMMCALL_ID::sandbox_page, address, tag);
 
@@ -31,28 +37,31 @@ namespace Aether
         }
 
         
-        int UnboxPage(uintptr_t address, uintptr_t tag)
+        int UnboxPage(uintptr_t address, uintptr_t tag, bool global_page = false)
         {
-            Util::TriggerCOW((uint8_t*)address);
+            if (global_page)
+            {
+                Util::TriggerCOW((uint8_t*)address);
+            }
 
             svm_vmmcall(VMMCALL_ID::unbox_page, address, tag);
 
             return 0;
         }
 
-        void SandboxRegion(uintptr_t base, uintptr_t size)
+        void SandboxRegion(uintptr_t base, uintptr_t size, bool global_page)
         {
             for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
             {
-                SandboxPage((uintptr_t)offset, NULL);
+                SandboxPage((uintptr_t)offset, NULL, global_page);
             }
         }
 
-        void UnboxRegion(uintptr_t base, uintptr_t size)
+        void UnboxRegion(uintptr_t base, uintptr_t size, bool global_page)
         {
             for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
             {
-                UnboxPage((uintptr_t)offset, NULL);
+                UnboxPage((uintptr_t)offset, NULL, global_page);
             }
         }
 	}

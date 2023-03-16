@@ -1,6 +1,7 @@
 #include "npthook_safety.h"
 #include "portable_executable.h"
 #include "vmexit.h"
+#include "npt_sandbox.h"
 
 namespace NptHooks
 {
@@ -16,6 +17,20 @@ namespace NptHooks
 				if (hook_entry->process_cr3 == (uintptr_t)data)
 				{
 					UnsetHook(hook_entry);
+				}
+
+				return false;
+			},
+			(void*)__readcr3()
+		);
+
+
+		Sandbox::ForEachHook(
+			[](Sandbox::SandboxPage* hook_entry, void* data)-> bool {
+
+				if (hook_entry->process_cr3 == (uintptr_t)data)
+				{
+					Sandbox::ReleasePage(hook_entry);
 				}
 
 				return false;
@@ -52,9 +67,8 @@ namespace NptHooks
 
 				clean_process_address_space = RELATIVE_ADDR(clean_process_address_space, 1, 5);
 //				name = shellcode_type{ (uintptr_t)function_address, (uintptr_t)name##_hook }; 
-				svm_vmmcall(VMMCALL_ID::set_npt_hook, ntoskrnl + 0x4FCE20, "\xCC", 1, NCR3_DIRECTORIES::primary, NULL);
 
-				// EASY_NPT_HOOK(Hooks::JmpRipCode, MmCleanProcessAddressSpace, clean_process_address_space)
+				EASY_NPT_HOOK(Hooks::JmpRipCode, MmCleanProcessAddressSpace, clean_process_address_space)
 			}
 		}
 	}

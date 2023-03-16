@@ -10,6 +10,9 @@ void(*test_shellcode)(void* printf_addr, void* read_target) = static_cast<declty
 	"\x48\x89\xe5"									// mov	rbp, rsp
 	"\x48\x83\xec\x08"								// sub	rsp, 64
 	"\x48\x89\xCB"									// mov	rbx,rcx
+
+	"\x48\x8B\x02"									// fuck it, mov rax, [rdx] 
+
 	"\x48\x89\x14\x24"								// mov	QWORD PTR [rsp],rdx
 	"\x48\xC7\xC0\x25\x73\x5C\x6E"					// mov	rax, 0x6e5c7325
 	"\x50"											// push	rax
@@ -92,7 +95,7 @@ void SandboxTest()
 
 	Aether::SetCallback(Aether::sandbox_readwrite, ReadWriteHook);
 
-	Aether::Sandbox::DenyRegionAccess((void*)GetModuleHandleA(NULL), PAGE_SIZE, false);
+	Aether::Sandbox::DenyRegionAccess((void*)GetModuleHandleA(NULL), PAGE_SIZE, false, true);
 
 	/*	intercept the OutputDebugStringA API call	*/
 
@@ -100,11 +103,10 @@ void SandboxTest()
 
 	Aether::Sandbox::SandboxRegion((uintptr_t)test_shellcode, PAGE_SIZE);
 
-	test_shellcode(printf, GetModuleHandleA(NULL));
-
-	Aether::Sandbox::SandboxRegion((uintptr_t)test_shellcode, PAGE_SIZE);
+	test_shellcode(OutputDebugStringA, GetModuleHandleA(NULL));
 
 	Sleep(1000);
 
 	Aether::Sandbox::UnboxRegion((uintptr_t)test_shellcode, PAGE_SIZE);
+	Aether::Sandbox::UnboxRegion((uintptr_t)GetModuleHandleA(NULL), PAGE_SIZE);
 }

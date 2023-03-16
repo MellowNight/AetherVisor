@@ -6,13 +6,17 @@ namespace Aether
 {
     namespace SyscallHook
     {
-        TlsParams* tracer_params;
+        // im using this as a BOOL
+
+        void* callback_pending = FALSE;
 
         void Init()
         {
-            instrumentation_hooks[syscall].tls_params_idx = TlsAlloc();
+            int tls_idx = TlsAlloc();
 
-            tracer_params = new TlsParams{ false };
+            instrumentation_hooks[syscall].tls_params_idx = tls_idx;
+
+            TlsSetValue(tls_idx, callback_pending);
         }
 
         int Enable()

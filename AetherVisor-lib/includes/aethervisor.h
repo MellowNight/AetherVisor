@@ -133,11 +133,6 @@ namespace Aether
 
     namespace SyscallHook
     {
-        struct TlsParams
-        {
-            bool callback_pending;
-        };
-
         void Init();
         int Enable();
         int Disable();
@@ -145,11 +140,11 @@ namespace Aether
 
     namespace Sandbox
     {
-        void DenyRegionAccess(void* base, size_t range, bool allow_reads);
+        void DenyRegionAccess(void* base, size_t range, bool allow_reads, bool global_page = false);
 
-        void SandboxRegion(uintptr_t base, uintptr_t size);
+        void SandboxRegion(uintptr_t base, uintptr_t size, bool global_page = false);
 
-        void UnboxRegion(uintptr_t base, uintptr_t size);
+        void UnboxRegion(uintptr_t base, uintptr_t size, bool global_page = false);
     }
 
     void SetCallback(

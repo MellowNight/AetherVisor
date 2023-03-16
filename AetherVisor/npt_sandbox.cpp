@@ -40,8 +40,20 @@ namespace Sandbox
 	{
 		Utils::UnlockPages(hook_entry->mdl);
 
-		memmove(sandbox_page_array + sandbox_page_count - 1, 
-			sandbox_page_array + sandbox_page_count, max_hooks - sandbox_page_count);
+		if (hook_entry->primary_npte)
+		{
+			hook_entry->primary_npte->ExecuteDisable = 0;
+		}		
+		
+		hook_entry->denied_access = FALSE;
+		hook_entry->guest_physical = NULL;
+
+		if ((hook_entry->id != sandbox_page_count - 1) && hook_entry->id != 0)
+		{
+			/*	shift every entry back 1 index	*/
+
+			memmove(&sandbox_page_array[hook_entry->id - 1], &sandbox_page_array[hook_entry->id], sizeof(SandboxPage) * (sandbox_page_count - hook_entry->id));
+		}
 
 		sandbox_page_count -= 1;
 	}
@@ -53,45 +65,49 @@ namespace Sandbox
 
 	void DenyMemoryAccess(VcpuData* vcpu, void* address, bool allow_reads)
 	{
-		/*	attach to the guest process context	*/
-
-		auto vmroot_cr3 = __readcr3();
-
-		__writecr3(vcpu->guest_vmcb.save_state_area.cr3.Flags);
-
-		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
-
-		KPROCESSOR_MODE mode = (uintptr_t)address < 0x7FFFFFFFFFF ? UserMode : KernelMode;
-
-		sandbox_page_count += 1;
-
-		sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
-
-		sandbox_entry->unreadable = !allow_reads;
-
-		sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
-
-		auto sandbox_npte = Utils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
-
-		if (allow_reads)
+		if (!vcpu->IsPagePresent(address))
 		{
-			/*	read only, only trap on writes	*/
-
-			sandbox_npte->Present = 1;
-			sandbox_npte->Write = 0;
+			return;
 		}
 		else
 		{
-			/*	no access, trap on both reads and writes	*/
+			/*	attach to the guest process context	*/
 
-			sandbox_npte->Present = 0;
+			auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
+
+			KPROCESSOR_MODE mode = (vcpu->guest_vmcb.save_state_area.cpl == 3) ? UserMode : KernelMode;
+
+			sandbox_entry->process_cr3 = __readcr3();
+
+			sandbox_entry->id = sandbox_page_count;
+
+			sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
+
+			sandbox_entry->denied_access = !allow_reads;
+
+			sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+
+			auto sandbox_npte = Utils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
+
+			sandbox_page_count += 1;
+
+			if (allow_reads)
+			{
+				/*	read only, only trap on writes	*/
+
+				sandbox_npte->Present = 1;
+				sandbox_npte->Write = 0;
+			}
+			else
+			{
+				/*	no access, trap on both reads and writes	*/
+
+				sandbox_npte->Present = 0;
+				sandbox_npte->Write = 0;
+			}
+
+			vcpu->guest_vmcb.control_area.tlb_control = 3;
 		}
-
-		/*	DenyMemoryAccess epilogue	*/
-
-		__writecr3(vmroot_cr3);
-
-		vcpu->guest_vmcb.control_area.tlb_control = 3;
 	}
 
 
@@ -103,41 +119,46 @@ namespace Sandbox
 
 	SandboxPage* AddPageToSandbox(VcpuData* vmcb_data, void* address, int32_t tag)
 	{
-		/*	enable execute for the nPTE of the guest address in the sandbox NCR3	*/
+		if (!vmcb_data->IsPagePresent(address))
+		{
+			return NULL;
+		}
+		else
+		{
+			/*	enable execute for the nPTE of the guest address in the sandbox NCR3	*/
 
-		auto vmroot_cr3 = __readcr3();
+			auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
 
-		__writecr3(vmcb_data->guest_vmcb.save_state_area.cr3.Flags);
+			KPROCESSOR_MODE mode = (vmcb_data->guest_vmcb.save_state_area.cpl == 3) ? UserMode : KernelMode;
 
-		auto sandbox_entry = &sandbox_page_array[sandbox_page_count];
+			sandbox_entry->id = sandbox_page_count;
 
-		KPROCESSOR_MODE mode = (uintptr_t)address < 0x7FFFFFFFFFF ? UserMode : KernelMode;
+			sandbox_entry->process_cr3 = __readcr3();
 
-		sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
+			sandbox_entry->mdl = Utils::LockPages(address, IoReadAccess, mode);
 
-		sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
+			sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-		DbgPrint("AddPageToSandbox() physical_page = %p \n", sandbox_entry->guest_physical);
+			DbgPrint("AddPageToSandbox() physical_page = %p address = %p \n", sandbox_entry->guest_physical, address);
 
-		sandbox_page_count += 1;
+			sandbox_page_count += 1;
 
-		/*	disable execute on the nested pte of the guest physical address, in NCR3 1	*/
+			/*	disable execute on the nested pte of the guest physical address, in NCR3 1	*/
 
-		sandbox_entry->primary_npte = Utils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[primary]);
+			sandbox_entry->primary_npte = Utils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[primary]);
 
-		sandbox_entry->primary_npte->ExecuteDisable = 1;
+			sandbox_entry->primary_npte->ExecuteDisable = 1;
 
-		auto sandbox_npte = Utils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
+			auto sandbox_npte = Utils::GetPte(sandbox_entry->guest_physical, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
-		sandbox_npte->ExecuteDisable = 0;
+			sandbox_npte->ExecuteDisable = 0;
 
-		/*	IsolatePage epilogue	*/
+			/*	IsolatePage epilogue	*/
 
-		__writecr3(vmroot_cr3);
+			vmcb_data->guest_vmcb.control_area.tlb_control = 3;
 
-		vmcb_data->guest_vmcb.control_area.tlb_control = 3;
-
-		return sandbox_entry;
+			return sandbox_entry;
+		}
 	}
 
 };

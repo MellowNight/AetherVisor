@@ -21,10 +21,7 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     {
     case VMMCALL_ID::start_branch_trace:
     {
-        BranchTracer::Init(this, guest_ctx->rdx,
-            guest_ctx->r8, guest_ctx->r9, guest_ctx->r12, (BranchTracer::TlsParams*)guest_ctx->r11);
-
-        DbgPrint("(BranchTracer::TlsParams*)guest_ctx->r11 %p \n", (BranchTracer::TlsParams*)guest_ctx->r11);
+        BranchTracer::Init(this, guest_ctx->rdx, guest_ctx->r8, guest_ctx->r9, guest_ctx->r12);
 
         break;
     }
@@ -60,10 +57,14 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
     }
     case VMMCALL_ID::unbox_page:
     {
+        DbgPrint("unbox_page virtual address %p \n", guest_ctx->rdx);
+
         Sandbox::ForEachHook(
             [](auto hook_entry, auto data) -> auto {
 
-                if (hook_entry->guest_physical == data)
+                DbgPrint("PAGE_ALIGN(hook_entry->guest_physical) %p  data %p \n", PAGE_ALIGN(hook_entry->guest_physical), data);
+
+                if (PAGE_ALIGN(hook_entry->guest_physical) == data)
                 {
                     DbgPrint("Releasing sandbox page %p \n", hook_entry->guest_physical);
                     Sandbox::ReleasePage(hook_entry);
@@ -71,7 +72,7 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
 
                 return false;
             },
-            (void*)MmGetPhysicalAddress((void*)guest_ctx->rdx).QuadPart
+            (void*)PAGE_ALIGN(MmGetPhysicalAddress((void*)guest_ctx->rdx).QuadPart)
         );
 
 

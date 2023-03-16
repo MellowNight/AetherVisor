@@ -32,8 +32,6 @@ namespace BranchTracer
     };
 #pragma pack(pop)
 
-    extern TlsParams* tls_params;
-
     void SetLBR(VcpuData* vcpu, BOOL value);
 
     void SetBTF(VcpuData* vcpu, BOOL value);
@@ -47,7 +45,7 @@ namespace BranchTracer
     void Init(
         VcpuData* vcpu,
         uintptr_t start_addr,
-        uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size, TlsParams* tracer_params);
+        uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size);
 
     void UpdateState(VcpuData* vcpu, GuestRegisters* guest_ctx);
 

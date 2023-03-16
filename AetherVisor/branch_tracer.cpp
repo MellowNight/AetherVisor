@@ -26,9 +26,7 @@ namespace BranchTracer
 
 	int is_system;
 
-	TlsParams* tls_params;
-
-	void Init(VcpuData* vcpu, uintptr_t start_addr, uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size, TlsParams* tracer_params)
+	void Init(VcpuData* vcpu, uintptr_t start_addr, uintptr_t stop_addr, uintptr_t trace_range_base, uintptr_t trace_range_size)
 	{
 		initialized = true;
 		range_base = trace_range_base;
@@ -37,8 +35,6 @@ namespace BranchTracer
 		is_system = ((uintptr_t)start_addr < 0x7FFFFFFFFFFF) ? false : true;
 		start_address = start_addr;
 		stop_address = stop_addr;
-
-		tls_params = tracer_params;
 	}
 
 	void Start(VcpuData* vcpu)
@@ -75,11 +71,6 @@ namespace BranchTracer
 			},
 			(void*)vcpu->guest_vmcb.save_state_area.rip
 				);
-
-		auto tls_buffer = Utils::GetTlsPtr<TlsParams>(
-			vcpu->guest_vmcb.save_state_area.gs_base, callbacks[branch].tls_params_idx);
-
-		*tls_buffer = tls_params;
 
 		/*  clean TLB after removing the NPT hook   */
 

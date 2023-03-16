@@ -9,10 +9,10 @@ bool VcpuData::InvalidOpcodeHandler(GuestRegisters* guest_ctx)
 
     /*	page in the instruction's page if it's not present. */
 
-    if (!IsPagePresent(guest_rip))
-    {
-        return false;
-    }
+    //if (!IsPagePresent(guest_rip))
+    //{
+    //    return false;
+    //}
 
     int rip_privilege = ((uintptr_t)guest_rip < 0x7FFFFFFFFFFF) ? 3 : 0;
 

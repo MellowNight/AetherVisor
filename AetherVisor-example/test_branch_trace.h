@@ -13,18 +13,30 @@ std::vector<BranchTracer::LogEntry> traced_branches;
 
 void BranchHook(GuestRegisters* registers, void* return_address, void* o_guest_rip, void* LastBranchFromIP)
 {
-    std::cout << std::hex << "[BranchHook]  return_address 0x" << (uintptr_t)return_address << " LastBranchFromIP 0x" << (uintptr_t)LastBranchFromIP << " o_guest_rip 0x" << (uintptr_t)o_guest_rip << std::endl;
-}
+    /* std::cout << std::hex << "[BranchHook]  return_address 0x" << (uintptr_t)return_address << " LastBranchFromIP 0x"
+         << (uintptr_t)LastBranchFromIP << " o_guest_rip 0x" << (uintptr_t)o_guest_rip << std::endl;*/
 
+         // std::cout << "LastBranchFromIP 0x" << std::hex << LastBranchFromIP << std::endl;
+
+    if (log_buffer.size() >= log_buffer.capacity())
+    {
+        traced_branches.insert(traced_branches.end(), BranchTracer::log_buffer.begin(), BranchTracer::log_buffer.end());
+    }
+}
 void BranchTraceFinished()
 {
-	std::cout << "Finished tracing Foo()! dumping branch log! \n";
+    traced_branches.insert(traced_branches.end(), BranchTracer::log_buffer.begin(), BranchTracer::log_buffer.end());
 
-	for (auto entry : traced_branches)
-	{
-		std::cout << "branch " << AddressInfo{ (void*)entry.branch_address }.Format() 
-            << " -> " << AddressInfo{ (void*)entry.branch_target }.Format() << "\n";
-	}
+    std::cout << "Finished tracing Foo()! dumping branch log! \n";
+
+    for (auto entry : traced_branches)
+    {
+        std::cout << "[BRANCH]  "
+            << AddressInfo{ (void*)entry.branch_address }.Format()
+            << " -> " << AddressInfo{ (void*)entry.branch_target }.Format()
+            << "\tresumed from (" << AddressInfo{ (void*)entry.resume_guest_rip }.Format() << ")"
+            << "\n";
+    }
 }
 
 #pragma optimize("", off)
