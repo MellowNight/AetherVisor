@@ -73,12 +73,12 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 	{
 		if (ncr3.QuadPart == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
-			DbgPrint("PAGE_ALIGN(fault_physical.QuadPart) = %p \n", PAGE_ALIGN(fault_physical.QuadPart));
+			// DbgPrint("PAGE_ALIGN(fault_physical.QuadPart) = %p \n", PAGE_ALIGN(fault_physical.QuadPart));
 			
 			auto denied_read_page = Sandbox::ForEachHook(
 				[](auto hook_entry, auto data) -> auto {
 
-					DbgPrint("PAGE_ALIGN(hook_entry->guest_physical) = %p \n", PAGE_ALIGN(hook_entry->guest_physical));
+			// 		DbgPrint("PAGE_ALIGN(hook_entry->guest_physical) = %p \n", PAGE_ALIGN(hook_entry->guest_physical));
 
 					if (data == PAGE_ALIGN(hook_entry->guest_physical) && hook_entry->denied_access)
 					{
@@ -94,7 +94,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 			if (denied_read_page)
 			{
-				DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
+			//	DbgPrint("single stepping at guest_rip = %p \n", guest_rip);
 
 				/*
 					Single-step the read/write in the ncr3 that allows all pages to be executable.
@@ -122,7 +122,6 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 		else
 		{
 			auto pte = AssignNptEntry((PML4E_64*)pml4_base, fault_physical.QuadPart, PTEAccess{ true, true, true });
-
 		}
 
 		return;
@@ -150,10 +149,9 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 			//	CHAR printBuffer[128];
 
+			//Disasm::format(guest_vmcb.save_state_area.br_from, &insn, printBuffer);
 
-				//Disasm::format(guest_vmcb.save_state_area.br_from, &insn, printBuffer);
-
-			if (insn_category == ZYDIS_CATEGORY_COND_BR || insn_category == ZYDIS_CATEGORY_RET || insn_category == ZYDIS_CATEGORY_CALL || insn_category == ZYDIS_CATEGORY_UNCOND_BR)
+			if (/*insn_category == ZYDIS_CATEGORY_COND_BR || insn_category == ZYDIS_CATEGORY_RET || */insn_category == ZYDIS_CATEGORY_CALL/* || insn_category == ZYDIS_CATEGORY_UNCOND_BR*/)
 			{
 				/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
@@ -171,18 +169,21 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 		auto sandbox_npte = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[sandbox]);
 
-		if (sandbox_npte->ExecuteDisable == FALSE)
+		if (sandbox_npte)
 		{
+			if (sandbox_npte->ExecuteDisable == FALSE)
+			{
 
-			BranchTracer::SetLBR(this, TRUE);
+				BranchTracer::SetLBR(this, TRUE);
 
-			/*  enter into the sandbox context    */
+				/*  enter into the sandbox context    */
 
-			// DbgPrint("0x%p is a sandbox page! \n", fault_physical.QuadPart);
+				// DbgPrint("0x%p is a sandbox page! \n", fault_physical.QuadPart);
 
-			guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
+				guest_vmcb.control_area.ncr3 = Hypervisor::Get()->ncr3_dirs[sandbox];
 
-			return;
+				return;
+			}
 		}
 
 		auto npthooked_page = Utils::GetPte((void*)fault_physical.QuadPart, Hypervisor::Get()->ncr3_dirs[shadow]);
@@ -213,15 +214,50 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 /*	AllocateNewTable(): Allocate a new nested page table (nPML4, nPDPT, nPD, nPT) for a guest physical address translation
 */
 
+
 void* AllocateNewTable(PT_ENTRY_64* page_entry)
 {
-	void* page_table = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+	static int max_reserve = 60000;
+
+	static void* page_table_reserves[60000];
+
+	static bool not_reserved = true;
+
+	static int last_reserved_count = 0;
+
+	if (not_reserved)
+	{
+		max_reserve = 60000;
+		last_reserved_count = 0;
+
+		for (int i = 0; i < max_reserve; ++i)
+		{
+			page_table_reserves[i] = ExAllocatePoolZero(NonPagedPool, PAGE_SIZE, 'ENON');
+		}
+
+		not_reserved = false;
+	}
+
+	void* page_table = page_table_reserves[last_reserved_count];
+
+	last_reserved_count += 1;
+
+	if (last_reserved_count > max_reserve)
+	{
+		KeBugCheckEx(MANUALLY_INITIATED_CRASH, 0, 1, 2, 3);
+	}
 
 	page_entry->PageFrameNumber = MmGetPhysicalAddress(page_table).QuadPart >> PAGE_SHIFT;
 	page_entry->Write = 1;
 	page_entry->Supervisor = 1;
 	page_entry->Present = 1;
 	page_entry->ExecuteDisable = 0;
+
+
+	if (page_table == NULL)
+	{
+		KeBugCheckEx(MANUALLY_INITIATED_CRASH, (ULONG64)page_table, last_reserved_count, NULL, NULL);
+	}
 
 	return page_table;
 }

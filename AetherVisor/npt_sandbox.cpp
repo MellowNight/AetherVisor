@@ -7,13 +7,11 @@
 
 namespace Sandbox
 {
-	void* sandbox_hooks[2] = { NULL, NULL };
-
 	int sandbox_page_count;
 
 	SandboxPage* sandbox_page_array;
 
-	int max_hooks = 6000;
+	int max_hooks = 10000;
 
 	void Init()
 	{
@@ -139,7 +137,7 @@ namespace Sandbox
 
 			sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-			DbgPrint("AddPageToSandbox() physical_page = %p address = %p \n", sandbox_entry->guest_physical, address);
+//			DbgPrint("AddPageToSandbox() physical_page = %p address = %p \n", sandbox_entry->guest_physical, address);
 
 			sandbox_page_count += 1;
 

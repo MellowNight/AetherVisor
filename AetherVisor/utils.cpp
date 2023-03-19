@@ -187,6 +187,12 @@ namespace Utils
 
         pml4 = (PML4E_64*)MmGetVirtualForPhysical(pml4_physical);
 
+
+        if (pml4 == NULL)
+        {
+            return NULL;
+        }
+
         pml4e = &pml4[helper.AsIndex.pml4];
 
         if (page_table_callback)
@@ -202,6 +208,11 @@ namespace Utils
         PDPTE_64* pdpte;
 
         pdpt = (PDPTE_64*)Utils::PfnToVirtualAddr(pml4e->PageFrameNumber);
+
+        if (pdpt == NULL)
+        {
+            return NULL;
+        }
 
         pdpte = &pdpt[helper.AsIndex.pdpt];
 
@@ -224,6 +235,11 @@ namespace Utils
 
         pd = (PDE_64*)Utils::PfnToVirtualAddr(pdpte->PageFrameNumber);
 
+        if (pd == NULL)
+        {
+            return NULL;
+        }
+
         pde = &pd[helper.AsIndex.pd];
 
         if (page_table_callback)
@@ -244,6 +260,11 @@ namespace Utils
         PTE_64* pte;
 
         pt = (PTE_64*)Utils::PfnToVirtualAddr(pde->PageFrameNumber);
+
+        if (pt == NULL)
+        {
+            return NULL;
+        }
 
         pte = &pt[helper.AsIndex.pt];
 

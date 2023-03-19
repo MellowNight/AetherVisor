@@ -15,11 +15,9 @@ namespace Aether
 
             void DenyRegionAccess(void* base, size_t range, bool allow_reads)
             {
-                auto aligned_range = (uintptr_t)PAGE_ALIGN(range + 0x1000);
-
-                for (auto offset = (uint8_t*)base; offset < (uint8_t*)base + aligned_range; offset += PAGE_SIZE)
+                for (auto offset = (uint8_t*)base; offset < (uint8_t*)base + range; offset += PAGE_SIZE)
                 {
-                    svm_vmmcall(VMMCALL_ID::deny_sandbox_reads, base, offset);
+                    DenyPageAccess(base, offset);
                 }
             }
 
@@ -52,9 +50,9 @@ namespace Aether
             {
                 for (auto offset = base; offset < base + size; offset += PAGE_SIZE)
                 {
-                    LARGE_INTEGER interval;
-                    interval.QuadPart = -1 * 1000 * 1000; /* 1/10 second */
-                    KeDelayExecutionThread(KernelMode, FALSE, &interval);
+                   // LARGE_INTEGER interval;
+
+                 //   KeDelayExecutionThread(KernelMode, FALSE, &interval);
 
                     SandboxPage((uintptr_t)offset, NULL, COW);
                 }
