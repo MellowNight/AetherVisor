@@ -4,7 +4,7 @@ namespace Instrumentation
 {
 	Callback callbacks[max_id];
 
-	bool InvokeHook(VcpuData* vcpu, CALLBACK_ID handler)
+	bool InvokeHook(VcpuData* vcpu, CALLBACK_ID handler, void* parameter, uint32_t param_size)
 	{
 		auto vmroot_cr3 = __readcr3();
 
@@ -18,6 +18,9 @@ namespace Instrumentation
 
 		int rip_privilege = (guest_rip < 0x7FFFFFFFFFFF) ? 3 : 0;
 
+
+		/*	make sure stack is paged in	*/
+
 		if (!vcpu->IsPagePresent((uint8_t*)vcpu->guest_vmcb.save_state_area.rsp - sizeof(uintptr_t)))
 		{
 			return false;
@@ -30,6 +33,13 @@ namespace Instrumentation
 			vcpu->guest_vmcb.save_state_area.rsp -= sizeof(uintptr_t);
 
 			*(uintptr_t*)vcpu->guest_vmcb.save_state_area.rsp = guest_rip;
+
+			if (param_size)
+			{
+				vcpu->guest_vmcb.save_state_area.rsp -= param_size;
+
+				memcpy((void*)vcpu->guest_vmcb.save_state_area.rsp, parameter, param_size);
+			}
 		}
 		else
 		{

@@ -23,6 +23,6 @@ namespace Instrumentation
 
 	extern Callback callbacks[max_id];
 
-    bool InvokeHook(VcpuData* vcpu, CALLBACK_ID handler);
+    bool InvokeHook(VcpuData* vcpu, CALLBACK_ID handler, void* parameter = NULL, uint32_t param_size = NULL);
 };
 

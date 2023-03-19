@@ -45,15 +45,19 @@ POPAQ macro
 endm
 
 execute_handler_wrapper proc frame
-	
+	; return address       17 * 8 + 16
+    ; original guest RIP   17 * 8 + 8
+    ; last branch location 17 * 8 + 0 
+    
     pushfq
     PUSHAQ
 
     .endprolog
 
     mov rcx, rsp                    ; pass the registers
-    mov rdx, [rsp + 8 * 17 + 8]     ; pass the return address
-    mov r8, [rsp + 8 * 17]          ; pass the original guest RIP
+    mov rdx, [rsp + 8 * 17 + 16]    ; pass the original return address on stack
+    mov r8, [rsp + 8 * 17 + 8]      ; pass the original guest RIP
+    mov r9, [rsp + 8 * 17]          ; pass the last branch location
         
     ; Align the stack pointer to 16 bytes
     push rbp
