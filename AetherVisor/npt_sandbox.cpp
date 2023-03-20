@@ -137,7 +137,7 @@ namespace Sandbox
 
 			sandbox_entry->guest_physical = PAGE_ALIGN(MmGetPhysicalAddress(address).QuadPart);
 
-//			DbgPrint("AddPageToSandbox() physical_page = %p address = %p \n", sandbox_entry->guest_physical, address);
+			// Logger::Get()->LogJunk("AddPageToSandbox() physical_page = %p address = %p \n", sandbox_entry->guest_physical, address);
 
 			sandbox_page_count += 1;
 

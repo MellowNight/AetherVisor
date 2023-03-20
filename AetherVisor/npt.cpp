@@ -73,7 +73,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 	{
 		if (ncr3.QuadPart == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
-			// DbgPrint("PAGE_ALIGN(fault_physical.QuadPart) = %p \n", PAGE_ALIGN(fault_physical.QuadPart));
+			DbgPrint("PAGE_ALIGN(fault_physical.QuadPart) = %p \n", PAGE_ALIGN(fault_physical.QuadPart));
 			
 			auto denied_read_page = Sandbox::ForEachHook(
 				[](auto hook_entry, auto data) -> auto {
