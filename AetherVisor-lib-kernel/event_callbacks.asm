@@ -76,6 +76,8 @@ execute_handler_wrapper proc frame
     POPAQ
     popfq
 
+    pop rax
+
     ret
 	
 execute_handler_wrapper endp

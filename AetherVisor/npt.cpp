@@ -155,7 +155,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 			{
 				/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
-				Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute, &guest_vmcb.save_state_area.br_from, sizeof(int64_t));
+				// Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute, &guest_vmcb.save_state_area.br_from, sizeof(int64_t));
 			}
 		}
 
