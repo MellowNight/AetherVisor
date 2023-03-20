@@ -52,7 +52,7 @@ extern "C" bool HandleVmexit(VcpuData * vcpu, GuestRegisters * guest_ctx)
     }
     case VMEXIT::VMRUN:
     {
-        vcpu->InjectException(EXCEPTION_VECTOR::GeneralProtection, false, 0);
+        vcpu->InjectException(EXCEPTION_VECTOR::InvalidOpcode, false, 0);
 
         break;
     }

@@ -16,7 +16,7 @@ namespace Instrumentation
 
 		int callback_cpl = ((uintptr_t)callbacks[handler].function < 0x7FFFFFFFFFFF) ? 3 : 0;
 
-		int rip_privilege = (guest_rip < 0x7FFFFFFFFFFF) ? 3 : 0;
+		int rip_privilege = vcpu->guest_vmcb.save_state_area.cpl;
 
 
 		/*	make sure stack is paged in	*/
