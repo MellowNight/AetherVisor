@@ -23,6 +23,8 @@ namespace Sandbox
 
 	extern int	sandbox_page_count;
 
+	extern uintptr_t branch_exclusion_range_base;
+
 	SandboxPage* AddPageToSandbox(
 		VcpuData* vmcb_data, 
 		void* address, 

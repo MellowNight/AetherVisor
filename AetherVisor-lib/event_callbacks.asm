@@ -52,9 +52,10 @@ execute_handler_wrapper proc frame
     .endprolog
  
     mov rcx, rsp                    ; pass the registers
-    mov rdx, [rsp + 8 * 17 + 8]     ; pass the return address
-    mov r8, [rsp + 8 * 17]          ; pass the original guest RIP
-    
+    mov rdx, [rsp + 8 * 17 + 16]     ; pass the return address
+    mov r8, [rsp + 8 * 17 + 8]      ; pass the original guest RIP
+    mov r9, [rsp + 8 * 17]          ; pass the last branch address
+
     ; Align the stack pointer to 16 bytes
     push rbp
     mov rbp, rsp
@@ -71,6 +72,8 @@ execute_handler_wrapper proc frame
 
     POPAQ
     popfq
+
+    pop [rsp]   ; remove param from stack
 
     ret
 	

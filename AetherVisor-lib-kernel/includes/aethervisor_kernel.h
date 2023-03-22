@@ -144,7 +144,7 @@ namespace Aether
         {
             void DenyRegionAccess(void* base, size_t range, bool allow_reads);
 
-            void SandboxRegion(uintptr_t base, uintptr_t size, bool COW = false);
+            void SandboxRegion(uintptr_t base, uintptr_t size, bool exclude_interrupt = true, bool COW = false);
 
             void UnboxRegion(uintptr_t base, uintptr_t size, bool global_page = false);
         }

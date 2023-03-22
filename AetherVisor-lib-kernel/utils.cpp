@@ -4,6 +4,62 @@ namespace Util
 {
     extern "C"
     {
+        uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const char* pattern, size_t pattern_size, char wildcard)
+        {
+            for (auto byte = (char*)region_base;
+                byte < (char*)region_base + region_size;
+                ++byte)
+            {
+                bool found = true;
+
+                for (char* pattern_byte = (char*)pattern, *begin = byte;
+                    pattern_byte < pattern + pattern_size;
+                    ++pattern_byte, ++begin)
+                {
+                    if (*pattern_byte != *begin && *pattern_byte != wildcard)
+                    {
+                        found = false;
+                    }
+                }
+
+                if (found)
+                {
+                    return (uintptr_t)byte;
+                }
+            }
+
+            return 0;
+        }
+
+        void* GetKernelModule(OUT PULONG pSize, UNICODE_STRING DriverName)
+        {
+            PLIST_ENTRY moduleList = (PLIST_ENTRY)PsLoadedModuleList;
+
+            for (PLIST_ENTRY link = moduleList; link; link = link->Flink)
+            {
+                LDR_DATA_TABLE_ENTRY* entry = CONTAINING_RECORD(link, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+                if (RtlCompareUnicodeString(&DriverName, &entry->BaseDllName, false) == 0)
+                {
+                    DbgPrint("found module! %wZ at %p \n", &entry->BaseDllName, entry->DllBase);
+                    if (pSize && MmIsAddressValid(pSize))
+                    {
+                        *pSize = entry->SizeOfImage;
+                    }
+
+                    return entry->DllBase;
+                }
+
+                if (link == moduleList->Blink)
+                {
+                    break;
+                }
+            }
+
+            return 0;
+        }
+
+
         int Exponent(int base, int power)
         {
             int start = 1;

@@ -1,26 +1,16 @@
 #pragma once
-#include    <ntifs.h>
-#include    <Ntstrsafe.h>
-#include    <intrin.h>
-#include	<cstdint>
+#include "kernel_structs.h"
 
 #define PAGE_ALIGN(Va) ((PVOID)((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
-
-extern "C"
-{
-    NTSYSAPI NTSTATUS NTAPI ZwProtectVirtualMemory(
-        IN HANDLE ProcessHandle,
-        IN OUT PVOID* BaseAddress,
-        IN OUT SIZE_T* NumberOfBytesToProtect,
-        IN uint32_t NewAccessProtection,
-        OUT PULONG OldAccessProtection
-    );
-}
 
 namespace Util
 {
     extern "C"
     {
+        uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const char* pattern, size_t pattern_size, char wildcard);
+
+        void* GetKernelModule(OUT PULONG pSize, UNICODE_STRING DriverName);
+
         int ForEachCore(void(*callback)(void* params), void* params);
 
         void WriteToReadOnly(void* address, uint8_t* bytes, size_t len);

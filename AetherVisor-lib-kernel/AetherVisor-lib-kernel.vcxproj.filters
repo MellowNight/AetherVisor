@@ -44,6 +44,12 @@
     <ClInclude Include="includes\aethervisor_kernel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="kernel_exports.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kernel_structs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="vmmcall.asm">

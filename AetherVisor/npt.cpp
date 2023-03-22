@@ -141,6 +141,16 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 		{
 			BranchTracer::SetLBR(this, FALSE);
 
+			bool invoke = true;
+
+			if (Sandbox::branch_exclusion_range_base)
+			{
+				if ((guest_rip < (Sandbox::branch_exclusion_range_base + 0x800)) && (guest_rip > Sandbox::branch_exclusion_range_base))
+				{
+					invoke = false;
+				}
+			}
+
 			ZydisDecodedOperand operands[5];
 
 			auto insn = Disasm::Disassemble((uint8_t*)guest_vmcb.save_state_area.br_from, operands);
@@ -151,11 +161,14 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 			//Disasm::format(guest_vmcb.save_state_area.br_from, &insn, printBuffer);
 
-			if (/*insn_category == ZYDIS_CATEGORY_COND_BR || insn_category == ZYDIS_CATEGORY_RET || */insn_category == ZYDIS_CATEGORY_CALL/* || insn_category == ZYDIS_CATEGORY_UNCOND_BR*/)
+			if (invoke)
 			{
-				/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
+				if (/*insn_category == ZYDIS_CATEGORY_COND_BR || */insn_category == ZYDIS_CATEGORY_RET || insn_category == ZYDIS_CATEGORY_CALL || insn_category == ZYDIS_CATEGORY_UNCOND_BR)
+				{
+					/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
-				// Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute, &guest_vmcb.save_state_area.br_from, sizeof(int64_t));
+					Instrumentation::InvokeHook(this, Instrumentation::sandbox_execute, &guest_vmcb.save_state_area.br_from, sizeof(int64_t));
+				}
 			}
 		}
 

@@ -128,9 +128,9 @@ namespace AetherVisor
 
         void DenyRegionAccess(void* base, size_t range, bool allow_reads);
 
-        int SandboxPage(uintptr_t address, uintptr_t tag, bool global_page = false);
+        int SandboxPage(uintptr_t address, uintptr_t tag, bool exclude_interrupt = true, bool global_page = false);
 
-        void SandboxRegion(uintptr_t base, uintptr_t size);
+        void SandboxRegion(uintptr_t base, uintptr_t size, bool exclude_interrupt = true, bool COW = false);
     }
 
     void SetCallback(

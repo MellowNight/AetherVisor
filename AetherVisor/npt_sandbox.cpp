@@ -12,6 +12,8 @@ namespace Sandbox
 	SandboxPage* sandbox_page_array;
 
 	int max_hooks = 10000;
+	
+	uintptr_t branch_exclusion_range_base;
 
 	void Init()
 	{
