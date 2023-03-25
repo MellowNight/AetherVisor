@@ -32,6 +32,8 @@ namespace Aether
                     Util::TriggerCOW((uint8_t*)address);
                 }
 
+                Util::LockPages((void*)address, IoReadAccess, KernelMode);
+
                 if (exclude_interrupt)
                 {
                     /*  KxUnexpectedInterrupt0 - 6A 00 55 E9 ?? ?? ?? ?? 6A 01 55 E9 */

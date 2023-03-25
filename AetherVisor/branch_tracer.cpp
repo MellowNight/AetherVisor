@@ -9,6 +9,7 @@ using namespace Instrumentation;
 
 namespace BranchTracer
 {
+	bool lbr_active; // only determines whether or not the LBR flag is set
 	bool active;
 	bool initialized;
 
@@ -82,7 +83,9 @@ namespace BranchTracer
 	}
 
 	void SetLBR(VcpuData* vcpu, BOOL value)
-	{
+	{			
+		lbr_active = value ? true : false;
+
 		if (value)
 		{
 			vcpu->guest_vmcb.control_area.lbr_virt_enable |= (1 << 0);

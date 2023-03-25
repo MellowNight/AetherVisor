@@ -8,6 +8,8 @@
 
 namespace BranchTracer
 {
+    extern bool lbr_active; // only determines whether or not the LBR flag is set
+
     extern CR3 process_cr3;
 
     extern bool active;

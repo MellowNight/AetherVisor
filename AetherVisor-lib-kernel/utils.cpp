@@ -3,7 +3,16 @@
 namespace Util
 {
     extern "C"
-    {
+    {    
+        PMDL LockPages(void* virtual_address, LOCK_OPERATION operation, KPROCESSOR_MODE access_mode, int size)
+        {
+            PMDL mdl = IoAllocateMdl(virtual_address, size, FALSE, FALSE, nullptr);
+
+            MmProbeAndLockPages(mdl, KernelMode, operation);
+
+            return mdl;
+        }
+
         uintptr_t FindPattern(uintptr_t region_base, size_t region_size, const char* pattern, size_t pattern_size, char wildcard)
         {
             for (auto byte = (char*)region_base;

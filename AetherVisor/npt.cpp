@@ -139,6 +139,11 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 		if (guest_vmcb.control_area.ncr3 == Hypervisor::Get()->ncr3_dirs[sandbox])
 		{
+			//if (BranchTracer::lbr_active)
+			//{
+			//	DbgPrint("WTF??? LBR WAS DISABLED IN SANDBOX?? \n");
+			//}
+
 			BranchTracer::SetLBR(this, FALSE);
 
 			bool invoke = true;
@@ -151,11 +156,11 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 				}
 			}
 
-			ZydisDecodedOperand operands[5];
+			// ZydisDecodedOperand operands[5];
 
-			auto insn = Disasm::Disassemble((uint8_t*)guest_vmcb.save_state_area.br_from, operands);
+			//auto insn = Disasm::Disassemble((uint8_t*)guest_vmcb.save_state_area.br_from, operands);
 
-			auto insn_category = insn.meta.category;
+			//auto insn_category = insn.meta.category;
 
 			//	CHAR printBuffer[128];
 
@@ -163,7 +168,7 @@ void VcpuData::NestedPageFaultHandler(GuestRegisters* guest_regs)
 
 			if (invoke)
 			{
-				if (/*insn_category == ZYDIS_CATEGORY_COND_BR || */insn_category == ZYDIS_CATEGORY_RET || insn_category == ZYDIS_CATEGORY_CALL || insn_category == ZYDIS_CATEGORY_UNCOND_BR)
+				//if (/*insn_category == ZYDIS_CATEGORY_COND_BR || */insn_category == ZYDIS_CATEGORY_RET || insn_category == ZYDIS_CATEGORY_CALL || insn_category == ZYDIS_CATEGORY_UNCOND_BR)
 				{
 					/*  call out of sandbox context and set RIP to the instrumentation hook for executes  */
 
