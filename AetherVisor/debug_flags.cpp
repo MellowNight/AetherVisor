@@ -49,7 +49,7 @@ void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 	{
 		auto dr0 = __readdr(0);
 
-		if (/*BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && */BranchTracer::active)
+		if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && BranchTracer::active)
 		{
 			*target_register = NULL;
 		}
@@ -60,7 +60,7 @@ void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 	{
 		*target_register = __readdr(6);
 
-		if (/*BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags &&*/ BranchTracer::active)
+		if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && BranchTracer::active)
 		{
 			((DR6*)target_register)->SingleInstruction = 0;
 		}
@@ -70,7 +70,7 @@ void VcpuData::DebugRegisterExit(GuestRegisters* guest_ctx)
 	{
 		*target_register = __readdr(7);
 
-		if (/*BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && */BranchTracer::active)
+		if (BranchTracer::process_cr3.Flags == guest_vmcb.save_state_area.cr3.Flags && BranchTracer::active)
 		{
 			((DR7*)target_register)->Flags &= ~((int64_t)1 << 9);
 			((DR7*)target_register)->Flags &= ~((int64_t)1 << 8);
@@ -112,25 +112,13 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 		((EFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
 		((EFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
 
-		//if ((BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags) && BranchTracer::active)
-		//{
-		//	((EFLAGS*)save_state_area.rsp)->TrapFlag = 0;
-		//}
+		if ((BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags) && BranchTracer::active)
+		{
+			((EFLAGS*)save_state_area.rsp)->TrapFlag = 0;
+		}
 	}
 	else if (save_state_area.cs_attrib.fields.long_mode == 0 /* && save_state_area.rflags.Virtual8086ModeFlag == 0*/)
 	{
-
-		//if (eac_base == 0 && eac_size == 0 && save_state_area.cpl == 3)
-		//{
-		//	UNICODE_STRING eac_name = RTL_CONSTANT_STRING(L"RogueCompanyEAC.exe");
-
-		//	eac_base = (uintptr_t)Utils::GetUserModule32(PsGetCurrentProcess(), &eac_name);
-		//	eac_size = PE_HEADER(eac_base)->OptionalHeader.SizeOfImage;
-
-		//	DbgPrint("PsGetProcessImageFileName %s 0x%p  save_state_area.rflags.Virtual8086ModeFlag %p \n", PsGetProcessImageFileName(PsGetCurrentProcess()), eac_base, save_state_area.rflags.Virtual8086ModeFlag);
-
-		//}
-
 		save_state_area.rsp -= sizeof(uint32_t);
 
 		uint32_t value = (uint32_t)((save_state_area.rflags.Flags & UINT32_MAX)); // & ~(/*RFLAGS_VIRTUAL_8086_MODE_FLAG_FLAG | */RFLAGS_RESUME_FLAG_FLAG));
@@ -140,24 +128,10 @@ void VcpuData::PushfExit(GuestRegisters* guest_ctx)
 		((EFLAGS*)save_state_area.rsp)->ResumeFlag = 0;
 		((EFLAGS*)save_state_area.rsp)->Virtual8086ModeFlag = 0;
 
-		//if ((BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags) && BranchTracer::active)
-		//{
-		//	((EFLAGS*)save_state_area.rsp)->TrapFlag = 0;
-		//}
-
-		//if (eac_base && save_state_area.cpl == 3)
-		//{
-		//	UNICODE_STRING module_name;
-
-		//	auto rip_dll_base = Utils::GetModuleFromAddress32(PsGetCurrentProcess(), save_state_area.rip, &module_name);
-
-		//	DbgPrint("[2] PsGetProcessImageFileName %s module name %wZ, rip offset +0x%p \n",
-		//		PsGetProcessImageFileName(PsGetCurrentProcess()),
-		//		&module_name,
-		//		save_state_area.rip - rip_dll_base);
-
-		//	DbgPrint("V8086mode %p  flags pushed onto stack val 0x%p \n", save_state_area.rflags.Virtual8086ModeFlag, value);
-		//}
+		if ((BranchTracer::process_cr3.Flags == save_state_area.cr3.Flags) && BranchTracer::active)
+		{
+			((EFLAGS*)save_state_area.rsp)->TrapFlag = 0;
+		}
 
 		save_state_area.rip = control_area.nrip;
 	}
