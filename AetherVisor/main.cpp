@@ -1,5 +1,4 @@
 #include "npt_hook.h"
-#include "npthook_safety.h"
 #include "logging.h"
 #include "disassembly.h"
 #include "prepare_vm.h"
@@ -90,7 +89,7 @@ bool VirtualizeAllProcessors()
 
 	//	unlock MDLs and remove NPT hooks in terminating processes
 
-	NptHooks::CleanupOnProcessExit();
+	Hypervisor::Get()->CleanupOnProcessExit();
 }
 
 

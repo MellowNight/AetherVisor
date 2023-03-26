@@ -79,9 +79,6 @@
     <ClInclude Include="npt_sandbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="npthook_safety.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="portable_executable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -141,7 +138,7 @@
     <ClCompile Include="msr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="npthook_safety.cpp">
+    <ClCompile Include="process_cleanup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="syscall_hook.cpp">

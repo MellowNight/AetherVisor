@@ -63,9 +63,26 @@ execute_handler_wrapper proc frame
 
     sub rsp, 20h
 
+    sub rsp, 60h
+    movaps xmmword ptr [rsp], xmm0
+    movaps xmmword ptr [rsp + 10h], xmm1
+    movaps xmmword ptr [rsp + 20h], xmm2
+    movaps xmmword ptr [rsp + 30h], xmm3
+    movaps xmmword ptr [rsp + 40h], xmm4
+    movaps xmmword ptr [rsp + 50h], xmm5
+
     call sandbox_execute_event
       
     add rsp, 20h
+     
+    movaps xmm5, xmmword ptr [rsp + 50h]
+    movaps xmm4, xmmword ptr [rsp + 40h]
+    movaps xmm3, xmmword ptr [rsp + 30h]
+    movaps xmm2, xmmword ptr [rsp + 20h]
+    movaps xmm1, xmmword ptr [rsp + 10h]
+    movaps xmm0, xmmword ptr [rsp]
+
+    add rsp, 60h
 
     mov rsp, rbp ; Add back the value that was subtracted
     pop rbp

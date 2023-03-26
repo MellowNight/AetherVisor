@@ -25,6 +25,12 @@ void VcpuData::VmmcallHandler(GuestRegisters* guest_ctx, bool* end_svm)
 
         break;
     }
+    case VMMCALL_ID::stop_branch_trace:
+    {
+        BranchTracer::Stop(this);
+
+        break;
+    }
     case VMMCALL_ID::deny_sandbox_reads:
     {
         Sandbox::DenyMemoryAccess(this, (void*)guest_ctx->rdx, guest_ctx->r8);

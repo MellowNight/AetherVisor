@@ -186,7 +186,6 @@
     <ClInclude Include="kernel_exports.h" />
     <ClInclude Include="kernel_structures.h" />
     <ClInclude Include="logging.h" />
-    <ClInclude Include="npthook_safety.h" />
     <ClInclude Include="npt_hook.h" />
     <ClInclude Include="npt.h" />
     <ClInclude Include="npt_sandbox.h" />
@@ -209,7 +208,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="logging.cpp" />
     <ClCompile Include="msr.cpp" />
-    <ClCompile Include="npthook_safety.cpp" />
+    <ClCompile Include="process_cleanup.cpp" />
     <ClCompile Include="npt_hook.cpp" />
     <ClCompile Include="npt.cpp" />
     <ClCompile Include="npt_sandbox.cpp" />

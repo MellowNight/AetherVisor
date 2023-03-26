@@ -15,6 +15,7 @@ enum VMMCALL_ID : uintptr_t
     start_branch_trace = 0x11111119,
     hook_efer_syscall = 0x1111111B,
     unbox_page = 0x1111111C,
+    stop_branch_trace = 0x1111111D,
 };
 
 enum VMEXIT

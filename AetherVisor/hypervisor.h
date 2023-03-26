@@ -116,4 +116,5 @@ public:
     static Hypervisor* Get();
 
     bool IsCoreVirtualized(int32_t core_number);
+    void CleanupOnProcessExit();
 };
