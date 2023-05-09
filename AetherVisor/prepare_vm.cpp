@@ -195,10 +195,13 @@ bool IsCoreReadyForVmrun(VMCB* guest_vmcb, SegmentAttribute cs_attribute)
 		__writecr4(cr4.Flags);
 	}
 
+	cr3.Flags = __readcr3();
+	cr4.Flags = __readcr4();
+
 	if ((cr3.Reserved1 != 0) || (cr3.Reserved2 != 0) || (cr4.Reserved1 != 0)
 		|| (cr4.Reserved2 != 0) || (cr4.Reserved3 != 0) || (cr4.Reserved4 != 0))
 	{
-		DbgPrint("cr3 or cr4 MBZ bits are zero. Invalid state rn \n");
+		DbgPrint("cr3 or cr4 MBZ bits are STILL zero. Invalid state rn \n");
 		return false;
 	}
 

@@ -68,7 +68,7 @@ bool VirtualizeAllProcessors()
 			}
 			else
 			{
-				Logger::Get()->Log("[SETUP] A problem occured!! invalid guest state \n");
+				DbgPrint("[SETUP] A problem occured!! invalid guest state \n");
 				__debugbreak();
 			}
 		}
@@ -85,11 +85,11 @@ bool VirtualizeAllProcessors()
 
 	bool (*KeRelaxTimingConstraints)(int one_or_zero) = static_cast<decltype(KeRelaxTimingConstraints)>((void*)(nt_base + 0x50F408));
 
-	KeRelaxTimingConstraints(1);
+	// KeRelaxTimingConstraints(1);
 
 	//	unlock MDLs and remove NPT hooks in terminating processes
 
-	Hypervisor::Get()->CleanupOnProcessExit();
+	// Hypervisor::Get()->CleanupOnProcessExit();
 }
 
 
